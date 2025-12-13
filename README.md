@@ -1,119 +1,106 @@
-# `rigup`
+```
+                                   ─────────────────────────────
+                                       ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌─╮
+                                     - ├┬╯  │  │ ┬ : │ │ ├─╯ -
+                                       ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵
+                                   ─────────────────────────────
+```
 
-## Project Overview
+# Package AI agent knowledge with tools using Nix
 
-**rigup** is a Nix-based system for packaging AI agent knowledge with tools.
-A **riglet** is "executable and adaptable knowledge": a parameterizable _SKILL.md_-like documentation of recipes, operations and techniques paired with the Nix packages needed to execute them.
-A **rig** is a project's collection of active riglets, ready to be used by an AI agent working on this project.
+## What is rigup?
 
-## Core Concepts
+`rigup` is a Nix-based system for packaging AI agent knowledge with the tools needed to execute it.
 
-- **Riglet**: Nix module defining `tools` (packages) + `docs` (markdown). Knowledge-first design
-- **Rig**: Project's flake.nix that composes riglets via `buildRig`
-- **Cross-riglet interaction**: Modules share config (e.g., `agent.user.name` defined in jj-basics, used in typst-reporter)
+- **Riglet** = Executable knowledge (docs + tools + metadata)
+- **Rig** = Project's collection of active riglets
+- **Knowledge-first design** = Documentation is the payload, tools are dependencies
+
+## Quick Start
+
+**Using a rig:**
+```bash
+# Build a simple but complete agent environment
+nix build github:YPares/rigup.nix#rigs.x86_64-linux.default.home
+
+# Discover available riglets
+cat result/RIG.md
+
+# Use the tools
+./result/bin/jj --version
+
+# Read the documentation
+cat ./result/docs/jj-basics/SKILL.md
+```
+
+**Creating riglets:**
+```nix
+{ config, pkgs, lib, riglib, ... }: {
+  config.riglets.my-riglet = {
+    tools = [ pkgs.mytool ];
+
+    meta = {
+      name = "My Riglet";
+      description = "What this provides";
+      whenToUse = [ "When you need X" ];
+      keywords = [ "search" "terms" ];
+    };
+
+    docs = riglib.writeDocsTree {
+      files.SKILL = ''
+        # My Riglet Documentation
+        ...
+      '';
+    };
+  };
+}
+```
+
+## Features
+
+- ✅ **Type-checked metadata** - Nix validates riglet structure
+- ✅ **Nested documentation** - Skills-style SKILL.md + references/
+- ✅ **Declarative composition** - Module system for riglet interaction
+- ✅ **Auto-generated manifests** - RIG.md lists all capabilities
+- ✅ **Reproducible** - Nix ensures consistent tool versions
 
 ## Architecture
 
 ```
 rigup.nix/
 ├── lib/
-│   ├── default.nix           # buildRig function (evaluates modules)
-│   └── rigletSchema.nix      # Base module defining riglet structure
-├── riglets/                  # Riglet modules
-│   ├── agent-rig.nix         # Meta-docs about rig system
-│   ├── jj-basics.nix         # Defines agent.user.{name,email} options
-│   └── typst-reporter.nix    # Uses agent.user.name, defines typst.template
-└── flake.nix                 # Exposes riglets & example rigs
+│   ├── default.nix      # buildRig, writeDocsTree
+│   └── rigletSchema.nix # Riglet type definitions
+├── riglets/
+│   ├── agent-rig.nix    # Meta-documentation (read this!)
+│   ├── jj-basics.nix    # Example riglet
+│   └── ...
+└── flake.nix            # Exposes riglets & example rigs
 ```
 
-**Usage pattern:**
+## Documentation
 
-```nix
-rig = rigup.lib.buildRig {
-  name = "alice-rig";  # optional, defaults to "agent-rig"
-  inherit pkgs;
-  modules = [
-    rigup.riglets.jj-basics
-    {
-      agent.user.name = "Alice";
-      agent.user.email = "alice@fake.com";
-    }
-  ];
-};
-# rig.env = combined buildEnv of all riglet tools
-# rig.docs.<riglet> = per-riglet documentation derivations
-# rig.meta.<riglet> = per-riglet metadata (name, description, whenToUse, keywords)
-# rig.home = complete agent directory:
-#   - RIG.md -> manifest listing all riglets with metadata
-#   - bin/ -> all tools
-#   - docs/<riglet>/ -> per-riglet documentation
-```
+**For AI agents:** Read `riglets/agent-rig.nix` - complete guide to using and creating riglets
 
-**Writing riglets:**
+**For developers:** This README + explore the example riglets
 
-```nix
-{ config, pkgs, lib, riglib, ... }: {
-  config.riglets.my-riglet = {
-    tools = [ pkgs.foo ];
+## Design Philosophy
 
-    # Metadata - structured info about when/how to use this riglet
-    meta = {
-      name = "My Riglet";
-      description = "Brief description of what this provides";
-      whenToUse = [
-        "Situation 1 where this riglet is relevant"
-        "Situation 2 where this riglet helps"
-      ];
-      keywords = [ "foo" "bar" "relevant-terms" ];
-    };
+rigup evolved from [agent-skills](https://github.com/YPares/agent-skills), combining:
+- **SKILL.md pattern** - Structured knowledge for agents
+- **Nix modules** - Declarative composition and type safety
+- **Tool packaging** - Dependencies travel with documentation
 
-    # Simple single-file docs
-    docs = riglib.writeDocsTree {
-      files.SKILL = '' ... '';
-    };
+## TODO
 
-    # Or with nested references/ directory (Skills pattern)
-    docs = riglib.writeDocsTree {
-      files = {
-        SKILL = '' ... main documentation ... '';
-        references.advanced = '' ... deep dive ... '';
-        references.troubleshooting = '' ... common issues ... '';
-      };
-    };
-  };
-}
-```
+- [ ] CLI (`rigup`) for convenient rig access
+- [ ] minijinja-based templating for dynamic docs
+- [ ] More example riglets
 
-## Key Design Decisions
+## License
 
-1. **Any flake can declare new riglets** - projects packaging tools via a `flake.nix` can declare alongside them riglets based on those tools, by declaring several `riglets.<riglet-name>` in their `outputs`
-1. **All riglets used in a rig share the same nixpkgs instance** - this ensures coherence and compatibility between the tools used by the various riglets
-1. **Riglet-specific options** (e.g., `agent.user.name`) live in the `config` shared between all riglets used in the final rig
-1. **minijinja for templating** (future) - simple, supports loops/conditionals for module options: derive the Skills contents from the final resolved config (via nix `builtins.toJSON`)
+MIT
 
-## Current State
+---
 
-Three example riglets implemented demonstrating:
-
-- Cross-riglet option sharing (agent.user.name)
-- Conditional docs (typst template styles via lib.optionalString)
-- Meta-documentation (agent-rig teaches agents about riglets)
-
-One example rig combining these three example riglets together.
-
-### TODO
-
-`mininija`-based templating - templating done directly in Nix code so far.
-
-CLI (`rigup`) - just Nix lib so far.
-
-## Related Projects
-
-- [**envil**](https://github.com/YPares/envil): stack-based Nix env manager
-- [**agent-skills**](https://github.com/YPares/agent-skills): Skill repo this evolved from (SKILL.md + scripts pattern)
-
-## Important Notes
-
-- Uses blueprint flake
-- Formatting: nixfmt-rfc-style
-- Built on Nix module system - Riglets are standard modules
+*Built with Nix • Formatting: nixfmt-rfc-style • Uses [blueprint](https://github.com/numtide/blueprint)*
