@@ -39,6 +39,7 @@ let
   # Returns an attrset with:
   #   - env: combined buildEnv of all tools
   #   - docs: attrset of riglet name -> docs derivation
+  #   - meta: attrset of riglet name -> metadata
   #   - home: complete agent directory (bin/ + docs/)
   buildRig =
     {
@@ -73,13 +74,58 @@ let
 
       # Docs per riglet
       docs = lib.mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
+
+      # Metadata per riglet
+      meta = lib.mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
+
+      # Generate RIG.md manifest from metadata
+      rigletsManifest = pkgs.writeText "RIG.md" ''
+        # Available Riglets
+
+        This rig provides the following riglets with their tools and documentation.
+
+        <riglets_system>
+
+        ## How to Use
+
+        **Access documentation:**
+        - Location: `docs/<riglet-name>/SKILL.md`
+        - Read main docs: `cat docs/<riglet-name>/SKILL.md`
+        - Read references: `cat docs/<riglet-name>/references/<topic>.md`
+
+        **Use the tools:**
+        - All tools are available in `bin/`
+        - Add to PATH: `export PATH="$PWD/bin:$PATH"`
+
+        ## Available Riglets
+
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (rigletName: rigletMeta: ''
+            <riglet>
+            <name>${rigletName}</name>
+            <title>${rigletMeta.name}</title>
+            <description>${rigletMeta.description}</description>
+            <whenToUse>
+            ${lib.concatStringsSep "\n" (map (use: "- ${use}") rigletMeta.whenToUse)}
+            </whenToUse>
+            <keywords>${lib.concatStringsSep ", " rigletMeta.keywords}</keywords>
+            <docs>docs/${rigletName}/</docs>
+            </riglet>
+          '') meta
+        )}
+
+        </riglets_system>
+      '';
     in
     {
-      inherit env docs;
+      inherit env docs meta;
 
       # Complete agent home directory with bin/ and docs/
       home = pkgs.runCommand "${name}-home" { } ''
         mkdir -p $out
+
+        # Add RIG.md manifest at top level
+        cp ${rigletsManifest} $out/RIG.md
 
         # Symlink all tools to bin/ (if env has a bin directory)
         if [ -d ${env}/bin ]; then

@@ -42,17 +42,30 @@ rig = rigup.lib.buildRig {
 };
 # rig.env = combined buildEnv of all riglet tools
 # rig.docs.<riglet> = per-riglet documentation derivations
+# rig.meta.<riglet> = per-riglet metadata (name, description, whenToUse, keywords)
 # rig.home = complete agent directory:
+#   - RIG.md -> manifest listing all riglets with metadata
 #   - bin/ -> all tools
 #   - docs/<riglet>/ -> per-riglet documentation
 ```
 
-**Writing riglet docs:**
+**Writing riglets:**
 
 ```nix
 { config, pkgs, lib, riglib, ... }: {
   config.riglets.my-riglet = {
     tools = [ pkgs.foo ];
+
+    # Metadata - structured info about when/how to use this riglet
+    meta = {
+      name = "My Riglet";
+      description = "Brief description of what this provides";
+      whenToUse = [
+        "Situation 1 where this riglet is relevant"
+        "Situation 2 where this riglet helps"
+      ];
+      keywords = [ "foo" "bar" "relevant-terms" ];
+    };
 
     # Simple single-file docs
     docs = riglib.writeDocsTree {

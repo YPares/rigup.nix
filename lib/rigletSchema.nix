@@ -20,6 +20,35 @@ in
               description = "Documentation derivation for this riglet";
               type = lib.types.package;
             };
+
+            meta = lib.mkOption {
+              description = "Metadata describing when and how to use this riglet";
+              type = lib.types.submodule {
+                options = {
+                  name = lib.mkOption {
+                    type = lib.types.str;
+                    description = "Human-readable riglet name";
+                  };
+
+                  description = lib.mkOption {
+                    type = lib.types.str;
+                    description = "Brief description of what this riglet provides";
+                  };
+
+                  whenToUse = lib.mkOption {
+                    type = lib.types.listOf lib.types.str;
+                    default = [ ];
+                    description = "Situations when this riglet should be loaded";
+                  };
+
+                  keywords = lib.mkOption {
+                    type = lib.types.listOf lib.types.str;
+                    default = [ ];
+                    description = "Keywords for searching/filtering riglets";
+                  };
+                };
+              };
+            };
           };
         }
       );

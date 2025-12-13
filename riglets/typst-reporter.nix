@@ -23,6 +23,25 @@
       pkgs.pandoc
     ];
 
+    meta = {
+      name = "Typst Reporter";
+      description = "Generate professional reports and documents using Typst";
+      whenToUse = [
+        "Creating reports or documentation"
+        "Generating PDFs from markup"
+        "Formatting technical documents"
+        "Converting between document formats"
+      ];
+      keywords = [
+        "typst"
+        "pandoc"
+        "pdf"
+        "reports"
+        "documentation"
+        "markup"
+      ];
+    };
+
     docs = pkgs.writeTextDir "SKILL.md" ''
       # Typst Report Generation
 

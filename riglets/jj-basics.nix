@@ -24,6 +24,25 @@
   config.riglets.jj-basics = {
     tools = [ pkgs.jujutsu ];
 
+    meta = {
+      name = "JJ Basics";
+      description = "Jujutsu version control fundamentals and workflows";
+      whenToUse = [
+        "Working with version control"
+        "Managing changes and commits"
+        "Navigating change history"
+        "Collaborating on code"
+      ];
+      keywords = [
+        "jj"
+        "jujutsu"
+        "version-control"
+        "vcs"
+        "git"
+        "dvcs"
+      ];
+    };
+
     docs = riglib.writeDocsTree {
       files = {
         SKILL = ''

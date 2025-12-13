@@ -7,6 +7,26 @@
   config.riglets.agent-rig = {
     tools = [ ];
 
+    meta = {
+      name = "Agent Rig System";
+      description = "Understanding and working with rigup's riglet system";
+      whenToUse = [
+        "Learning about the rig architecture"
+        "Creating new riglets"
+        "Understanding how riglets interact"
+        "Setting up a project's rig"
+      ];
+      keywords = [
+        "rigup"
+        "riglets"
+        "rig"
+        "meta"
+        "architecture"
+        "nix"
+        "modules"
+      ];
+    };
+
     docs = pkgs.writeTextDir "SKILL.md" ''
       # Agent Rig System
 
@@ -37,7 +57,8 @@
       **buildRig outputs:**
       - `env` - Combined tools as buildEnv (bin/, share/, etc.)
       - `docs.<riglet>` - Per-riglet documentation derivations
-      - `home` - Complete agent directory: bin/ + docs/<riglet>/
+      - `meta.<riglet>` - Per-riglet metadata (structured discovery info)
+      - `home` - Complete agent directory: RIG.md + bin/ + docs/<riglet>/
 
       ## Riglet Structure
 
@@ -57,6 +78,17 @@
         config.riglets.my-riglet = {
           tools = [ pkgs.tool1 pkgs.tool2 ];
 
+          # Metadata for discovery and context
+          meta = {
+            name = "My Riglet";
+            description = "What this riglet provides";
+            whenToUse = [
+              "Situation 1"
+              "Situation 2"
+            ];
+            keywords = [ "keyword1" "keyword2" ];
+          };
+
           # Simple single-file docs
           docs = riglib.writeDocsTree {
             files.SKILL = "...";
@@ -73,6 +105,12 @@
         };
       }
       ```
+
+      **Metadata structure:**
+      - `name` - Human-readable riglet name
+      - `description` - Brief summary of what it provides
+      - `whenToUse` - List of situations when this riglet is relevant
+      - `keywords` - Search/filter terms
 
       **riglib.writeDocsTree** converts nested attrsets to directory trees:
       - `files.SKILL` → `SKILL.md`
@@ -140,16 +178,28 @@
       # Build complete home directory with tools + docs
       nix build .#rigs.<system>.default.home
 
+      # First, read the riglets manifest to see what's available
+      cat ./result/RIG.md
+
       # Use the tools
       ./result/bin/jj --version
 
-      # Read documentation
+      # Read documentation (paths shown in RIG.md)
       cat ./result/docs/jj-basics/SKILL.md
       ls ./result/docs/
 
       # Add to PATH
       export PATH="$(nix build .#rigs.<system>.default.home --no-link --print-out-paths)/bin:$PATH"
       ```
+
+      **RIG.md manifest:**
+      The home directory includes a `RIG.md` file that lists all available riglets with:
+      - Human-readable name and description
+      - When to use each riglet
+      - Keywords for searching
+      - Documentation paths
+
+      Agents should read this file first to understand available capabilities.
 
       **Access tools only:**
       ```bash
@@ -158,6 +208,15 @@
 
       # Or build the env directly
       nix build .#rigs.<system>.default.env
+      ```
+
+      **Discover available riglets:**
+      ```bash
+      # View metadata for a specific riglet
+      nix eval .#rigs.<system>.default.meta.jj-basics --json | jq
+
+      # Search all riglet keywords (future rigup CLI will do this)
+      nix eval .#rigs.<system>.default.meta --json | jq 'to_entries | map({riglet: .key, keywords: .value.keywords})'
       ```
 
       **Read riglet documentation:**
