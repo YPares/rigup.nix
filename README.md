@@ -84,6 +84,11 @@ rigup.nix/
 - [ ] minijinja-based templating for easy modular docs that adapt based on the rig's config
 - [ ] More example riglets
 
+## Related Projects
+
+- [`openskills`](https://github.com/numman-ali/openskills): Universal Skill loader, following Claude Skills system and manifest
+- [`llm-agents.nix`](https://github.com/numtide/llm-agents.nix): Numtide's flake packaging AI coding agents and development tools
+
 ## License
 
 MIT
