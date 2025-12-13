@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  lib,
   ...
 }:
 {
@@ -70,7 +69,7 @@
         # ... template using config.agent.user.name
       ```
 
-      ## Using Rigs in Projects
+      ## Defining Rigs in Projects
 
       In your project's flake.nix:
 
@@ -80,8 +79,11 @@
 
         outputs = { rigup, nixpkgs, ... }:
           let
-            pkgs = nixpkgs.legacyPackages.x86_64-linux;
-            rig = rigup.lib.buildRig {
+            system = "x86_64-linux";
+            pkgs = import nixpkgs { inherit system; };
+          in rec {
+            # Rigs are exposed directly as an output so the future `rigup` CLI can use them
+            rigs.$${system}.default = rigup.lib.buildRig {
               inherit pkgs;
               modules = [
                 rigup.riglets.jj-basics
@@ -93,19 +95,18 @@
                 }
               ];
             };
-          in {
-            packages.x86_64-linux.default = rig.tools;
-            # Access docs: rig.docs.jj-basics, etc.
+            packages.$${system}.default = rigs.default.env;
+            # Access docs: rigs.default.docs.jj-basics, etc.
           };
       }
       ```
 
       ## Creating New Riglets
 
-      1. Create `riglets/my-riglet.nix` in rigup.nix repo
+      1. Create `riglets/my-riglet.nix`
       2. Define options and config as modules
       3. Add to flake's riglets output
-      4. Test by importing in a project rig
+      4. Can used them in your flake's `rigs.<rig-name>` outputs
 
       ## Design Principles
 

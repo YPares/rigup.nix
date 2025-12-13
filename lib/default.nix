@@ -2,7 +2,7 @@
 {
   # Evaluate a rig from a set of riglet modules
   # Returns an attrset with:
-  #   - tools: combined buildEnv of all tools
+  #   - env: combined buildEnv of all tools
   #   - docs: attrset of riglet name -> docs derivation
   buildRig =
     {
@@ -24,7 +24,7 @@
     in
     {
       # Combined tools from all riglets
-      tools = pkgs.buildEnv {
+      env = pkgs.buildEnv {
         inherit name;
         paths = lib.flatten (lib.mapAttrsToList (_: riglet: riglet.tools) evaluated.config.riglets);
       };

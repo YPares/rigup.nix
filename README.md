@@ -28,6 +28,7 @@ rigup.nix/
 
 ```nix
 rig = rigup.lib.buildRig {
+  name = "alice-rig";
   inherit pkgs;
   modules = [
     rigup.riglets.jj-basics
@@ -37,7 +38,7 @@ rig = rigup.lib.buildRig {
     }
   ];
 };
-# rig.tools = combined buildEnv
+# rig.env = combined buildEnv
 # rig.docs.<riglet> = per-riglet documentation
 ```
 
@@ -45,7 +46,7 @@ rig = rigup.lib.buildRig {
 
 1. **Any flake can declare new riglets** - projects packaging tools via a `flake.nix` can declare alongside them riglets based on those tools, by declaring several `riglets.<riglet-name>` in their `outputs`
 1. **All riglets used in a rig share the same nixpkgs instance** - this ensures coherence and compatibility between the tools used by the various riglets
-1. **Riglet-specific options** (e.g., `agent.user.name`) live in the `config` shared between all riglets used in the final rig 
+1. **Riglet-specific options** (e.g., `agent.user.name`) live in the `config` shared between all riglets used in the final rig
 1. **minijinja for templating** (future) - simple, supports loops/conditionals for module options: derive the Skills contents from the final resolved config (via nix `builtins.toJSON`)
 
 ## Current State
@@ -56,9 +57,13 @@ Three example riglets implemented demonstrating:
 - Conditional docs (typst template styles via lib.optionalString)
 - Meta-documentation (agent-rig teaches agents about riglets)
 
-CLI (`rigup`) not yet implemented - just Nix lib so far.
+One example rig combining these three example riglets together.
 
-`mininija`-based templating not yet implemented - templating done directly in Nix code so far.
+### TODO
+
+`mininija`-based templating - templating done directly in Nix code so far.
+
+CLI (`rigup`) - just Nix lib so far.
 
 ## Related Projects
 
