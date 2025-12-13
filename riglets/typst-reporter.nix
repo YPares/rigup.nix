@@ -1,109 +1,121 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 {
   options.typst = {
     template = lib.mkOption {
-      type = lib.types.enum [ "academic" "technical" "simple" ];
+      type = lib.types.enum [
+        "academic"
+        "technical"
+        "simple"
+      ];
       default = "simple";
       description = "Template style for generated reports";
     };
   };
 
   config.riglets.typst-reporter = {
-    tools = [ pkgs.typst pkgs.pandoc ];
+    tools = [
+      pkgs.typst
+      pkgs.pandoc
+    ];
 
     docs = pkgs.writeTextDir "SKILL.md" ''
-            # Typst Report Generation
+      # Typst Report Generation
 
-            ## Configuration
+      ## Configuration
 
-            - **Author**: ${config.user.name}
-            - **Template**: ${config.typst.template}
+      - **Author**: ${config.user.name}
+      - **Template**: ${config.typst.template}
 
-            ## Quick Start
+      ## Quick Start
 
-            Create a new report:
+      Create a new report:
 
-            ```bash
-            cat > report.typ <<'EOF'
-            #set document(author: "${config.user.name}")
-            #set page(numbering: "1")
+      ```bash
+      cat > report.typ <<'EOF'
+      #set document(author: "${config.user.name}")
+      #set page(numbering: "1")
 
-            = My Report
+      = My Report
 
-            _Author: ${config.user.name}_
+      _Author: ${config.user.name}_
 
-            == Introduction
+      == Introduction
 
-            This is a ${config.typst.template} report.
+      This is a ${config.typst.template} report.
 
-            == Findings
+      == Findings
 
-            Write your findings here.
+      Write your findings here.
 
-            == Conclusion
+      == Conclusion
 
-            Summarize your work.
-            EOF
+      Summarize your work.
+      EOF
 
-            typst compile report.typ
-            ```
+      typst compile report.typ
+      ```
 
-            ## Template Styles
+      ## Template Styles
 
-            ${lib.optionalString (config.typst.template == "academic") ''
-            **Academic Template**:
-            - Includes abstract
-            - Bibliography support
-            - Academic formatting (double-spaced, numbered sections)
-            ''}
+      ${lib.optionalString (config.typst.template == "academic") ''
+        **Academic Template**:
+        - Includes abstract
+        - Bibliography support
+        - Academic formatting (double-spaced, numbered sections)
+      ''}
 
-            ${lib.optionalString (config.typst.template == "technical") ''
-            **Technical Template**:
-            - Code highlighting
-            - Diagram support
-            - API documentation structure
-            ''}
+      ${lib.optionalString (config.typst.template == "technical") ''
+        **Technical Template**:
+        - Code highlighting
+        - Diagram support
+        - API documentation structure
+      ''}
 
-            ${lib.optionalString (config.typst.template == "simple") ''
-            **Simple Template**:
-            - Clean, minimal design
-            - Quick turnaround
-            - Good for short reports and memos
-            ''}
+      ${lib.optionalString (config.typst.template == "simple") ''
+        **Simple Template**:
+        - Clean, minimal design
+        - Quick turnaround
+        - Good for short reports and memos
+      ''}
 
-            ## Common Patterns
+      ## Common Patterns
 
-            **Adding code blocks:**
-            ````typst
-            ```python
-            def hello():
-                print("world")
-            ```
-            ````
+      **Adding code blocks:**
+      ````typst
+      ```python
+      def hello():
+          print("world")
+      ```
+      ````
 
-            **Including images:**
-            ```typst
-            #image("diagram.png", width: 80%)
-            ```
+      **Including images:**
+      ```typst
+      #image("diagram.png", width: 80%)
+      ```
 
-            **Tables:**
-            ```typst
-            #table(
-              columns: (auto, auto),
-              [Name], [Value],
-              [Result], [42]
-            )
-            ```
+      **Tables:**
+      ```typst
+      #table(
+        columns: (auto, auto),
+        [Name], [Value],
+        [Result], [42]
+      )
+      ```
 
-            ## Converting to Other Formats
+      ## Converting to Other Formats
 
-            ```bash
-            # Typst to PDF
-            typst compile report.typ report.pdf
-            # Then use your PDF viewer
-            ```
+      ```bash
+      # Typst to PDF
+      typst compile report.typ report.pdf
+      # Then use your PDF viewer
+      ```
 
-            Your report is now tracked with author **${config.user.name}**.
+      Your report is now tracked with author **${config.user.name}**.
     '';
   };
 }
