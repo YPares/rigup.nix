@@ -12,7 +12,7 @@
 
 `rigup` is a Nix-based system for packaging AI agent knowledge with the tools needed to execute it.
 
-- **Riglet** = Executable knowledge (docs + tools + metadata)
+- **Riglet** = Executable knowledge (operational docs ("Skills") + tools + metadata)
 - **Rig** = Project's collection of active riglets
 - **Knowledge-first design** = Documentation is the payload, tools are dependencies
 
