@@ -16,19 +16,21 @@ A **rig** is a project's collection of active riglets, ready to be used by an AI
 
 ```
 rigup.nix/
-├── lib/default.nix           # buildRig function (evaluates modules)
+├── lib/
+│   ├── default.nix           # buildRig function (evaluates modules)
+│   └── rigletSchema.nix      # Base module defining riglet structure
 ├── riglets/                  # Riglet modules
 │   ├── agent-rig.nix         # Meta-docs about rig system
 │   ├── jj-basics.nix         # Defines agent.user.{name,email} options
 │   └── typst-reporter.nix    # Uses agent.user.name, defines typst.template
-└── flake.nix                 # Exposes riglets (system-agnostic)
+└── flake.nix                 # Exposes riglets & example rigs
 ```
 
 **Usage pattern:**
 
 ```nix
 rig = rigup.lib.buildRig {
-  name = "alice-rig";
+  name = "alice-rig";  # optional, defaults to "agent-rig"
   inherit pkgs;
   modules = [
     rigup.riglets.jj-basics
@@ -38,8 +40,8 @@ rig = rigup.lib.buildRig {
     }
   ];
 };
-# rig.env = combined buildEnv
-# rig.docs.<riglet> = per-riglet documentation
+# rig.env = combined buildEnv of all riglet tools
+# rig.docs.<riglet> = per-riglet documentation derivations
 ```
 
 ## Key Design Decisions

@@ -30,9 +30,9 @@
 
       ### rigup
       Nix library and CLI tool:
-      - `buildRig` function evaluates riglet modules
-      - Returns combined tools and per-riglet docs
-      - CLI provides convenient access to rig outputs
+      - `buildRig` function evaluates riglet modules with `lib/rigletSchema.nix` base
+      - Returns `{ env = ...; docs = { <riglet> = ...; }; }`
+      - CLI provides convenient access to rig outputs (future)
 
       ## Riglet Structure
 
@@ -84,6 +84,7 @@
           in rec {
             # Rigs are exposed directly as an output so the future `rigup` CLI can use them
             rigs.$${system}.default = rigup.lib.buildRig {
+              name = "my-project-rig";  # optional, defaults to "agent-rig"
               inherit pkgs;
               modules = [
                 rigup.riglets.jj-basics
@@ -95,10 +96,31 @@
                 }
               ];
             };
-            packages.$${system}.default = rigs.default.env;
-            # Access docs: rigs.default.docs.jj-basics, etc.
+            # Export combined tools as default package
+            packages.$${system}.default = rigs.$${system}.default.env;
+            # Access docs: rigs.<system>.default.docs.<riglet-name>
           };
       }
+      ```
+
+      ## Using a Rig
+
+      **Access the combined tools:**
+      ```bash
+      # Build and enter shell with all rig tools
+      nix develop .#rigs.<system>.default.env
+
+      # Or build the env directly
+      nix build .#rigs.<system>.default.env
+      ```
+
+      **Read riglet documentation:**
+      ```bash
+      # View specific riglet docs
+      nix build .#rigs.<system>.default.docs.jj-basics --no-link --print-out-paths | xargs -I {} cat {}/SKILL.md
+
+      # Or use future rigup CLI (when implemented)
+      rigup docs jj-basics
       ```
 
       ## Creating New Riglets
@@ -106,7 +128,7 @@
       1. Create `riglets/my-riglet.nix`
       2. Define options and config as modules
       3. Add to flake's riglets output
-      4. Can used them in your flake's `rigs.<rig-name>` outputs
+      4. Use them in your flake's `rigs.<rig-name>` outputs
 
       ## Design Principles
 
