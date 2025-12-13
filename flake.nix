@@ -1,20 +1,23 @@
 {
   description = "rigup - Build your AI agent's rig";
 
-  # Add all your dependencies here
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     blueprint.url = "github:numtide/blueprint";
     blueprint.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  # Load the blueprint and add custom outputs
   outputs =
-    inputs:
+    inputs@{
+      self,
+      nixpkgs,
+      blueprint,
+      ...
+    }:
     let
-      forEachSystem = inputs.nixpkgs.lib.genAttrs inputs.nixpkgs.lib.systems.flakeExposed;
+      forEachSystem = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed;
     in
-    inputs.blueprint { inherit inputs; }
+    blueprint { inherit inputs; }
     // {
       # Expose riglet modules
       riglets = {
@@ -22,5 +25,29 @@
         jj-basics = import ./riglets/jj-basics.nix;
         typst-reporter = import ./riglets/typst-reporter.nix;
       };
+
+      # Expose example rigs
+      rigs = forEachSystem (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system; };
+        in
+        {
+          # Example rig using all available riglets
+          default = self.lib.buildRig {
+            inherit pkgs;
+            modules = with self.riglets; [
+              agent-rig
+              jj-basics
+              typst-reporter
+              # Configure required options
+              {
+                agent.user.name = "Test Agent";
+                agent.user.email = "test@example.com";
+              }
+            ];
+          };
+        }
+      );
     };
 }
