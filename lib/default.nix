@@ -39,6 +39,7 @@ let
   # Returns an attrset with:
   #   - env: combined buildEnv of all tools
   #   - docs: attrset of riglet name -> docs derivation
+  #   - home: complete agent directory (bin/ + docs/)
   buildRig =
     {
       modules,
@@ -64,8 +65,6 @@ let
           inherit pkgs riglib;
         };
       };
-    in
-    {
       # Combined tools from all riglets
       env = pkgs.buildEnv {
         inherit name;
@@ -74,6 +73,27 @@ let
 
       # Docs per riglet
       docs = lib.mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
+    in
+    {
+      inherit env docs;
+
+      # Complete agent home directory with bin/ and docs/
+      home = pkgs.runCommand "${name}-home" { } ''
+        mkdir -p $out
+
+        # Symlink all tools to bin/ (if env has a bin directory)
+        if [ -d ${env}/bin ]; then
+          ln -s ${env}/bin $out/bin
+        fi
+
+        # Create docs/ with subdirs per riglet
+        mkdir -p $out/docs
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (rigletName: rigletDocs: ''
+            ln -s ${rigletDocs} $out/docs/${rigletName}
+          '') docs
+        )}
+      '';
     };
 in
 {

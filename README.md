@@ -42,6 +42,9 @@ rig = rigup.lib.buildRig {
 };
 # rig.env = combined buildEnv of all riglet tools
 # rig.docs.<riglet> = per-riglet documentation derivations
+# rig.home = complete agent directory:
+#   - bin/ -> all tools
+#   - docs/<riglet>/ -> per-riglet documentation
 ```
 
 **Writing riglet docs:**

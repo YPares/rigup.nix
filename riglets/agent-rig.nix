@@ -31,8 +31,13 @@
       ### rigup
       Nix library and CLI tool:
       - `buildRig` function evaluates riglet modules with `lib/rigletSchema.nix` base
-      - Returns `{ env = ...; docs = { <riglet> = ...; }; }`
+      - Returns `{ env = ...; docs = { <riglet> = ...; }; home = ...; }`
       - CLI provides convenient access to rig outputs (future)
+
+      **buildRig outputs:**
+      - `env` - Combined tools as buildEnv (bin/, share/, etc.)
+      - `docs.<riglet>` - Per-riglet documentation derivations
+      - `home` - Complete agent directory: bin/ + docs/<riglet>/
 
       ## Riglet Structure
 
@@ -117,14 +122,36 @@
             };
             # Export combined tools as default package
             packages.$${system}.default = rigs.$${system}.default.env;
-            # Access docs: rigs.<system>.default.docs.<riglet-name>
+            # Or export complete home as default:
+            # packages.$${system}.default = rigs.$${system}.default.home;
+
+            # Available outputs:
+            # - rigs.<system>.default.env - Tools only
+            # - rigs.<system>.default.docs.<riglet> - Per-riglet docs
+            # - rigs.<system>.default.home - Complete environment (bin/ + docs/)
           };
       }
       ```
 
       ## Using a Rig
 
-      **Access the combined tools:**
+      **Complete agent environment (recommended):**
+      ```bash
+      # Build complete home directory with tools + docs
+      nix build .#rigs.<system>.default.home
+
+      # Use the tools
+      ./result/bin/jj --version
+
+      # Read documentation
+      cat ./result/docs/jj-basics/SKILL.md
+      ls ./result/docs/
+
+      # Add to PATH
+      export PATH="$(nix build .#rigs.<system>.default.home --no-link --print-out-paths)/bin:$PATH"
+      ```
+
+      **Access tools only:**
       ```bash
       # Build and enter shell with all rig tools
       nix develop .#rigs.<system>.default.env
