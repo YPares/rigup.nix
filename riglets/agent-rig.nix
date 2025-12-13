@@ -62,12 +62,12 @@
       Riglets can reference each other's options via `config`:
 
       ```nix
-      # jj-basics defines user.name
-      options.user.name = lib.mkOption { ... };
+      # jj-basics defines agent.user.name
+      options.agent.user.name = lib.mkOption { ... };
 
       # typst-reporter uses it
       config.riglets.typst-reporter.docs =
-        # ... template using config.user.name
+        # ... template using config.agent.user.name
       ```
 
       ## Using Rigs in Projects
@@ -87,8 +87,8 @@
                 rigup.riglets.jj-basics
                 rigup.riglets.typst-reporter
                 {
-                  user.name = "Alice";
-                  user.email = "alice@fake.com";
+                  agent.user.name = "Alice";
+                  agent.user.email = "alice@fake.com";
                   typst.template = "academic";
                 }
               ];

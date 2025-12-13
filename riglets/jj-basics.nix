@@ -5,18 +5,18 @@
   ...
 }:
 {
-  # Define shared user options at top level
-  options.user = {
+  # Define shared options at top level
+  options.agent.user = {
     name = lib.mkOption {
       type = lib.types.str;
-      example = "Alice Developer";
-      description = "User's full name for version control and documentation";
+      example = "AI-Agent";
+      description = "AI Agent's username for version control and documentation";
     };
 
     email = lib.mkOption {
       type = lib.types.str;
-      example = "alice@example.com";
-      description = "User's email address (can be fake for agent use)";
+      example = "foo@bar.qux";
+      description = "AI Agent's email address (can be fake)";
     };
   };
 
@@ -28,7 +28,7 @@
 
       ## Quick Reference
 
-      Configured for: **${config.user.name}** <${config.user.email}>
+      Configured for: **${config.agent.user.name}** <${config.agent.user.email}>
 
       ### Essential Commands
 
@@ -59,8 +59,8 @@
 
       ```toml
       [user]
-      name = "${config.user.name}"
-      email = "${config.user.email}"
+      name = "${config.agent.user.name}"
+      email = "${config.agent.user.email}"
       ```
 
       ### Workflow Tips
@@ -88,8 +88,6 @@
       # Make edits
       jj new  # Return to tip
       ```
-
-      For more advanced workflows, see the full `working-with-jj` skill.
     '';
   };
 }

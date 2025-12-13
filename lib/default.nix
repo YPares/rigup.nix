@@ -1,3 +1,4 @@
+{ ... }:
 {
   # Evaluate a rig from a set of riglet modules
   # Returns an attrset with:

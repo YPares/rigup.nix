@@ -26,23 +26,18 @@
     docs = pkgs.writeTextDir "SKILL.md" ''
       # Typst Report Generation
 
-      ## Configuration
-
-      - **Author**: ${config.user.name}
-      - **Template**: ${config.typst.template}
-
       ## Quick Start
 
       Create a new report:
 
       ```bash
       cat > report.typ <<'EOF'
-      #set document(author: "${config.user.name}")
+      #set document(author: "${config.agent.user.name}")
       #set page(numbering: "1")
 
       = My Report
 
-      _Author: ${config.user.name}_
+      By ${config.agent.user.name} (_${config.agent.user.email}_)
 
       == Introduction
 
@@ -106,16 +101,6 @@
         [Result], [42]
       )
       ```
-
-      ## Converting to Other Formats
-
-      ```bash
-      # Typst to PDF
-      typst compile report.typ report.pdf
-      # Then use your PDF viewer
-      ```
-
-      Your report is now tracked with author **${config.user.name}**.
     '';
   };
 }
