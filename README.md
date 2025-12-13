@@ -58,11 +58,11 @@ cat ./result/docs/jj-basics/SKILL.md
 
 ## Features
 
-- ✅ **Type-checked metadata** - Nix validates riglet structure
-- ✅ **Nested documentation** - Skills-style SKILL.md + references/
-- ✅ **Declarative composition** - Module system for riglet interaction
-- ✅ **Auto-generated manifests** - RIG.md lists all capabilities
-- ✅ **Reproducible** - Nix ensures consistent tool versions
+- **Type-checked metadata:** Nix validates riglet structure
+- **Nested documentation:** Skills-style SKILL.md + references/
+- **Declarative composition:** Module system for riglet interaction
+- **Auto-generated manifests:** RIG.md lists all capabilities
+- **Reproducible:** Nix ensures consistent tool versions
 
 ## Architecture
 
@@ -78,23 +78,10 @@ rigup.nix/
 └── flake.nix            # Exposes riglets & example rigs
 ```
 
-## Documentation
-
-**For AI agents:** Read `riglets/agent-rig.nix` - complete guide to using and creating riglets
-
-**For developers:** This README + explore the example riglets
-
-## Design Philosophy
-
-rigup evolved from [agent-skills](https://github.com/YPares/agent-skills), combining:
-- **SKILL.md pattern** - Structured knowledge for agents
-- **Nix modules** - Declarative composition and type safety
-- **Tool packaging** - Dependencies travel with documentation
-
 ## TODO
 
 - [ ] CLI (`rigup`) for convenient rig access
-- [ ] minijinja-based templating for dynamic docs
+- [ ] minijinja-based templating for easy modular docs that adapt based on the rig's config
 - [ ] More example riglets
 
 ## License
