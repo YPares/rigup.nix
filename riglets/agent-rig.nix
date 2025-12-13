@@ -26,15 +26,16 @@
             - **Configuration**: Options that adapt behavior to project context
 
             ### Rig
-            A project's `.rig/` directory containing:
-            - `flake.nix` or `rigup.yaml` - declares which riglets are active
-            - `profile/` - Nix profile with installed tools (gitignored)
+            A project's flake.nix that declares which riglets are active:
+            - Uses `buildRig` to compose riglet modules
+            - Builds combined tool environment declaratively
+            - Exposes riglet documentation
 
             ### rigup
-            CLI tool that:
-            - Reads riglet declarations
-            - Ensures tools are installed in isolated profile
-            - Outputs riglet documentation to agents
+            Nix library and CLI tool:
+            - `buildRig` function evaluates riglet modules
+            - Returns combined tools and per-riglet docs
+            - CLI provides convenient access to rig outputs
 
             ## Riglet Structure
 
@@ -74,12 +75,42 @@
               # ... template using config.user.name
             ```
            
+            ## Using Rigs in Projects
+
+            In your project's flake.nix:
+
+            ```nix
+            {
+              inputs.rigup.url = "github:YPares/rigup.nix";
+
+              outputs = { rigup, nixpkgs, ... }:
+                let
+                  pkgs = nixpkgs.legacyPackages.x86_64-linux;
+                  rig = rigup.lib.buildRig {
+                    inherit pkgs;
+                    modules = [
+                      rigup.riglets.jj-basics
+                      rigup.riglets.typst-reporter
+                      {
+                        user.name = "Alice";
+                        user.email = "alice@fake.com";
+                        riglets.typst-reporter.template = "academic";
+                      }
+                    ];
+                  };
+                in {
+                  packages.x86_64-linux.default = rig.tools;
+                  # Access docs: rig.docs.jj-basics, etc.
+                };
+            }
+            ```
+
             ## Creating New Riglets
 
-            1. Create `riglets/my-riglet.nix`
-            2. Define options and config
+            1. Create `riglets/my-riglet.nix` in rigup.nix repo
+            2. Define options and config as modules
             3. Add to flake's riglets output
-            4. Test with `rigup read my-riglet`
+            4. Test by importing in a project rig
 
             ## Design Principles
 

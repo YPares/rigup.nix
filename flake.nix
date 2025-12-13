@@ -16,7 +16,7 @@
     in
     inputs.blueprint { inherit inputs; }
     // {
-      # Expose riglet modules per system
+      # Expose riglet modules
       riglets = {
         agent-rig = import ./riglets/agent-rig.nix;
         jj-basics = import ./riglets/jj-basics.nix;
