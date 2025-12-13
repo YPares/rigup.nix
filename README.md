@@ -44,6 +44,30 @@ rig = rigup.lib.buildRig {
 # rig.docs.<riglet> = per-riglet documentation derivations
 ```
 
+**Writing riglet docs:**
+
+```nix
+{ config, pkgs, lib, riglib, ... }: {
+  config.riglets.my-riglet = {
+    tools = [ pkgs.foo ];
+
+    # Simple single-file docs
+    docs = riglib.writeDocsTree {
+      files.SKILL = '' ... '';
+    };
+
+    # Or with nested references/ directory (Skills pattern)
+    docs = riglib.writeDocsTree {
+      files = {
+        SKILL = '' ... main documentation ... '';
+        references.advanced = '' ... deep dive ... '';
+        references.troubleshooting = '' ... common issues ... '';
+      };
+    };
+  };
+}
+```
+
 ## Key Design Decisions
 
 1. **Any flake can declare new riglets** - projects packaging tools via a `flake.nix` can declare alongside them riglets based on those tools, by declaring several `riglets.<riglet-name>` in their `outputs`

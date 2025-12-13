@@ -36,10 +36,10 @@
 
       ## Riglet Structure
 
-      Riglets are Nix modules:
+      Riglets are Nix modules with access to `riglib` helpers:
 
       ```nix
-      { config, pkgs, lib, ... }: {
+      { config, pkgs, lib, riglib, ... }: {
         # Riglet-specific options (optional)
         options.myRiglet = {
           myOption = lib.mkOption {
@@ -51,10 +51,29 @@
         # Riglet definition
         config.riglets.my-riglet = {
           tools = [ pkgs.tool1 pkgs.tool2 ];
-          docs = pkgs.writeTextDir "SKILL.md" "...";
+
+          # Simple single-file docs
+          docs = riglib.writeDocsTree {
+            files.SKILL = "...";
+          };
+
+          # Or nested structure (Skills pattern: SKILL.md + references/*)
+          docs = riglib.writeDocsTree {
+            files = {
+              SKILL = "...";
+              references.advanced = "...";
+              references.troubleshooting = "...";
+            };
+          };
         };
       }
       ```
+
+      **riglib.writeDocsTree** converts nested attrsets to directory trees:
+      - `files.SKILL` → `SKILL.md`
+      - `files.references.foo` → `references/foo.md`
+      - Extension defaults to `.md`, customizable via `ext` parameter
+      - `pkgs` is automatically available (no need to pass it)
 
       ## Cross-Riglet Interaction
 
