@@ -1,28 +1,23 @@
 { config, pkgs, lib, ... }:
 {
-  options.riglets.typst-reporter = lib.mkOption {
-    type = lib.types.submodule {
-      options = {
-        template = lib.mkOption {
-          type = lib.types.enum [ "academic" "technical" "simple" ];
-          default = "simple";
-          description = "Template style for generated reports";
-        };
+  options.typst = {
+    template = lib.mkOption {
+      type = lib.types.enum [ "academic" "technical" "simple" ];
+      default = "simple";
+      description = "Template style for generated reports";
+    };
+  };
 
-        tools = lib.mkOption {
-          type = lib.types.listOf lib.types.package;
-          default = [ pkgs.typst pkgs.pandoc ];
-        };
+  config.riglets.typst-reporter = {
+    tools = [ pkgs.typst pkgs.pandoc ];
 
-        docs = lib.mkOption {
-          type = lib.types.package;
-          default = pkgs.writeTextDir "SKILL.md" ''
+    docs = pkgs.writeTextDir "SKILL.md" ''
             # Typst Report Generation
 
             ## Configuration
 
             - **Author**: ${config.user.name}
-            - **Template**: ${config.riglets.typst-reporter.template}
+            - **Template**: ${config.typst.template}
 
             ## Quick Start
 
@@ -39,7 +34,7 @@
 
             == Introduction
 
-            This is a ${config.riglets.typst-reporter.template} report.
+            This is a ${config.typst.template} report.
 
             == Findings
 
@@ -55,21 +50,21 @@
 
             ## Template Styles
 
-            ${lib.optionalString (config.riglets.typst-reporter.template == "academic") ''
+            ${lib.optionalString (config.typst.template == "academic") ''
             **Academic Template**:
             - Includes abstract
             - Bibliography support
             - Academic formatting (double-spaced, numbered sections)
             ''}
 
-            ${lib.optionalString (config.riglets.typst-reporter.template == "technical") ''
+            ${lib.optionalString (config.typst.template == "technical") ''
             **Technical Template**:
             - Code highlighting
             - Diagram support
             - API documentation structure
             ''}
 
-            ${lib.optionalString (config.riglets.typst-reporter.template == "simple") ''
+            ${lib.optionalString (config.typst.template == "simple") ''
             **Simple Template**:
             - Clean, minimal design
             - Quick turnaround
@@ -109,13 +104,6 @@
             ```
 
             Your report is now tracked with author **${config.user.name}**.
-          '';
-        };
-      };
-    };
-  };
-
-  config.riglets.typst-reporter = {
-    tools = [ pkgs.typst pkgs.pandoc ];
+    '';
   };
 }

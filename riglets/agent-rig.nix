@@ -1,16 +1,9 @@
 { config, pkgs, lib, ... }:
 {
-  options.riglets.agent-rig = lib.mkOption {
-    type = lib.types.submodule {
-      options = {
-        tools = lib.mkOption {
-          type = lib.types.listOf lib.types.package;
-          default = [];
-        };
+  config.riglets.agent-rig = {
+    tools = [];
 
-        docs = lib.mkOption {
-          type = lib.types.package;
-          default = pkgs.writeTextDir "SKILL.md" ''
+    docs = pkgs.writeTextDir "SKILL.md" ''
             # Agent Rig System
 
             ## Overview
@@ -43,18 +36,15 @@
 
             ```nix
             { config, pkgs, lib, ... }: {
-              options.riglets.my-riglet = lib.mkOption {
-                type = lib.types.submodule {
-                  options = {
-                    # Riglet-specific options
-                    myOption = lib.mkOption {
-                      type = lib.types.str;
-                      description = "Example option";
-                    };
-                  };
+              # Riglet-specific options (optional)
+              options.myRiglet = {
+                myOption = lib.mkOption {
+                  type = lib.types.str;
+                  description = "Example option";
                 };
               };
 
+              # Riglet definition
               config.riglets.my-riglet = {
                 tools = [ pkgs.tool1 pkgs.tool2 ];
                 docs = pkgs.writeTextDir "SKILL.md" "...";
@@ -94,7 +84,7 @@
                       {
                         user.name = "Alice";
                         user.email = "alice@fake.com";
-                        riglets.typst-reporter.template = "academic";
+                        typst.template = "academic";
                       }
                     ];
                   };
@@ -118,14 +108,6 @@
             - **Declarative**: Configuration via Nix module options
             - **Composable**: Riglets build on each other
             - **Reproducible**: Nix ensures consistent tool versions
-          '';
-        };
-      };
-    };
-  };
-
-  config.riglets.agent-rig = {
-    # No tools needed for meta-documentation
-    tools = [];
+    '';
   };
 }

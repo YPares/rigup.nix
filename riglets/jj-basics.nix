@@ -15,17 +15,10 @@
     };
   };
 
-  options.riglets.jj-basics = lib.mkOption {
-    type = lib.types.submodule {
-      options = {
-        tools = lib.mkOption {
-          type = lib.types.listOf lib.types.package;
-          default = [ pkgs.jujutsu ];
-        };
+  config.riglets.jj-basics = {
+    tools = [ pkgs.jujutsu ];
 
-        docs = lib.mkOption {
-          type = lib.types.package;
-          default = pkgs.writeTextDir "SKILL.md" ''
+    docs = pkgs.writeTextDir "SKILL.md" ''
             # JJ Basics
 
             ## Quick Reference
@@ -92,13 +85,6 @@
             ```
 
             For more advanced workflows, see the full `working-with-jj` skill.
-          '';
-        };
-      };
-    };
-  };
-
-  config.riglets.jj-basics = {
-    tools = [ pkgs.jujutsu ];
+    '';
   };
 }
