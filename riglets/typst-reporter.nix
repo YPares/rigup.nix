@@ -79,12 +79,12 @@
             ## Common Patterns
 
             **Adding code blocks:**
-            ```typst
+            ````typst
             ```python
             def hello():
                 print("world")
-            ````
             ```
+            ````
 
             **Including images:**
             ```typst
@@ -102,24 +102,10 @@
 
             ## Converting to Other Formats
 
-            Use pandoc to convert:
-
             ```bash
-            # Typst to Markdown
-            pandoc report.typ -o report.md
-
-            # Typst to HTML
+            # Typst to PDF
             typst compile report.typ report.pdf
             # Then use your PDF viewer
-            ```
-
-            ## Integration with Version Control
-
-            After generating your report:
-
-            ```bash
-            jj describe -m "Add research report on X"
-            jj new
             ```
 
             Your report is now tracked with author **${config.user.name}**.

@@ -1,11 +1,11 @@
-{ lib, pkgs, ... }:
 {
   # Evaluate a rig from a set of riglet modules
   # Returns an attrset with:
   #   - tools: combined buildEnv of all tools
   #   - docs: attrset of riglet name -> docs derivation
-  evalRig = { modules, system ? pkgs.system }:
+  buildRig = { modules, pkgs, system ? pkgs.system }:
     let
+      lib = pkgs.lib;
       # Evaluate the module system with all riglet modules
       evaluated = lib.evalModules {
         modules = modules ++ [

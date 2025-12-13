@@ -73,20 +73,7 @@
             config.riglets.typst-reporter.docs =
               # ... template using config.user.name
             ```
-
-            ## Templating
-
-            Use minijinja for dynamic documentation:
-
-            ```nix
-            docs = pkgs.runCommand "docs" {
-              buildInputs = [ pkgs.minijinja ];
-            } ''
-              echo '${builtins.toJSON config}' | \
-                minijinja ''${./template.md} > $out/SKILL.md
-            '';
-            ```
-
+           
             ## Creating New Riglets
 
             1. Create `riglets/my-riglet.nix`
