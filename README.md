@@ -149,7 +149,7 @@ nix build .#default-rig -o my-default-rig
 The `modules` listed for each rig in your `rigup.toml` **must** match your flake inputs and what exists in your project:
 
 - directly refer to everything under your project's `riglets/` folder as `"self.riglets.xxx"`. For instance, to use `$PROJECT_ROOT/riglets/foo.nix`, use `"self.riglets.foo"`;
-- use `"<other>.riglets.xxx"` for external riglets from flakes declared in your `flakes.nix` as `inputs.<other>.url = "..."`.
+- use `"<other>.riglets.xxx"` for external riglets from flakes declared in your `flake.nix` as `inputs.<other>.url = "..."`.
 
 #### Advanced approach
 
@@ -182,6 +182,9 @@ Build rigs directly in Nix when a more complex configuration is needed:
 }
 ```
 
+The main reason to use a TOML file instead of listing everything in your `flake.nix` is not just because TOML is more well-known than Nix syntax.
+It's mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below).
+
 ## Features
 
 - **Data-driven config:** `rigup.toml` for CLI-manageable rigs
@@ -208,9 +211,14 @@ rigup.nix/
 
 ## TODO
 
-- [ ] CLI (`rigup`) for convenient rig access
-- [ ] minijinja-based templating for easy modular docs that adapt based on the rig's config
-- [ ] More example riglets
+- CLI (`rigup`) for convenient rig access and manipulation of the `rigup.toml` file, via an interface like:
+  - `rigup add --rig <rig> --input <flake-url> <riglet>`
+  - `rigup config list --rig <rig>`
+  - `rigup config set --rig <rig> foo.bar.qux <value>`
+  - `rigup start --rig <rig> claude`
+  - etc.
+- [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
+- More example riglets
 
 ## Related Projects
 
