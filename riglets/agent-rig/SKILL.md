@@ -7,28 +7,32 @@ A **rig** is a project-scoped collection of riglets that provide knowledge and t
 ## Core Concepts
 
 ### Riglet
-A riglet is executable knowledge packaged with its dependencies:
+A riglet is executable knowledge packaged with its dependencies, as a Nix module:
+- **Metadata**: When should this riglet be used, is it production-ready or experimental, etc.
 - **Knowledge**: SKILL.md documenting processes and recipes
 - **Tools**: Nix packages needed to execute those recipes
-- **Configuration**: Options that adapt behavior to project context
+- **Configuration**: Settings to adapt the behavior to project context
 
 ### Rig
-A project's flake.nix that declares which riglets are active:
+A project-level structure that declares which riglets are active:
 - Uses `buildRig` to compose riglet modules
 - Builds combined tool environment declaratively
 - Exposes riglet documentation
 
 ### rigup
-Nix library and CLI tool:
-- `buildRig` function evaluates riglet modules with `lib/rigletSchema.nix` base
-- Returns `{ env = ...; docs = { <riglet> = ...; }; home = ...; }`
-- CLI provides convenient access to rig outputs (future)
+A Nix library and future CLI tool: http://github.com/YPares/rigup.nix
+
+The lib contains:
+- `buildRig` function: evaluates riglet modules and ensures they comply with the riglet schema used by rigup. Returns the rig as an attrset: `{ env = ...; meta = { <riglet> = ... }; docs = { <riglet> = ...; }; home = ...; }`
+- `resolveProject` function: inspects the `riglets/` folder of a project and its `rigup.toml` to find out which riglets and rigs it defines. It calls `buildRig` for each rig in the `rigup.toml`
 
 **buildRig outputs:**
-- `env` - Combined tools as buildEnv (bin/, share/, etc.)
+- `env` - Tools combined through nixpkgs `buildEnv` function (bin/, share/, etc.)
+- `meta.<riglet>` - Per-riglet metadata (discovery info structured as a Nix attrset)
 - `docs.<riglet>` - Per-riglet documentation derivations
-- `meta.<riglet>` - Per-riglet metadata (structured discovery info)
 - `home` - Complete agent directory: RIG.md + bin/ + docs/ + .config/
+
+CLI will provide convenient rig edition & access to rig outputs (e.g. starting a shell with all env vars needed set to operate the rig)
 
 ## Riglet Structure
 
@@ -50,27 +54,26 @@ Riglets are Nix modules with access to `riglib` helpers:
 
     # Metadata for discovery and context
     meta = {
-      name = "My Riglet";
+      name = "My Riglet"; # Human readable name
       description = "What this riglet provides";
       whenToUse = [
-        "Situation 1"
+        "Situation 1" # When the AI Agent should use this riglet's recipes and tools
         "Situation 2"
       ];
       keywords = [ "keyword1" "keyword2" ];
-      status = "experimental";  # stable | experimental | draft | deprecated | example
+      status = "experimental";  # stable | experimental (default) | draft | deprecated | example
       version = "x.y.z";  # Semantic version of riglet's interface (configuration + provided methods, procedures, docs...)
+      broken = false; # Optional. false by default
     };
 
-    # Simple single-file docs
+    # Documentation file(s) (Skills pattern: SKILL.md + references/*.md)
     docs = riglib.writeFileTree {
-      "SKILL.md" = "...";
-    };
-
-    # Or nested structure (Skills pattern: SKILL.md + references/*)
-    docs = riglib.writeFileTree {
-      "SKILL.md" = "...";
-      references."advanced.md" = "...";
-      references."troubleshooting.md" = "...";
+      "SKILL.md" = "...";  # SKILL.md MUST BE PRESENT
+      references = {       # Optional. To add deeper knowledge about more specific topics, less common recipes, etc.
+                           # SKILL.md should mention when each reference becomes relevant
+        "advanced.md" = "...";
+        "troubleshooting.md" = "...";
+      };
     };
 
     # Configuration files (optional)
@@ -85,42 +88,44 @@ Riglets are Nix modules with access to `riglib` helpers:
 }
 ```
 
-**Metadata structure:**
-- `name` - Human-readable riglet name
-- `description` - Brief summary of what it provides
-- `whenToUse` - List of situations when this riglet is relevant
-- `keywords` - Search/filter terms
-- `status` - Maturity level: `"stable"` | `"experimental"` (default) | `"draft"` | `"deprecated"` | `"example"`
-  - `stable` - Production-ready, well-tested riglet
-  - `experimental` - Usable but may change, not fully battle-tested
-  - `draft` - Work in progress, incomplete
-  - `deprecated` - No longer maintained, use alternatives
-  - `example` - Pedagogical riglet for demonstrating patterns
-- `version` - Semantic version (default: `"0.1.0"`) of riglet's interface/capabilities
-  - Use semver format: `MAJOR.MINOR.PATCH` (e.g., `"1.2.3"`)
-  - Increment MAJOR for breaking changes (renamed options, removed features)
-  - Increment MINOR for backwards-compatible additions (new options, new docs sections)
-  - Increment PATCH for backwards-compatible fixes (doc corrections, bug fixes)
-- `broken` - Boolean flag (default: `false`) indicating riglet is currently non-functional
-  - Like Nix derivations' `meta.broken`, marks temporary "needs fixing" state
-  - Takes precedence over status in warnings
+**The full exact Nix module schema of a riglet is defined here:** %%RIGLET_SCHEMA%%
+
+**About meta.status:**
+`status` - Maturity level:
+- `stable` - Production-ready, well-tested riglet
+- `experimental` - Usable but may change, not fully battle-tested
+- `draft` - Work in progress, incomplete
+- `deprecated` - No longer maintained, use alternatives
+- `example` - Pedagogical riglet for demonstrating patterns
+
+**About meta.version:**
+`version` - Semantic version (default: `"0.1.0"`) of riglet's interface/capabilities:
+- Use semver format: `MAJOR.MINOR.PATCH` (e.g., `"1.2.3"`)
+- Increment MAJOR for breaking changes (renamed options, removed features)
+- Increment MINOR for backwards-compatible additions (new options, new docs sections)
+- Increment PATCH for backwards-compatible fixes (doc corrections, bug fixes)
+
+**About meta.broken:**
+`broken` - Boolean flag (default: `false`) indicating riglet is currently non-functional:
+- Like Nix derivations' `meta.broken`, marks temporary "needs fixing" state
+- Takes precedence over status in warnings
 
 **riglib.writeFileTree** converts nested attrsets to directory trees:
-- Takes a single attrset argument (pkgs is already bound)
+- Takes a single attrset argument
 - `"SKILL.md"` → `SKILL.md`
 - `references."foo.md"` → `references/foo.md`
 - Extensions must be included in attribute names
 - Leaf values can be:
   - Strings (inline content)
   - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
-  - Derivations (e.g., `pkgs.writeText` or `pkgs.formats.toml`)
+  - Derivations (e.g., `pkgs.writeText` or `(pkgs.formats.<format> {}).generate`)
 
 **config-files** provides configuration for tools:
 - Uses `riglib.writeFileTree` to create `.config/` directory structure
 - Follows XDG Base Directory specification
-- All riglets' config-files are merged into `home/.config/`
+- All riglets' config-files are merged into `.config/`
 - Example: `jj."config.toml"` → `.config/jj/config.toml`
-- Can use `pkgs.formats.toml`, `.json`, `.yaml` for typed configs
+- Can use `pkgs.formats.toml`, `.json`, `.yaml` to generate config files from Nix data
 - Can use plain strings for shell scripts or plain text configs
 
 ## Cross-Riglet Interaction
@@ -132,15 +137,16 @@ Riglets can reference each other's options via `config`:
 options.agent.user.name = lib.mkOption { ... };
 
 # typst-reporter uses it
-config.riglets.typst-reporter.docs =
+config.riglets.typst-reporter.docs = ''
   # ... template using config.agent.user.name
+'';
 ```
 
 ## Defining Rigs in Projects
 
-**Recommended: Use rigup.toml for CLI-manageable rigs**
+### Recommended: Use rigup.toml
 
-Create `rigup.toml` in your project root:
+Add a `rigup.toml` file to your project root:
 
 ```toml
 [rigs.default.riglets]
@@ -161,10 +167,10 @@ Then use `rigup.lib.resolveProject` in your flake.nix:
   outputs = { self, rigup, ... }@inputs:
     let system = "x86_64-linux";
     in
-    # Calling `rigup` flake directly as a function is equivalent to calling
-    # `rigup.lib.resolveProject`, as rigup defines the __functor attr
+    # Using the rigup flake directly as a function is equivalent to calling
+    # `rigup.lib.resolveProject`, as `rigup` defines the __functor attr
     rigup { inherit inputs; } //
-    # We can declare a few output packages for more direct output to the rig
+    # We can declare a few output packages to give a more direct access to the rig
     {
       # A package that exposes just the tools of the rig
       packages.${system}.default-rig-tools = self.rigs.${system}.default.env;
@@ -174,10 +180,16 @@ Then use `rigup.lib.resolveProject` in your flake.nix:
 }
 ```
 
-This auto-discovers riglets from `riglets/` and builds rigs from TOML config.
-Future CLI tools can modify `rigup.toml` without parsing Nix code.
+`resolveProject` auto-discovers riglets from `riglets/` and builds rigs from `rigup.toml`.
 
-**Advanced: directly use buildRig for complex config**
+**`resolveProject` outputs:**
+- `riglets.<riglet>` - Auto-discovered riglet modules
+- `rigs.<system>.<rig>.env` - Tools only
+- `rigs.<system>.<rig>.docs.<riglet>` - Per-riglet docs
+- `rigs.<system>.<rig>.meta.<riglet>` - Per-riglet metadata
+- `rigs.<system>.<rig>.home` - Complete environment (RIG.md + bin/ + docs/ + .config/)
+
+### Advanced: Directly use buildRig for complex config
 
 For config not representable in TOML:
 
@@ -206,13 +218,6 @@ For config not representable in TOML:
     };
 }
 ```
-
-**Available outputs:**
-- `riglets.<riglet>` - Auto-discovered riglet modules
-- `rigs.<system>.<rig>.env` - Tools only
-- `rigs.<system>.<rig>.docs.<riglet>` - Per-riglet docs
-- `rigs.<system>.<rig>.meta.<riglet>` - Per-riglet metadata
-- `rigs.<system>.<rig>.home` - Complete environment (bin/ + docs/ + .config/)
 
 ## Using a Rig
 
@@ -272,22 +277,24 @@ nix eval .#rigs.<system>.default.meta --json | jq 'to_entries | map({riglet: .ke
 nix build .#rigs.<system>.default.docs.<riglet> --no-link --print-out-paths | xargs -I {} cat {}/SKILL.md
 
 # Or use future rigup CLI (when implemented)
-rigup docs jj-basics
+rigup docs <riglet>
 ```
 
 ## Creating New Riglets
 
-In some flake:
+In some project:
 
-1. Create `riglets/my-riglet.nix` (or `riglets/my-riglet/default.nix` for riglets with multiple supporting files)
-2. Define options and config as modules
-3. Add to flake's riglets output (auto-discovered from `riglets/`)
+1. Create the `riglets/my-riglet.nix` (or `riglets/my-riglet/default.nix` for riglets with multiple supporting files) Nix module
+2. Add the needed tools, documentation, metadata
+3. Define options (schema) and config (values) in this module
+4. Ensure the project has a top-level `flake.nix` that uses `resolveProject` as shown above,
+   so all the riglets will be exposed by the flake
 
-## Using them
+## Using Riglets
 
-In the flake defining the riglets OR in another one importing it:
+In the project defining the riglets OR in another one importing it as an input flake:
 
-1. Use the riglets in the flake's `rigs.<system>.<rig-name>` outputs
+1. Use the riglets in the `rigup.toml` to build rigs
 2. Set an output package to export the whole rig's `home` derivation:
    `packages.<system>.<pkg> = self.rigs.<system>.<rig-name>.home`
 
