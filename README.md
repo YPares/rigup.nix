@@ -199,6 +199,9 @@ some-flake = ["foo", "bar"]
 means that your `flake.nix` has a `some-flake` input that exposes the `riglets.foo` and `riglets.bar` outputs.
 `self` is just a special case of that, as every flake has an implicit `self` input which is the flake itself.
 
+**NOTE:** The main reason to use a TOML file instead of listing everything in your `flake.nix` is not just because TOML is more well-known than Nix syntax.
+It's mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below).
+
 #### Advanced approach
 
 Build rigs directly in Nix when a more complex configuration is needed:
@@ -229,9 +232,6 @@ Build rigs directly in Nix when a more complex configuration is needed:
     };
 }
 ```
-
-The main reason to use a TOML file instead of listing everything in your `flake.nix` is not just because TOML is more well-known than Nix syntax.
-It's mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below).
 
 ## Features
 
