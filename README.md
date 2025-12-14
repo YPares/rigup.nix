@@ -259,7 +259,8 @@ rigup.nix/
 
 ## TODO
 
-- CLI (`rigup`) for convenient rig access and manipulation of the `rigup.toml` file, via an interface like:
+- Add `checks` to riglets: automated and/or through-agent testing that a riglet is working as intended
+- `rigup` CLI tool for convenient rig access and manipulation of the `rigup.toml` file, via an interface like:
   - `rigup add --rig <rig> --input <flake-url> <riglet>`
   - `rigup config list --rig <rig>`
   - `rigup config set --rig <rig> foo.bar.qux <value>`
