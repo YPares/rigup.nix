@@ -18,10 +18,10 @@
     in
     blueprint { inherit inputs; }
     # Expose the example riglets
-    // rigupLib.resolveRigs { inherit inputs; }
+    // rigupLib.resolveProject { inherit inputs; }
     // {
       # Makes the flake itself directly usable as a function
-      __functor = self: self.lib.resolveRigs;
+      __functor = self: self.lib.resolveProject;
 
       # Templates for bootstrapping new projects
       templates.default = {

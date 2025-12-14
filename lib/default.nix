@@ -123,10 +123,10 @@ let
       '';
     };
 
-  resolveRigs = import ./resolveRigs.nix { inherit rigupLib; };
+  resolveProject = import ./resolveProject.nix { inherit rigupLib; };
 
   rigupLib = {
-    inherit writeFileTree buildRig resolveRigs;
+    inherit writeFileTree buildRig resolveProject;
   };
 in
 rigupLib

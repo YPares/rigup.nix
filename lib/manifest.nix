@@ -14,7 +14,7 @@
       text = ''
         # Your Rig
 
-        Hello. The rig you will be using today is _${name}_.
+        Hello. The rig you will be using today is called _${name}_.
         Your rig provides technical and operational documentation and the tools needed to execute it.
 
         A _riglet_ (similar to an Agent Skill) contains instructions about related operations, methods, commands etc. that are handy when working on a project.

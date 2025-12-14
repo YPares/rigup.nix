@@ -152,7 +152,7 @@ name = "Alice"
 email = "alice@example.com"
 ```
 
-Then use `rigup.lib.resolveRigs` in your flake.nix:
+Then use `rigup.lib.resolveProject` in your flake.nix:
 
 ```nix
 {
@@ -162,7 +162,7 @@ Then use `rigup.lib.resolveRigs` in your flake.nix:
     let system = "x86_64-linux";
     in
     # Calling `rigup` flake directly as a function is equivalent to calling
-    # `rigup.lib.resolveRigs`, as rigup defines the __functor attr
+    # `rigup.lib.resolveProject`, as rigup defines the __functor attr
     rigup { inherit inputs; } //
     # We can declare a few output packages for more direct output to the rig
     {
@@ -187,7 +187,7 @@ For config not representable in TOML:
 
   outputs = { self, rigup, nixpkgs, ... }@inputs:
     let
-      resolved = rigup.lib.resolveRigs { inherit inputs; };
+      resolved = rigup.lib.resolveProject { inherit inputs; };
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
     in

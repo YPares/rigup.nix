@@ -1,7 +1,7 @@
-# Auto-discover riglets and resolve rigs from rigup.toml
+# Auto-discover riglets from riglets/ folder and resolve rigs from rigup.toml
 { rigupLib, ... }:
 
-# Resolve rigs from rigup.toml configuration
+# Resolves complete project structure from rigup.toml configuration
 # Arguments:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
 #   - systems: list of systems to generate rigs for (e.g., ["x86_64-linux"])
