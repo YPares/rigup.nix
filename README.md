@@ -113,7 +113,8 @@ Then add to it a `<riglet-name>.nix` file:
 ```
 
 Just as with regular Agent Skills, the point of separating the docs into several files
-is to allow [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). (I would just have called that "cleaner layout" but apparently there's a fancy term for that which often pops up in discussions about Agent Skills nowadays)
+is to allow [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure).
+When using AI Agents, this is important because [context](https://www.ibm.com/think/topics/context-window) is on a budget, and agents should not have to read [more documentation than they need](https://medium.com/@cdcore/mcp-is-broken-and-anthropic-just-admitted-it-7eeb8ee41933) to complete a task.
 
 ### Creating a Rig
 
@@ -204,7 +205,7 @@ It's mainly because pure data (that can already cover a large set of use cases) 
 - **Data-driven config:** `rigup.toml` for CLI-manageable rigs
 - **Auto-discovery:** Riglets from `riglets/` automatically exposed
 - **Type-checked metadata:** Nix validates riglet structure
-- **Nested documentation:** Skills-style SKILL.md + references/
+- **Lazily readable documentation:** Skills-style SKILL.md + references/
 - **Declarative composition:** Module system for riglet interaction
 - **Auto-generated manifests:** RIG.md lists all capabilities
 - **Reproducible:** Nix ensures consistent tool versions
