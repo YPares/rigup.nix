@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  riglib,
   ...
 }:
 {
@@ -42,84 +43,102 @@
       ];
     };
 
-    docs = pkgs.writeTextDir "SKILL.md" ''
-      # Typst Report Generation
+    config-files = riglib.writeFileTree {
+      typst."template.typ" = ''
+        // Default ${config.typst.template} template for ${config.agent.user.name}
+        #set document(author: "${config.agent.user.name}")
+        #set page(numbering: "1")
 
-      ## Quick Start
+        = Report Title
 
-      Create a new report:
+        By ${config.agent.user.name}
 
-      ```bash
-      cat > report.typ <<'EOF'
-      #set document(author: "${config.agent.user.name}")
-      #set page(numbering: "1")
+        == Section
 
-      = My Report
+        Your content here.
+      '';
+    };
 
-      By ${config.agent.user.name} (_${config.agent.user.email}_)
+    docs = riglib.writeFileTree {
+      "SKILL.md" = ''
+        # Typst Report Generation
 
-      == Introduction
+        ## Quick Start
 
-      This is a ${config.typst.template} report.
+        Create a new report:
 
-      == Findings
+        ```bash
+        cat > report.typ <<'EOF'
+        #set document(author: "${config.agent.user.name}")
+        #set page(numbering: "1")
 
-      Write your findings here.
+        = My Report
 
-      == Conclusion
+        By ${config.agent.user.name} (_${config.agent.user.email}_)
 
-      Summarize your work.
-      EOF
+        == Introduction
 
-      typst compile report.typ
-      ```
+        This is a ${config.typst.template} report.
 
-      ## Template Styles
+        == Findings
 
-      ${lib.optionalString (config.typst.template == "academic") ''
-        **Academic Template**:
-        - Includes abstract
-        - Bibliography support
-        - Academic formatting (double-spaced, numbered sections)
-      ''}
+        Write your findings here.
 
-      ${lib.optionalString (config.typst.template == "technical") ''
-        **Technical Template**:
-        - Code highlighting
-        - Diagram support
-        - API documentation structure
-      ''}
+        == Conclusion
 
-      ${lib.optionalString (config.typst.template == "simple") ''
-        **Simple Template**:
-        - Clean, minimal design
-        - Quick turnaround
-        - Good for short reports and memos
-      ''}
+        Summarize your work.
+        EOF
 
-      ## Common Patterns
+        typst compile report.typ
+        ```
 
-      **Adding code blocks:**
-      ````typst
-      ```python
-      def hello():
-          print("world")
-      ```
-      ````
+        ## Template Styles
 
-      **Including images:**
-      ```typst
-      #image("diagram.png", width: 80%)
-      ```
+        ${lib.optionalString (config.typst.template == "academic") ''
+          **Academic Template**:
+          - Includes abstract
+          - Bibliography support
+          - Academic formatting (double-spaced, numbered sections)
+        ''}
 
-      **Tables:**
-      ```typst
-      #table(
-        columns: (auto, auto),
-        [Name], [Value],
-        [Result], [42]
-      )
-      ```
-    '';
+        ${lib.optionalString (config.typst.template == "technical") ''
+          **Technical Template**:
+          - Code highlighting
+          - Diagram support
+          - API documentation structure
+        ''}
+
+        ${lib.optionalString (config.typst.template == "simple") ''
+          **Simple Template**:
+          - Clean, minimal design
+          - Quick turnaround
+          - Good for short reports and memos
+        ''}
+
+        ## Common Patterns
+
+        **Adding code blocks:**
+        ````typst
+        ```python
+        def hello():
+            print("world")
+        ```
+        ````
+
+        **Including images:**
+        ```typst
+        #image("diagram.png", width: 80%)
+        ```
+
+        **Tables:**
+        ```typst
+          #table(
+            columns: (auto, auto),
+            [Name], [Value],
+            [Result], [42]
+          )
+          ```
+      '';
+    };
   };
 }

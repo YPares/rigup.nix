@@ -21,6 +21,12 @@ in
               type = lib.types.package;
             };
 
+            config-files = lib.mkOption {
+              description = "Configuration files derivation (use riglib.writeFileTree)";
+              default = null;
+              type = lib.types.nullOr lib.types.package;
+            };
+
             meta = lib.mkOption {
               description = "Metadata describing when and how to use this riglet";
               type = lib.types.submodule {

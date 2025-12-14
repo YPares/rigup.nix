@@ -1,14 +1,11 @@
 { ... }:
 let
-  # Convert nested attribute set to directory tree of text files
-  # Usage: writeDocsTree { files = { SKILL = "..."; references.foo = "..."; }; ... }
+  # Convert nested attribute set to directory tree of files
+  # Usage: writeFileTree pkgs { "SKILL.md" = "..."; references."foo.md" = "..."; }
   # Creates: derivation with SKILL.md and references/foo.md
-  writeDocsTree =
-    {
-      pkgs,
-      files, # Nested attrset where leaves are strings
-      ext ? ".md", # Extension to append to leaf paths
-    }:
+  # Leaves can be either strings (file content) or derivations (existing files)
+  writeFileTree =
+    pkgs: tree:
     let
       lib = pkgs.lib;
 
@@ -20,20 +17,28 @@ let
             name: value:
             let
               path = if prefix == "" then name else "${prefix}/${name}";
+              delimiter = "NIXEOF_${builtins.hashString "sha256" path}";
             in
-            if lib.isAttrs value then
+            if lib.isAttrs value && !lib.isDerivation value then
               mkFileCommands path value # Recurse into nested attrs
-            else
+            else if lib.isDerivation value then
+              # Symlink derivation to output path
               ''
-                mkdir -p "$out/$(dirname "${path}${ext}")"
-                cat > "$out/${path}${ext}" <<'EOF'
+                mkdir -p "$out/$(dirname "${path}")"
+                ln -s ${value} "$out/${path}"
+              ''
+            else
+              # Write string content to file
+              ''
+                mkdir -p "$out/$(dirname "${path}")"
+                cat > "$out/${path}" <<'${delimiter}'
                 ${value}
-                EOF
+                ${delimiter}
               ''
           ) attrs
         );
     in
-    pkgs.runCommand "docs" { } (mkFileCommands "" files);
+    pkgs.runCommand "file-tree" { } (mkFileCommands "" tree);
 
   # Evaluate a rig from a set of riglet modules
   # Returns an attrset with:
@@ -52,7 +57,7 @@ let
 
       # Helpers available to riglets, with pkgs already bound
       riglib = {
-        writeDocsTree = args: writeDocsTree (args // { inherit pkgs; });
+        writeFileTree = writeFileTree pkgs;
         # Future helpers can be added here
       };
 
@@ -139,9 +144,20 @@ let
             ln -s ${rigletDocs} $out/docs/${rigletName}
           '') docs
         )}
+
+        # Create .config/ with config files from all riglets
+        mkdir -p $out/.config
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (
+            _: riglet:
+            lib.optionalString (riglet.config-files != null) ''
+              cp -r ${riglet.config-files}/* $out/.config/
+            ''
+          ) evaluated.config.riglets
+        )}
       '';
     };
 in
 {
-  inherit writeDocsTree buildRig;
+  inherit writeFileTree buildRig;
 }
