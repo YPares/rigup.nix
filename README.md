@@ -25,9 +25,24 @@ In short, `rigup` is **Claude Skills + lightweight [home management](https://git
 
 ## Quick Start
 
-This project defines example riglets, and an example rig combining them.
+### Start a New Project
+
+```bash
+# Initialize a new project from our template
+mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
+
+# Build your rig
+nix build
+
+# Explore the rig
+cat result/RIG.md
+```
+
+This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
 
 ### Using a Rig
+
+This project defines example riglets, and an example rig combining them.
 
 ```bash
 # Build a simple but complete agent rig:
