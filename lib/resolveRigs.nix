@@ -16,14 +16,32 @@ let
 
   # Auto-discover all riglets from riglets/ directory
   rigletsDir = inputs.self + "/riglets";
-  rigletFiles = builtins.readDir rigletsDir;
+  rigletEntries = builtins.readDir rigletsDir;
 
-  # Expose all .nix files as riglets
+  # Find .nix files (excluding default.nix in root)
+  nixFileRiglets = builtins.filter (
+    name: builtins.match ".*\\.nix" name != null && name != "default.nix"
+  ) (builtins.attrNames rigletEntries);
+
+  # Find directories containing default.nix
+  dirRiglets = builtins.filter (
+    name:
+    rigletEntries.${name} == "directory" && builtins.pathExists (rigletsDir + "/${name}/default.nix")
+  ) (builtins.attrNames rigletEntries);
+
+  # Combine both types into riglets attrset
   riglets = builtins.listToAttrs (
-    builtins.map (name: {
+    # .nix files: strip extension
+    (builtins.map (name: {
       name = builtins.replaceStrings [ ".nix" ] [ "" ] name;
       value = rigletsDir + "/${name}";
-    }) (builtins.filter (name: builtins.match ".*\\.nix" name != null) (builtins.attrNames rigletFiles))
+    }) nixFileRiglets)
+    ++
+      # directories: use directory name as-is
+      (builtins.map (name: {
+        name = name;
+        value = rigletsDir + "/${name}";
+      }) dirRiglets)
   );
 
   # Resolve a module reference like "self.riglets.foo" or "input.riglets.bar"

@@ -29,7 +29,7 @@
     };
 
     docs = riglib.writeFileTree {
-      "SKILL.md" = ./agent-rig/SKILL.md;
+      "SKILL.md" = ./SKILL.md;
     };
   };
 }

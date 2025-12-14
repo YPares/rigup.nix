@@ -110,7 +110,10 @@ Riglets are Nix modules with access to `riglib` helpers:
 - `"SKILL.md"` → `SKILL.md`
 - `references."foo.md"` → `references/foo.md`
 - Extensions must be included in attribute names
-- Leaf values can be strings (content) or derivations (existing files)
+- Leaf values can be:
+  - Strings (inline content)
+  - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
+  - Derivations (e.g., `pkgs.writeText` or `pkgs.formats.toml`)
 
 **config-files** provides configuration for tools:
 - Uses `riglib.writeFileTree` to create `.config/` directory structure
@@ -278,9 +281,9 @@ rigup docs jj-basics
 
 In some flake:
 
-1. Create `riglets/my-riglet.nix`
+1. Create `riglets/my-riglet.nix` (or `riglets/my-riglet/default.nix` for riglets with multiple supporting files)
 2. Define options and config as modules
-3. Add to flake's riglets output
+3. Add to flake's riglets output (auto-discovered from `riglets/`)
 
 ## Using them
 

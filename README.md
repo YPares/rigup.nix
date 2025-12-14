@@ -48,6 +48,7 @@ cat result/docs/jj-basics/SKILL.md
 Riglets are a simple use case of [Nix modules](https://nix.dev/tutorials/module-system/a-basic-module/).
 
 Concretely, this means a riglet is a `(config, dependencies) -> data` Nix function, where:
+
 - `config` is the final config of the rig which the riglet is part of,
 - `data` is a dictionary-like structure ("attribute set" in Nix lingo) providing nested fields that will _themselves_ contribute to the final aggregated config
 
@@ -115,6 +116,23 @@ Then add to it a `<riglet-name>.nix` file:
 Just as with regular Agent Skills, the point of separating the docs into several files
 is to allow [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure).
 When using AI Agents, this is important because [context](https://www.ibm.com/think/topics/context-window) is on a budget, and agents should not have to read [more documentation than they need](https://medium.com/@cdcore/mcp-is-broken-and-anthropic-just-admitted-it-7eeb8ee41933) to complete a task.
+
+#### Alternative structure
+
+Instead of `riglets/<riglet-name>.nix`, you can define your riglet as `riglets/<riglet-name>/default.nix` to add supporting files next to it:
+
+```
+riglets/
+├── simple-riglet.nix          # Single-file riglet
+└── complex-riglet/            # Directory-based riglet
+    ├── default.nix            # Main riglet definition
+    ├── SKILL.md               # Referenced in default.nix via ./SKILL.md
+    └── references/
+        └── advanced.md        # Referenced in default.nix via ./references/advanced.md
+```
+
+This is useful to break up a riglet into various Nix or raw text files to make it more manageable.
+`rigup` will discover and treat both layouts identically.
 
 ### Creating a Rig
 
