@@ -128,12 +128,12 @@ Compose riglets into your project's `flake.nix`:
 ```
 rigup.nix/
 ├── lib/
-│   ├── default.nix      # buildRig, writeDocsTree
+│   ├── default.nix      # riglib (common functions to define riglets)
+│   ├── manifest.nix     # RIG.md generation
 │   └── rigletSchema.nix # Riglet type definitions
 ├── riglets/
-│   ├── agent-rig.nix    # Meta-documentation (read this!)
-│   ├── jj-basics.nix    # Example riglet
-│   └── ...
+│   ├── agent-rig.nix    # Meta-documentation (a riglet about the agent rig system)
+│   └── ...              # Example riglets
 └── flake.nix            # Exposes riglets & example rigs
 ```
 
