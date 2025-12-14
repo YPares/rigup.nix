@@ -67,16 +67,27 @@ Then add to it a `<riglet-name>.nix` file:
       version = "0.1.0";
     };
 
-    # The Skill part of the riglet
+    # The Skill part of the riglet. It's a file hierarchy
+    # which should contain a SKILL.md entry at the top
     docs = riglib.writeFileTree {
+      # Use inline strings...
       "SKILL.md" = ''
         # My Riglet Documentation
+
         ...
+
+        For more advanced cases, see references/advanced-cases.md
       '';
+      references = {
+        # ...or local file paths...
+        "advanced-cases.md" = ./path/to/advanced-cases.md;
+        # ...or derivations that build a file
+        "foo.md" = pkgs.writeText "foo.md" (mkFooContents x y z t);
+      };
     };
 
     # The configuration that the tools should use
-    # These will go under `.config` in the final home folder of the rig
+    # These will go under `.config` in the final "home directory" of the rig
     config-files = riglib.writeFileTree {
       # .config/mytool/config.toml
       mytool."config.toml" = ''
@@ -86,6 +97,9 @@ Then add to it a `<riglet-name>.nix` file:
   };
 }
 ```
+
+Just as with regular Agent Skills, the point of separating the docs into several files
+is to allow [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure). (I would just have called that "cleaner layout" but apparently there's a fancy term for that which often pops up in discussions about Agent Skills nowadays)
 
 ### Creating a Rig
 
