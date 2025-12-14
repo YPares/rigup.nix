@@ -43,7 +43,13 @@ cat result/RIG.md
 cat result/docs/jj-basics/SKILL.md
 ```
 
-### Creating Riglets
+### Creating a Riglet
+
+Riglets are a simple use case of [Nix modules](https://nix.dev/tutorials/module-system/a-basic-module/).
+
+Concretely, this means a riglet is a `(config, dependencies) -> data` Nix function, where:
+- `config` is the final config of the rig which the riglet is part of,
+- `data` is a dictionary-like structure ("attribute set" in Nix lingo) providing nested fields that will _themselves_ contribute to the final aggregated config
 
 Create a `riglets/` folder at the root of your project.
 Then add to it a `<riglet-name>.nix` file:
@@ -51,8 +57,14 @@ Then add to it a `<riglet-name>.nix` file:
 ```nix
 # riglets/my-riglet.nix
 
-{ config, pkgs, lib, riglib, ... }: {
+# - config is the final aggregated config of the rig using my-riglet,
+# - pkgs is your usual imported nixpkgs,
+# - riglib is injected by rigup, and contains utility functions to build riglets
+{ config, pkgs, riglib, ... }: {
+
+  # Each riglet must declare itself under config.riglets.<riglet-name>
   config.riglets.my-riglet = {
+
     # The tools needed by this riglet
     tools = [ pkgs.mytool ];
 
@@ -94,7 +106,9 @@ Then add to it a `<riglet-name>.nix` file:
         setting = "value"
       '';
     };
+
   };
+
 }
 ```
 
