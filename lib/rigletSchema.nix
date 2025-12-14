@@ -52,6 +52,18 @@ in
                     default = [ ];
                     description = "Keywords for searching/filtering riglets";
                   };
+
+                  status = lib.mkOption {
+                    type = lib.types.enum [
+                      "stable"
+                      "experimental"
+                      "draft"
+                      "deprecated"
+                      "example"
+                    ];
+                    default = "experimental";
+                    description = "Maturity/stability status of this riglet";
+                  };
                 };
               };
             };

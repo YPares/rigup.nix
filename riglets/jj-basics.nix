@@ -41,6 +41,7 @@
         "git"
         "dvcs"
       ];
+      status = "example";
     };
 
     config-files = riglib.writeFileTree {

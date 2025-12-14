@@ -26,6 +26,7 @@
         "nix"
         "modules"
       ];
+      status = "experimental";
     };
 
     docs = riglib.writeFileTree {
@@ -89,6 +90,7 @@
                 "Situation 2"
               ];
               keywords = [ "keyword1" "keyword2" ];
+              status = "experimental";  # stable | experimental | draft | deprecated | example
             };
 
             # Simple single-file docs
@@ -120,6 +122,12 @@
         - `description` - Brief summary of what it provides
         - `whenToUse` - List of situations when this riglet is relevant
         - `keywords` - Search/filter terms
+        - `status` - Maturity level: `"stable"` | `"experimental"` (default) | `"draft"` | `"deprecated"` | `"example"`
+          - `stable` - Production-ready, well-tested riglet
+          - `experimental` - Usable but may change, not fully battle-tested
+          - `draft` - Work in progress, incomplete
+          - `deprecated` - No longer maintained, use alternatives
+          - `example` - Pedagogical riglet for demonstrating patterns
 
         **riglib.writeFileTree** converts nested attrsets to directory trees:
         - Takes a single attrset argument (pkgs is already bound)

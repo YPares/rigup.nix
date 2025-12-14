@@ -58,6 +58,7 @@ cat ./result/docs/jj-basics/SKILL.md
       description = "What this provides";
       whenToUse = [ "When you need X" ];
       keywords = [ "search" "terms" ];
+      status = "draft";
     };
 
     # The Skill part of the riglet

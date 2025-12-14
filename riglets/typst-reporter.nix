@@ -41,6 +41,7 @@
         "documentation"
         "markup"
       ];
+      status = "example";
     };
 
     config-files = riglib.writeFileTree {
