@@ -13,7 +13,7 @@
 A _riglet_ is _executable knowledge_:
 
 - metadata to indicate to your agent what this riglet is for and when it is useful to consult it
-- a set of operations, instructions, processes, a.k.a a new [skill](https://code.claude.com/docs/en/skills) for your agent. These instructions are _lazily_ loaded: your agent reads them when it needs to
+- a set of operations, instructions, processes, a.k.a a new [skill](https://code.claude.com/docs/en/skills) for your agent. These instructions are _lazily_ loaded: your agent reads them when it needs to, or is prompted to
 - the tools (nix packages) needed to execute these instructions
 - the configuration for these tools
 

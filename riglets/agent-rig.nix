@@ -135,6 +135,9 @@
           - Increment MAJOR for breaking changes (renamed options, removed features)
           - Increment MINOR for backwards-compatible additions (new options, new docs sections)
           - Increment PATCH for backwards-compatible fixes (doc corrections, bug fixes)
+        - `broken` - Boolean flag (default: `false`) indicating riglet is currently non-functional
+          - Like Nix derivations' `meta.broken`, marks temporary "needs fixing" state
+          - Takes precedence over status in warnings
 
         **riglib.writeFileTree** converts nested attrsets to directory trees:
         - Takes a single attrset argument (pkgs is already bound)
@@ -209,7 +212,7 @@
         **Complete agent environment (recommended):**
         ```bash
         # Build complete home directory with tools + docs + config
-        nix build .#rigs.<system>.default.home
+        nix build .#rigs.<system>.<rig>.home
 
         # First, read the riglets manifest to see what's available
         cat ./result/RIG.md
@@ -223,8 +226,6 @@
 
         # Use configuration files (XDG Base Directory compatible)
         export XDG_CONFIG_HOME="$(nix build .#rigs.<system>.default.home --no-link --print-out-paths)/.config"
-        # Or copy them to your home directory
-        cp -r ./result/.config/* ~/.config/
 
         # Add to PATH
         export PATH="$(nix build .#rigs.<system>.default.home --no-link --print-out-paths)/bin:$PATH"
@@ -251,7 +252,7 @@
         **Discover available riglets:**
         ```bash
         # View metadata for a specific riglet
-        nix eval .#rigs.<system>.default.meta.jj-basics --json | jq
+        nix eval .#rigs.<system>.default.meta.<riglet> --json | jq
 
         # Search all riglet keywords (future rigup CLI will do this)
         nix eval .#rigs.<system>.default.meta --json | jq 'to_entries | map({riglet: .key, keywords: .value.keywords})'
@@ -260,7 +261,7 @@
         **Read riglet documentation:**
         ```bash
         # View specific riglet docs
-        nix build .#rigs.<system>.default.docs.jj-basics --no-link --print-out-paths | xargs -I {} cat {}/SKILL.md
+        nix build .#rigs.<system>.default.docs.<riglet> --no-link --print-out-paths | xargs -I {} cat {}/SKILL.md
 
         # Or use future rigup CLI (when implemented)
         rigup docs jj-basics
@@ -268,10 +269,19 @@
 
         ## Creating New Riglets
 
+        In some flake:
+
         1. Create `riglets/my-riglet.nix`
         2. Define options and config as modules
         3. Add to flake's riglets output
-        4. Use them in your flake's `rigs.<rig-name>` outputs
+
+        ## Using them
+
+        In the flake defining the riglets OR in another one importing it:
+
+        1. Use the riglets in the flake's `rigs.<system>.<rig-name>` outputs
+        2. Set an output package to export the whole rig's `home` derivation:
+           `packages.<system>.<pkg> = self.rigs.<system>.<rig-name>.home`
 
         ## Design Principles
 

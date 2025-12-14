@@ -60,6 +60,7 @@ let
         writeFileTree = writeFileTree pkgs;
         # Future helpers can be added here
       };
+      manifestLib = import ./manifest.nix { inherit pkgs lib; };
 
       # Evaluate the module system with all riglet modules
       evaluated = lib.evalModules {
@@ -84,43 +85,7 @@ let
       meta = lib.mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
 
       # Generate RIG.md manifest from metadata
-      rigletsManifest = pkgs.writeText "RIG.md" ''
-        # Available Riglets
-
-        This rig provides the following riglets with their tools and documentation.
-
-        <riglets_system>
-
-        ## How to Use
-
-        **Access documentation:**
-        - Location: `docs/<riglet-name>/SKILL.md`
-        - Read main docs: `cat docs/<riglet-name>/SKILL.md`
-        - Read references: `cat docs/<riglet-name>/references/<topic>.md`
-
-        **Use the tools:**
-        - All tools are available in `bin/`
-        - Add to PATH: `export PATH="$PWD/bin:$PATH"`
-
-        ## Available Riglets
-
-        ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (rigletName: rigletMeta: ''
-            <riglet>
-            <name>${rigletName}</name>
-            <title>${rigletMeta.name}</title>
-            <description>${rigletMeta.description}</description>
-            <whenToUse>
-            ${lib.concatStringsSep "\n" (map (use: "- ${use}") rigletMeta.whenToUse)}
-            </whenToUse>
-            <keywords>${lib.concatStringsSep ", " rigletMeta.keywords}</keywords>
-            <docs>docs/${rigletName}/</docs>
-            </riglet>
-          '') meta
-        )}
-
-        </riglets_system>
-      '';
+      manifest = manifestLib.generateManifest { inherit name meta; };
     in
     {
       inherit env docs meta;
@@ -130,7 +95,7 @@ let
         mkdir -p $out
 
         # Add RIG.md manifest at top level
-        cp ${rigletsManifest} $out/RIG.md
+        cp ${manifest} $out/RIG.md
 
         # Symlink all tools to bin/ (if env has a bin directory)
         if [ -d ${env}/bin ]; then

@@ -70,6 +70,12 @@ in
                     default = "0.1.0";
                     description = "Semantic version of this riglet's interface/capabilities (semver format)";
                   };
+
+                  broken = lib.mkOption {
+                    type = lib.types.bool;
+                    default = false;
+                    description = "Whether this riglet is currently broken/non-functional and needs fixing";
+                  };
                 };
               };
             };
