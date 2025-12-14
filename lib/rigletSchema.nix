@@ -64,6 +64,12 @@ in
                     default = "experimental";
                     description = "Maturity/stability status of this riglet";
                   };
+
+                  version = lib.mkOption {
+                    type = lib.types.strMatching "^[0-9]+\\.[0-9]+\\.[0-9]+.*$";
+                    default = "0.1.0";
+                    description = "Semantic version of this riglet's interface/capabilities (semver format)";
+                  };
                 };
               };
             };

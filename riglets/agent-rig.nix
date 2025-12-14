@@ -27,6 +27,7 @@
         "modules"
       ];
       status = "experimental";
+      version = "0.1.0";
     };
 
     docs = riglib.writeFileTree {
@@ -91,6 +92,7 @@
               ];
               keywords = [ "keyword1" "keyword2" ];
               status = "experimental";  # stable | experimental | draft | deprecated | example
+              version = "1.0.0";  # Semantic version of riglet's interface
             };
 
             # Simple single-file docs
@@ -128,6 +130,11 @@
           - `draft` - Work in progress, incomplete
           - `deprecated` - No longer maintained, use alternatives
           - `example` - Pedagogical riglet for demonstrating patterns
+        - `version` - Semantic version (default: `"0.1.0"`) of riglet's interface/capabilities
+          - Use semver format: `MAJOR.MINOR.PATCH` (e.g., `"1.2.3"`)
+          - Increment MAJOR for breaking changes (renamed options, removed features)
+          - Increment MINOR for backwards-compatible additions (new options, new docs sections)
+          - Increment PATCH for backwards-compatible fixes (doc corrections, bug fixes)
 
         **riglib.writeFileTree** converts nested attrsets to directory trees:
         - Takes a single attrset argument (pkgs is already bound)
