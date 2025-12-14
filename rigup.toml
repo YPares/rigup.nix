@@ -2,15 +2,15 @@
 # This file defines which rigs are available and their configuration
 
 # Define rigs
-[rigs.default]
-# List of riglet modules to include
-# Format: "<input-name>.riglets.<riglet-name>"
-# Use "self" for local riglets from riglets/ directory
-modules = [
-  "self.riglets.agent-rig",
-  "self.riglets.jj-basics",
-  "self.riglets.typst-reporter",
+[rigs.default.riglets]
+# Riglets from this repository
+self = [
+  "agent-rig",
+  "jj-basics",
+  "typst-reporter",
 ]
+# Riglets from external flake inputs would go here:
+# <input> = ["some-external-riglet-from-<input>"]
 
 # Configuration for this rig (inline Nix module)
 [rigs.default.config.agent.user]

@@ -44,20 +44,22 @@ let
       }) dirRiglets)
   );
 
-  # Resolve a module reference like "self.riglets.foo" or "input.riglets.bar"
-  # Returns the actual riglet module path/attrset
-  resolveModuleRef =
-    ref:
-    let
-      parts = builtins.split "\\." ref;
-      # parts will be ["input-name" "riglets" "riglet-name"] with separators
-      # Filter out the separators (empty strings from split)
-      cleanParts = builtins.filter (x: builtins.isString x && x != "") parts;
-
-      inputName = builtins.elemAt cleanParts 0;
-      rigletName = builtins.elemAt cleanParts 2;
-    in
-    if inputName == "self" then riglets.${rigletName} else inputs.${inputName}.riglets.${rigletName};
+  # Resolve riglets from the new TOML structure
+  # Takes riglets attrset from TOML: { self = ["riglet1", ...]; input = ["riglet2", ...]; }
+  # Returns list of resolved module paths
+  resolveRiglets =
+    rigletsSpec:
+    builtins.concatLists (
+      builtins.attrValues (
+        builtins.mapAttrs (
+          inputName: rigletNames:
+          builtins.map (
+            rigletName:
+            if inputName == "self" then riglets.${rigletName} else inputs.${inputName}.riglets.${rigletName}
+          ) rigletNames
+        ) rigletsSpec
+      )
+    );
 
   # Build rigs for all systems
   rigs = builtins.listToAttrs (
@@ -70,8 +72,8 @@ let
             let
               rigDef = rigupToml.rigs.${rigName};
 
-              # Resolve module references to actual paths
-              resolvedModules = builtins.map resolveModuleRef rigDef.modules;
+              # Resolve riglets from TOML spec to actual module paths
+              resolvedModules = if rigDef ? riglets then resolveRiglets rigDef.riglets else [ ];
 
               # Convert TOML config to inline module
               configModule = if rigDef ? config then rigDef.config else { };

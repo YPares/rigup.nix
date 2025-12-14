@@ -143,11 +143,9 @@ config.riglets.typst-reporter.docs =
 Create `rigup.toml` in your project root:
 
 ```toml
-[rigs.default]
-modules = [
-  "self.riglets.my-riglet",
-  "rigup.riglets.jj-basics",
-]
+[rigs.default.riglets]
+self = ["my-riglet"]
+rigup = ["jj-basics"]
 
 [rigs.default.config.agent.user]
 name = "Alice"

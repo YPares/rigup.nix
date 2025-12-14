@@ -141,17 +141,12 @@ This is useful to break up a riglet into various Nix or raw text files to make i
 Define rigs in `rigup.toml` at the top of your project:
 
 ```toml
-[rigs.default]
-modules = [
-  # Which riglets should this 'default' rig be made of:
-  "rigup.riglets.jj-basics",
-  "rigup.riglets.typst-reporter",
-  # If you define local riglets in your riglets/ folder, use them with:
-  #"self.riglets.foo"
-]
+# Riglets to include in this rig, grouped by source
+[rigs.default.riglets]
+rigup = ["jj-basics", "typst-reporter"]  # From the rigup flake input
+self = ["my-local-riglet"]               # From your riglets/ folder
 
-# Fill up the configuration of the riglets used in this 'default' rig,
-# or override some default values
+# Configuration for the riglets used in this rig
 [rigs.default.config.agent.user]
 name = "Alice"  # This is used by both jj-basics & typst-reporter example riglets
 email = "alice@example.com"
@@ -179,10 +174,15 @@ Finally, build the rig with:
 nix build .#default-rig -o my-default-rig
 ```
 
-The `modules` listed for each rig in your `rigup.toml` **must** match your flake inputs and what exists in your project:
+The riglets listed in your `rigup.toml` **must** match your flake inputs and what exists in your project. As a general case:
 
-- directly refer to everything under your project's `riglets/` folder as `"self.riglets.xxx"`. For instance, to use `$PROJECT_ROOT/riglets/foo.nix`, use `"self.riglets.foo"`;
-- use `"<other>.riglets.xxx"` for external riglets from flakes declared in your `flake.nix` as `inputs.<other>.url = "..."`.
+```toml
+[rigs.my-rig.riglets]
+some-flake = ["foo", "bar"]
+```
+
+means that your `flake.nix` has a `some-flake` input that exposes the `riglets.foo` and `riglets.bar` outputs.
+`self` is just a special case of that, as every flake has an implicit `self` input which is the flake itself.
 
 #### Advanced approach
 
