@@ -1,26 +1,36 @@
 ```
-                                   ─────────────────────────────
-                                       ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌─╮
-                                     - ├┬╯  │  │ ┬ : │ │ ├─╯ -
-                                       ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵
-                                   ─────────────────────────────
+                               ─────────────────────────────────
+                                     ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌─╮     
+                                 ──  ├┬╯  │  │ ┬ : │ │ ├─╯  ──
+                                     ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵       
+                               ─────────────────────────────────
 ```
 
-# Package AI agent knowledge with tools using Nix
+# Self-Contained, Modular, Reusable AI Agent Skills
 
-## What is rigup?
+`rigup` is a Nix-based system for packaging AI agent skills with the tools and config needed to execute them.
 
-`rigup` is a Nix-based system for packaging AI agent knowledge with the tools needed to execute it.
+A _riglet_ is _executable knowledge_:
 
-- **Riglet** = Executable knowledge (operational docs ("Skills") + tools + metadata)
-- **Rig** = Project's collection of active riglets
-- **Knowledge-first design** = Documentation is the payload, tools are dependencies
+- metadata to indicate to your agent what this riglet is for and when it is useful to consult it
+- a set of operations, instructions, processes, a.k.a a new [skill](https://code.claude.com/docs/en/skills) for your agent. These instructions are _lazily_ loaded: your agent reads them when it needs to
+- the tools (nix packages) needed to execute these instructions
+- the configuration for these tools
+
+By combining the relevant riglets together, you build your agent's _rig_: the tools it needs to work on your project, and the operational knowledge it needs to use those tools properly and efficiently.
+
+`rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies
+
+In short, `rigup` is **Claude Skills + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
 
 ## Quick Start
 
-**Using a rig:**
+This project defines example riglets, and an example rig combining them.
+
+### Using a Rig
+
 ```bash
-# Build a simple but complete agent environment
+# Build a simple but complete agent rig:
 nix build github:YPares/rigup.nix#rigs.x86_64-linux.default.home
 
 # Discover available riglets
@@ -33,12 +43,16 @@ cat result/RIG.md
 cat ./result/docs/jj-basics/SKILL.md
 ```
 
-**Creating riglets:**
+### Creating Riglets
+
 ```nix
 { config, pkgs, lib, riglib, ... }: {
   config.riglets.my-riglet = {
+    # The tools needed by this riglet
     tools = [ pkgs.mytool ];
 
+    # The metadata that will enable your agent to know what this riglet
+    # provides and when it should be consulted
     meta = {
       name = "My Riglet";
       description = "What this provides";
@@ -46,13 +60,56 @@ cat ./result/docs/jj-basics/SKILL.md
       keywords = [ "search" "terms" ];
     };
 
-    docs = riglib.writeDocsTree {
-      files.SKILL = ''
+    # The Skill part of the riglet
+    docs = riglib.writeFileTree {
+      "SKILL.md" = ''
         # My Riglet Documentation
         ...
       '';
     };
+
+    # The configuration that the tools should use
+    # These will go under `.config` in the final home folder of the rig
+    config-files = riglib.writeFileTree {
+      # .config/mytool/config.toml
+      mytool."config.toml" = ''
+        setting = "value"
+      '';
+    };
   };
+}
+```
+
+### Creating a Rig
+
+Compose riglets into your project's `flake.nix`:
+
+```nix
+{
+  inputs.rigup.url = "github:YPares/rigup.nix";
+
+  outputs = { self, rigup, nixpkgs, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+    in {
+      rigs.${system}.default = rigup.lib.buildRig {
+        inherit pkgs;
+        modules = [
+          rigup.riglets.jj-basics
+          rigup.riglets.typst-reporter
+          ./riglets/my-riglet.nix  # Your custom riglet
+          {
+            # Configure riglets
+            agent.user.name = "Alice";
+            agent.user.email = "alice@example.com";
+          }
+        ];
+      };
+
+      # Export the complete rig (tools + docs + config)
+      packages.${system}.default = self.rigs.${system}.default.home;
+    };
 }
 ```
 
@@ -93,6 +150,6 @@ rigup.nix/
 
 MIT
 
----
+______________________________________________________________________
 
 *Built with Nix • Formatting: nixfmt-rfc-style • Uses [blueprint](https://github.com/numtide/blueprint)*
