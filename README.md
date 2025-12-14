@@ -40,12 +40,17 @@ cat result/RIG.md
 ./result/bin/jj --version
 
 # Read the documentation
-cat ./result/docs/jj-basics/SKILL.md
+cat result/docs/jj-basics/SKILL.md
 ```
 
 ### Creating Riglets
 
+Create a `riglets/` folder at the root of your project.
+Then add to it a `<riglet-name>.nix` file:
+
 ```nix
+# riglets/my-riglet.nix
+
 { config, pkgs, lib, riglib, ... }: {
   config.riglets.my-riglet = {
     # The tools needed by this riglet
@@ -84,39 +89,89 @@ cat ./result/docs/jj-basics/SKILL.md
 
 ### Creating a Rig
 
-Compose riglets into your project's `flake.nix`:
+#### Simple Approach
+
+Define rigs in `rigup.toml` at the top of your project:
+
+```toml
+[rigs.default]
+modules = [
+  # Which riglets should this 'default' rig be made of:
+  "rigup.riglets.jj-basics",
+  "rigup.riglets.typst-reporter",
+  # If you define local riglets in your riglets/ folder, use them with:
+  #"self.riglets.foo"
+]
+
+# Fill up the configuration of the riglets used in this 'default' rig,
+# or override some default values
+[rigs.default.config.agent.user]
+name = "Alice"  # This is used by both jj-basics & typst-reporter example riglets
+email = "alice@example.com"
+```
+
+Your `flake.nix` is then:
+
+```nix
+# flake.nix
+{
+  inputs.rigup.url = "github:YPares/rigup.nix";
+
+  outputs = { self, rigup, ... }@inputs:
+    let system = "...";
+    in rigup { inherit inputs; } // {
+      # Make the whole rig directly buildable as an output package:
+      packages.${system}.default-rig = self.rigs.${system}.default.home;
+    };
+}
+```
+
+Finally, build the rig with:
+
+```shell
+nix build .#default-rig -o my-default-rig
+```
+
+The `modules` listed for each rig in your `rigup.toml` **must** match your flake inputs and what exists in your project:
+
+- directly refer to everything under your project's `riglets/` folder as `"self.riglets.xxx"`. For instance, to use `$PROJECT_ROOT/riglets/foo.nix`, use `"self.riglets.foo"`;
+- use `"<other>.riglets.xxx"` for external riglets from flakes declared in your `flakes.nix` as `inputs.<other>.url = "..."`.
+
+#### Advanced approach
+
+Build rigs directly in Nix when a more complex configuration is needed:
 
 ```nix
 {
   inputs.rigup.url = "github:YPares/rigup.nix";
 
-  outputs = { self, rigup, nixpkgs, ... }:
+  outputs = { self, rigup, nixpkgs, ... }@inputs:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
-    in {
-      rigs.${system}.default = rigup.lib.buildRig {
+    in
+    rigup { inherit inputs; } // {
+      # Override or extend with custom rigs
+      rigs.${system}.custom = rigup.lib.buildRig {
         inherit pkgs;
         modules = [
-          rigup.riglets.jj-basics
-          rigup.riglets.typst-reporter
-          ./riglets/my-riglet.nix  # Your custom riglet
+          some.advanced.riglet # extra modules
           {
-            # Configure riglets
-            agent.user.name = "Alice";
-            agent.user.email = "alice@example.com";
+            # More advanced config, that e.g. requires direct access to some Nix functions
+            agent.complexOption = { ... };
           }
         ];
       };
 
-      # Export the complete rig (tools + docs + config)
-      packages.${system}.default = self.rigs.${system}.default.home;
+      packages.${system}.custom-rig = self.rigs.${system}.custom.home;
     };
 }
 ```
 
 ## Features
 
+- **Data-driven config:** `rigup.toml` for CLI-manageable rigs
+- **Auto-discovery:** Riglets from `riglets/` automatically exposed
 - **Type-checked metadata:** Nix validates riglet structure
 - **Nested documentation:** Skills-style SKILL.md + references/
 - **Declarative composition:** Module system for riglet interaction

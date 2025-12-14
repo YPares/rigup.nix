@@ -9,45 +9,18 @@
 
   outputs =
     inputs@{
-      self,
-      nixpkgs,
       blueprint,
       ...
     }:
     let
-      forEachSystem = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed;
+      # Import lib functions directly to avoid circular dependency
+      rigupLib = import ./lib { };
     in
     blueprint { inherit inputs; }
+    # Expose the example riglets
+    // rigupLib.resolveRigs { inherit inputs; }
     // {
-      # Expose riglet modules
-      riglets = {
-        agent-rig = import ./riglets/agent-rig.nix;
-        jj-basics = import ./riglets/jj-basics.nix;
-        typst-reporter = import ./riglets/typst-reporter.nix;
-      };
-
-      # Expose example rigs
-      rigs = forEachSystem (
-        system:
-        let
-          pkgs = import nixpkgs { inherit system; };
-        in
-        {
-          # Example rig using all available riglets
-          default = self.lib.buildRig {
-            inherit pkgs;
-            modules = with self.riglets; [
-              agent-rig
-              jj-basics
-              typst-reporter
-              # Configure required options
-              {
-                agent.user.name = "Test Agent";
-                agent.user.email = "test@example.com";
-              }
-            ];
-          };
-        }
-      );
+      # Makes the flake itself directly usable as a function
+      __functor = self: self.lib.resolveRigs;
     };
 }

@@ -21,8 +21,8 @@ let
             in
             if lib.isAttrs value && !lib.isDerivation value then
               mkFileCommands path value # Recurse into nested attrs
-            else if lib.isDerivation value then
-              # Symlink derivation to output path
+            else if lib.isDerivation value || builtins.isPath value then
+              # Symlink derivation or path to output path
               ''
                 mkdir -p "$out/$(dirname "${path}")"
                 ln -s ${value} "$out/${path}"
@@ -122,7 +122,11 @@ let
         )}
       '';
     };
+
+  resolveRigs = import ./resolveRigs.nix { inherit rigupLib; };
+
+  rigupLib = {
+    inherit writeFileTree buildRig resolveRigs;
+  };
 in
-{
-  inherit writeFileTree buildRig;
-}
+rigupLib

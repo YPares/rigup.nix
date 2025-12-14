@@ -1,0 +1,21 @@
+# rigup configuration
+# This file defines which rigs are available and their configuration
+
+# Define rigs
+[rigs.default]
+# List of riglet modules to include
+# Format: "<input-name>.riglets.<riglet-name>"
+# Use "self" for local riglets from riglets/ directory
+modules = [
+  "self.riglets.agent-rig",
+  "self.riglets.jj-basics",
+  "self.riglets.typst-reporter",
+]
+
+# Configuration for this rig (inline Nix module)
+[rigs.default.config.agent.user]
+name = "Test Agent"
+email = "test@example.com"
+
+[rigs.default.config.typst]
+template = "simple"
