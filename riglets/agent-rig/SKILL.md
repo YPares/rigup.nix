@@ -36,7 +36,9 @@ CLI will provide convenient rig edition & access to rig outputs (e.g. starting a
 
 ## Riglet Structure
 
-Riglets are Nix modules with access to `riglib` helpers:
+Riglets are Nix modules with access to `riglib` helpers
+
+### Example Riglet
 
 ```nix
 { config, pkgs, lib, riglib, ... }: {
@@ -64,6 +66,7 @@ Riglets are Nix modules with access to `riglib` helpers:
       status = "experimental";  # stable | experimental (default) | draft | deprecated | example
       version = "x.y.z";  # Semantic version of riglet's interface (configuration + provided methods, procedures, docs...)
       broken = false; # Optional. false by default
+      disclosure = "lazy" # How much to show about riglet in manifest. "lazy" by default
     };
 
     # Documentation file(s) (Skills pattern: SKILL.md + references/*.md)
@@ -90,8 +93,10 @@ Riglets are Nix modules with access to `riglib` helpers:
 
 **The full exact Nix module schema of a riglet is defined here:** %%RIGLET_SCHEMA%%
 
+### Metadata
+
 **About meta.status:**
-`status` - Maturity level:
+Maturity level:
 - `stable` - Production-ready, well-tested riglet
 - `experimental` - Usable but may change, not fully battle-tested
 - `draft` - Work in progress, incomplete
@@ -99,16 +104,40 @@ Riglets are Nix modules with access to `riglib` helpers:
 - `example` - Pedagogical riglet for demonstrating patterns
 
 **About meta.version:**
-`version` - Semantic version (default: `"0.1.0"`) of riglet's interface/capabilities:
+Semantic version (default: `"0.1.0"`) of riglet's interface/capabilities:
 - Use semver format: `MAJOR.MINOR.PATCH` (e.g., `"1.2.3"`)
 - Increment MAJOR for breaking changes (renamed options, removed features)
 - Increment MINOR for backwards-compatible additions (new options, new docs sections)
 - Increment PATCH for backwards-compatible fixes (doc corrections, bug fixes)
 
 **About meta.broken:**
-`broken` - Boolean flag (default: `false`) indicating riglet is currently non-functional:
+Boolean flag indicating riglet is currently non-functional:
 - Like Nix derivations' `meta.broken`, marks temporary "needs fixing" state
 - Takes precedence over status in warnings
+
+**About meta.disclosure:**
+Enum controlling how much information about the riglet is exposed in RIG.md
+- `none` - Riglet not mentioned in RIG.md. Agent won't know it exists unless manually browsing the rig or user mentions it
+- `lazy` - Description, `whenToUse`, keywords, and basic metadata included. Paths to documentation provided (default)
+- `toc` - Like `lazy`, plus an auto-generated table of contents from SKILL.md with line numbers for efficient navigation
+- `eager` - Full top-level SKILL.md content embedded directly in RIG.md
+
+This controls the information/token-count ratio:
+- most riglets use `lazy` to avoid overwhelming agents during discovery
+- foundational riglets use `toc` to enable efficient pinpointing
+- `eager` should only be used for very short SKILL.md
+
+### Tool Config Files
+
+**config-files** provides configuration for tools:
+- Uses `riglib.writeFileTree` to create `.config/` directory structure
+- Follows XDG Base Directory specification
+- All riglets' config-files are merged into `.config/`
+- Example: `jj."config.toml"` → `.config/jj/config.toml`
+- Can use `pkgs.formats.toml`, `.json`, `.yaml` to generate config files from Nix data
+- Can use plain strings for shell scripts or plain text configs
+
+### Helper Functions to Use
 
 **riglib.writeFileTree** converts nested attrsets to directory trees:
 - Takes a single attrset argument
@@ -119,14 +148,6 @@ Riglets are Nix modules with access to `riglib` helpers:
   - Strings (inline content)
   - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
   - Derivations (e.g., `pkgs.writeText` or `(pkgs.formats.<format> {}).generate`)
-
-**config-files** provides configuration for tools:
-- Uses `riglib.writeFileTree` to create `.config/` directory structure
-- Follows XDG Base Directory specification
-- All riglets' config-files are merged into `.config/`
-- Example: `jj."config.toml"` → `.config/jj/config.toml`
-- Can use `pkgs.formats.toml`, `.json`, `.yaml` to generate config files from Nix data
-- Can use plain strings for shell scripts or plain text configs
 
 ## Cross-Riglet Interaction
 

@@ -30,28 +30,40 @@ with pkgs.lib;
               type = types.submodule {
                 options = {
                   name = mkOption {
-                    type = types.str;
                     description = "Human-readable riglet name";
+                    type = types.str;
                   };
 
                   description = mkOption {
-                    type = types.str;
                     description = "Brief description of what this riglet provides";
+                    type = types.str;
+                  };
+
+                  disclosure = mkOption {
+                    description = "How to disclose this riglet via the RIG.toml manifest";
+                    type = types.enum [
+                      "none"
+                      "lazy"
+                      "toc"
+                      "eager"
+                    ];
+                    default = "lazy";
                   };
 
                   whenToUse = mkOption {
+                    description = "Situations when this riglet should be loaded";
                     type = types.listOf types.str;
                     default = [ ];
-                    description = "Situations when this riglet should be loaded";
                   };
 
                   keywords = mkOption {
+                    description = "Keywords for searching/filtering riglets";
                     type = types.listOf types.str;
                     default = [ ];
-                    description = "Keywords for searching/filtering riglets";
                   };
 
                   status = mkOption {
+                    description = "Maturity/stability status of this riglet";
                     type = types.enum [
                       "stable"
                       "experimental"
@@ -60,19 +72,18 @@ with pkgs.lib;
                       "example"
                     ];
                     default = "experimental";
-                    description = "Maturity/stability status of this riglet";
                   };
 
                   version = mkOption {
+                    description = "Semantic version of this riglet's interface/capabilities (semver format)";
                     type = types.strMatching "^[0-9]+\\.[0-9]+\\.[0-9]+.*$";
                     default = "0.1.0";
-                    description = "Semantic version of this riglet's interface/capabilities (semver format)";
                   };
 
                   broken = mkOption {
+                    description = "Whether this riglet is currently broken/non-functional and needs fixing";
                     type = types.bool;
                     default = false;
-                    description = "Whether this riglet is currently broken/non-functional and needs fixing";
                   };
                 };
               };

@@ -86,8 +86,15 @@ let
       # Metadata per riglet
       meta = mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
 
-      # Generate RIG.md manifest from metadata
-      manifest = manifestLib.generateManifest { inherit name meta; };
+      # Generate RIG.md manifest from metadata and docs
+      manifest = manifestLib.generateManifest {
+        inherit
+          name
+          meta
+          docs
+          pkgs
+          ;
+      };
     in
     {
       inherit env docs meta;

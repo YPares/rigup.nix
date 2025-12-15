@@ -26,6 +26,7 @@
       ];
       status = "experimental";
       version = "0.1.0";
+      disclosure = "toc";
     };
 
     docs = riglib.writeFileTree {
