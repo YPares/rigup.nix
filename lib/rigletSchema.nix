@@ -1,57 +1,58 @@
 # Base module that defines common riglet structure
-{ lib, ... }:
+{ pkgs, ... }:
+with pkgs.lib;
 {
   options = {
-    riglets = lib.mkOption {
+    riglets = mkOption {
       description = "Available riglets";
-      type = lib.types.attrsOf (
-        lib.types.submodule {
+      type = types.attrsOf (
+        types.submodule {
           options = {
-            tools = lib.mkOption {
+            tools = mkOption {
               description = "List of tools this riglet provides";
-              type = lib.types.listOf lib.types.package;
+              type = types.listOf types.package;
               default = [ ];
             };
 
-            docs = lib.mkOption {
+            docs = mkOption {
               description = "Documentation derivation for this riglet";
-              type = lib.types.package;
+              type = types.package;
             };
 
-            config-files = lib.mkOption {
-              description = "Configuration files derivation (use riglib.writeFileTree)";
+            config-files = mkOption {
+              description = "Configuration files derivation (use rigwriteFileTree)";
               default = null;
-              type = lib.types.nullOr lib.types.package;
+              type = types.nullOr types.package;
             };
 
-            meta = lib.mkOption {
+            meta = mkOption {
               description = "Metadata describing when and how to use this riglet";
-              type = lib.types.submodule {
+              type = types.submodule {
                 options = {
-                  name = lib.mkOption {
-                    type = lib.types.str;
+                  name = mkOption {
+                    type = types.str;
                     description = "Human-readable riglet name";
                   };
 
-                  description = lib.mkOption {
-                    type = lib.types.str;
+                  description = mkOption {
+                    type = types.str;
                     description = "Brief description of what this riglet provides";
                   };
 
-                  whenToUse = lib.mkOption {
-                    type = lib.types.listOf lib.types.str;
+                  whenToUse = mkOption {
+                    type = types.listOf types.str;
                     default = [ ];
                     description = "Situations when this riglet should be loaded";
                   };
 
-                  keywords = lib.mkOption {
-                    type = lib.types.listOf lib.types.str;
+                  keywords = mkOption {
+                    type = types.listOf types.str;
                     default = [ ];
                     description = "Keywords for searching/filtering riglets";
                   };
 
-                  status = lib.mkOption {
-                    type = lib.types.enum [
+                  status = mkOption {
+                    type = types.enum [
                       "stable"
                       "experimental"
                       "draft"
@@ -62,14 +63,14 @@
                     description = "Maturity/stability status of this riglet";
                   };
 
-                  version = lib.mkOption {
-                    type = lib.types.strMatching "^[0-9]+\\.[0-9]+\\.[0-9]+.*$";
+                  version = mkOption {
+                    type = types.strMatching "^[0-9]+\\.[0-9]+\\.[0-9]+.*$";
                     default = "0.1.0";
                     description = "Semantic version of this riglet's interface/capabilities (semver format)";
                   };
 
-                  broken = lib.mkOption {
-                    type = lib.types.bool;
+                  broken = mkOption {
+                    type = types.bool;
                     default = false;
                     description = "Whether this riglet is currently broken/non-functional and needs fixing";
                   };

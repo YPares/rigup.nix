@@ -1,6 +1,6 @@
 # Generate RIG.md manifest from rig metadata
-{ pkgs, lib }:
-
+{ pkgs }:
+with pkgs.lib;
 {
   # Generate RIG.md manifest file from rig metadata
   # Arguments:
@@ -38,8 +38,8 @@
 
         <rig_system>
 
-        ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (
+        ${concatStringsSep "\n" (
+          mapAttrsToList (
             rigletName: rigletMeta:
             let
               warning =
@@ -61,12 +61,12 @@
                 <name>${rigletName}</name>
                 <title>${rigletMeta.name}</title>
                 <description>${rigletMeta.description}</description>
-                <keywords>${lib.concatStringsSep ", " rigletMeta.keywords}</keywords>
+                <keywords>${concatStringsSep ", " rigletMeta.keywords}</keywords>
                 <version>${rigletMeta.version}</version>${
-                  lib.optionalString (warning != "") "\n  <warning>${warning}</warning>"
+                  optionalString (warning != "") "\n  <warning>${warning}</warning>"
                 }
                 <whenToUse>
-              ${lib.concatStringsSep "\n" (map (use: "    - ${use}") rigletMeta.whenToUse)}
+              ${concatStringsSep "\n" (map (use: "    - ${use}") rigletMeta.whenToUse)}
                 </whenToUse>
                 <docs>docs/${rigletName}/</docs>
               </riglet>

@@ -6,22 +6,21 @@ let
   # Leaves can be either strings (file content) or derivations (existing files)
   writeFileTree =
     pkgs: tree:
+    with pkgs.lib;
     let
-      lib = pkgs.lib;
-
       # Recursively build file creation commands
       mkFileCommands =
         prefix: attrs:
-        lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (
+        concatStringsSep "\n" (
+          mapAttrsToList (
             name: value:
             let
               path = if prefix == "" then name else "${prefix}/${name}";
               delimiter = "NIXEOF_${builtins.hashString "sha256" path}";
             in
-            if lib.isAttrs value && !lib.isDerivation value then
+            if isAttrs value && !isDerivation value then
               mkFileCommands path value # Recurse into nested attrs
-            else if lib.isDerivation value || builtins.isPath value then
+            else if isDerivation value || builtins.isPath value then
               # Symlink derivation or path to output path
               ''
                 mkdir -p "$out/$(dirname "${path}")"
@@ -52,18 +51,17 @@ let
       pkgs,
       name ? "agent-rig",
     }:
+    with pkgs.lib;
     let
-      lib = pkgs.lib;
-
       # Helpers available to riglets, with pkgs already bound
       riglib = {
         writeFileTree = writeFileTree pkgs;
         # Future helpers can be added here
       };
-      manifestLib = import ./manifest.nix { inherit pkgs lib; };
+      manifestLib = import ./manifest.nix { inherit pkgs; };
 
       # Evaluate the module system with all riglet modules
-      evaluated = lib.evalModules {
+      evaluated = evalModules {
         modules = [
           {
             # Pass pkgs and riglib to all modules
@@ -79,14 +77,14 @@ let
       # Combined tools from all riglets
       env = pkgs.buildEnv {
         inherit name;
-        paths = lib.flatten (lib.mapAttrsToList (_: riglet: riglet.tools) evaluated.config.riglets);
+        paths = flatten (mapAttrsToList (_: riglet: riglet.tools) evaluated.config.riglets);
       };
 
       # Docs per riglet
-      docs = lib.mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
+      docs = mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
 
       # Metadata per riglet
-      meta = lib.mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
+      meta = mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
 
       # Generate RIG.md manifest from metadata
       manifest = manifestLib.generateManifest { inherit name meta; };
@@ -108,18 +106,18 @@ let
 
         # Create docs/ with subdirs per riglet
         mkdir -p $out/docs
-        ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (rigletName: rigletDocs: ''
+        ${concatStringsSep "\n" (
+          mapAttrsToList (rigletName: rigletDocs: ''
             ln -sL ${rigletDocs} $out/docs/${rigletName}
           '') docs
         )}
 
         # Create .config/ with config files from all riglets
         mkdir -p $out/.config
-        ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (
+        ${concatStringsSep "\n" (
+          mapAttrsToList (
             _: riglet:
-            lib.optionalString (riglet.config-files != null) ''
+            optionalString (riglet.config-files != null) ''
               for f in ${riglet.config-files}/*; do
                 ln -sL "$f" $out/.config/
               done
