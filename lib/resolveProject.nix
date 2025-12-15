@@ -22,7 +22,7 @@ let
 
   # Auto-discover all riglets from riglets/ directory
   rigletsDir = inputs.self + "/riglets";
-  rigletEntries = builtins.readDir rigletsDir;
+  rigletEntries = if builtins.pathExists rigletsDir then builtins.readDir rigletsDir else { };
 
   # Find .nix files (excluding default.nix in root)
   nixFileRiglets = builtins.filter (
