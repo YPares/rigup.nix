@@ -1,8 +1,5 @@
 # Base module that defines common riglet structure
-{ config, pkgs, ... }:
-let
-  lib = pkgs.lib;
-in
+{ lib, ... }:
 {
   options = {
     riglets = lib.mkOption {

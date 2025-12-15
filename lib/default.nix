@@ -64,13 +64,16 @@ let
 
       # Evaluate the module system with all riglet modules
       evaluated = lib.evalModules {
-        modules = modules ++ [
+        modules = [
+          {
+            # Pass pkgs and riglib to all modules
+            _module.args = {
+              inherit pkgs riglib;
+            };
+          }
           ./rigletSchema.nix
-        ];
-        # Pass pkgs and riglib helpers to all modules
-        specialArgs = {
-          inherit pkgs riglib;
-        };
+        ]
+        ++ modules;
       };
       # Combined tools from all riglets
       env = pkgs.buildEnv {
