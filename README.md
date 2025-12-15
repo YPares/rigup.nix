@@ -132,6 +132,10 @@ Then add to it a `<riglet-name>.nix` file:
       };
     };
 
+    # Alternatively, if you already have a folder that follows the Agent Skill convention,
+    # (SKILL.md at the top and references/*.md files), you can directly reuse it:
+    #docs = ./path/to/skill/folder;
+
     # (Optional) The configuration that the tools should use
     # These will go under `.config` in the final "home directory" of the rig
     config-files = riglib.writeFileTree {

@@ -79,6 +79,9 @@ Riglets are Nix modules with access to `riglib` helpers
       };
     };
 
+    # Alternatively, if you already have a folder that follows this same Agent Skill layout, you can directly reuse it:
+    #docs = ./path/to/skill/folder;
+
     # Configuration files (optional)
     config-files = riglib.writeFileTree {
       myapp."config.toml" = (pkgs.formats.toml {}).generate "myapp-config" {

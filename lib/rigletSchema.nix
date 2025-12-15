@@ -15,8 +15,11 @@ with pkgs.lib;
             };
 
             docs = mkOption {
-              description = "Documentation derivation for this riglet";
-              type = types.package;
+              description = "Documentation derivation or path (folder)";
+              type = types.oneOf [
+                types.package
+                types.path
+              ];
             };
 
             config-files = mkOption {
