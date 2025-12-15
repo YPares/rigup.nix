@@ -44,11 +44,12 @@ let
   #   - env: combined buildEnv of all tools
   #   - docs: attrset of riglet name -> docs derivation
   #   - meta: attrset of riglet name -> metadata
-  #   - home: complete agent directory (RIG.toml + bin/ + [share/ + ...] + docs/)
+  #   - home: complete rig directory (RIG.toml + bin/ + [lib/ + share/ + ...] + docs/)
   buildRig =
     {
-      modules,
+      inputs,
       pkgs,
+      modules,
       name ? "agent-rig",
     }:
     with pkgs.lib;
@@ -64,9 +65,9 @@ let
       evaluated = evalModules {
         modules = [
           {
-            # Pass pkgs and riglib to all modules
+            # Pass pkgs, riglib, and inputs to all modules
             _module.args = {
-              inherit pkgs riglib;
+              inherit pkgs riglib inputs;
             };
           }
           ./rigletSchema.nix

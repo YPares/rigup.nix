@@ -88,7 +88,7 @@ let
               pkgs = import inputs.nixpkgs { inherit system; };
             in
             rigupLib.buildRig {
-              inherit pkgs;
+              inherit pkgs inputs;
               name = rigName;
               modules = resolvedModules ++ [ configModule ];
             };

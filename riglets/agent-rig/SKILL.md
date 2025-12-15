@@ -226,8 +226,8 @@ For config not representable in TOML:
     in
     resolved // {
       rigs.$${system}.custom = rigup.lib.buildRig {
+        inherit inputs pkgs;
         name = "my-custom-rig";
-        inherit pkgs;
         modules = [
           rigup.riglets.jj-basics
           {
