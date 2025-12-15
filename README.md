@@ -1,9 +1,9 @@
 ```
-                               ─────────────────────────────────
-                                     ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌─╮     
-                                 ──  ├┬╯  │  │ ┬ : │ │ ├─╯  ──
-                                     ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵       
-                               ─────────────────────────────────
+                                ─────────────────────────────────
+                                      ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌─╮     
+                                  ──  ├┬╯  │  │ ┬ : │ │ ├─╯  ──
+                                      ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵       
+                                ─────────────────────────────────
 ```
 
 # Self-Contained, Modular, Reusable AI Agent Skills
@@ -23,12 +23,15 @@ By combining the relevant riglets together, you build your agent's _rig_: the to
 
 In short, `rigup` is **Claude Skills + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
 
-## Quick Start
+## Quick start
 
-### Start a New Project
+You can create a new project from the template provided by this repository, or even directly build
+the example rig defined here.
+
+### Create a new project
 
 ```bash
-# Initialize a new project from our template
+# Initialize a new project from the template
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
 
 # Build your rig
@@ -40,7 +43,7 @@ cat result/RIG.md
 
 This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
 
-### Using a Rig
+### Use the example rig from this project
 
 This project defines example riglets, and an example rig combining them.
 
@@ -58,7 +61,11 @@ cat result/RIG.md
 cat result/docs/jj-basics/SKILL.md
 ```
 
-### Creating a Riglet
+## Deeper dive
+
+This section covers the general workflow of defining and editing riglets and rigs.
+
+### Creating a riglet
 
 Riglets are a simple use case of [Nix modules](https://nix.dev/tutorials/module-system/a-basic-module/).
 
@@ -95,7 +102,7 @@ Then add to it a `<riglet-name>.nix` file:
       version = "0.1.0";
     };
 
-    # The Skill part of the riglet. It's a file hierarchy that should contain a
+    # The Skill part of the riglet. It is a file hierarchy that should contain a
     # SKILL.md entry right under the root
     docs = riglib.writeFileTree {
       # Use inline strings...
@@ -149,7 +156,7 @@ riglets/
 This is useful to break up a riglet into various Nix or raw text files to make it more manageable.
 `rigup` will discover and treat both layouts identically.
 
-### Creating a Rig
+### Creating a rig
 
 #### Simple option: `rigup.toml`
 
@@ -176,7 +183,7 @@ Your `flake.nix` should be:
   outputs = { self, rigup, ... }@inputs:
     let system = "...";
     in rigup { inherit inputs; } // {
-      # Expose the whole rig directly as an output package, so it's easy to build
+      # Expose the whole rig directly as an output package, so it is easy to build
       packages.${system}.default-rig = self.rigs.${system}.default.home;
     };
 }
@@ -198,12 +205,12 @@ some-flake = ["foo", "bar"]
 means that your `flake.nix` has a `some-flake` input that exposes the `riglets.foo` and `riglets.bar` outputs.
 `self` is just a special case of that, as every flake has an implicit `self` input which is the flake itself.
 
-**NOTE:** The main reason to use a TOML file instead of listing everything in your `flake.nix` is not just because TOML is more well-known than Nix syntax.
-It's mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below).
+**NOTE:** The main reason to use a TOML file instead of always defining everything as Nix code is not _just_ because TOML is (much) more well-known than Nix syntax.
+It is mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below)...
 
 #### Advanced option: combine with Nix
 
-Build rigs directly in Nix when a more complex configuration is needed:
+...that being said, building rigs directly in Nix (if you need the full Nix power to write your rig's configuration) is totally supported:
 
 ```nix
 {
@@ -243,9 +250,11 @@ Build rigs directly in Nix when a more complex configuration is needed:
 }
 ```
 
-You can completely sidestep the `rigup.toml`, or define some simple rigs in the `rigup.toml` and some more advanced ones in Nix code (if so please don't put everything in your `flake.nix`, the above is just for the sake of the example).
+**IMPORTANT:** This makes the `rigup.toml` entirely _optional_, but it is **still necessary** to use `rigup { inherit inputs; }` to construct your flake's outputs.
+This is so `rigup` can discover which riglets are defined in your `$PROJECT_ROOT/riglets/` and set up the `riglets` output of your flake.
 
-**NOTE:** Even if you don't use a `rigup.toml`, it's **still necessary** to use `rigup { inherit inputs; }` so it discovers which riglets are defined in your `$PROJECT_ROOT/riglets/` and sets up the `riglets` output of your flake.
+As the above suggests, you can totally mix both options: define some simple rigs in the `rigup.toml` and some advanced ones in Nix code.
+Although, prefer splitting you rigs' definitions in separate Nix files rather than declaring everything in your `flake.nix`, the example above is just for the sake of concision.
 
 ## Features
 
@@ -283,7 +292,7 @@ rigup.nix/
 - [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
 - More example riglets
 
-## Related Projects
+## Related projects
 
 - [`openskills`](https://github.com/numman-ali/openskills): Universal Skill loader, following Claude Skills system and manifest
 - [`llm-agents.nix`](https://github.com/numtide/llm-agents.nix): Numtide's flake packaging AI coding agents and development tools
