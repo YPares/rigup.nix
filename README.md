@@ -62,7 +62,7 @@ cat result/docs/jj-basics/SKILL.md
 
 Riglets are a simple use case of [Nix modules](https://nix.dev/tutorials/module-system/a-basic-module/).
 
-Concretely, this means a riglet is a `(config, dependencies) -> data` Nix function, where:
+Concretely, this means a riglet (in its most general form) is a `(config, dependencies) -> data` Nix function, where:
 
 - `config` is the final config of the rig which the riglet is part of,
 - `data` is a dictionary-like structure ("attribute set" in Nix lingo) providing nested fields that will _themselves_ contribute to the final aggregated config
@@ -95,8 +95,8 @@ Then add to it a `<riglet-name>.nix` file:
       version = "0.1.0";
     };
 
-    # The Skill part of the riglet. It's a file hierarchy
-    # which should contain a SKILL.md entry at the top
+    # The Skill part of the riglet. It's a file hierarchy that should contain a
+    # SKILL.md entry right under the root
     docs = riglib.writeFileTree {
       # Use inline strings...
       "SKILL.md" = ''
@@ -151,7 +151,7 @@ This is useful to break up a riglet into various Nix or raw text files to make i
 
 ### Creating a Rig
 
-#### Simple Approach
+#### Simple option: `rigup.toml`
 
 Define rigs in `rigup.toml` at the top of your project:
 
@@ -167,17 +167,16 @@ name = "Alice"  # This is used by both jj-basics & typst-reporter example riglet
 email = "alice@example.com"
 ```
 
-Your `flake.nix` is then:
+Your `flake.nix` should be:
 
 ```nix
-# flake.nix
 {
   inputs.rigup.url = "github:YPares/rigup.nix";
 
   outputs = { self, rigup, ... }@inputs:
     let system = "...";
     in rigup { inherit inputs; } // {
-      # Make the whole rig directly buildable as an output package:
+      # Expose the whole rig directly as an output package, so it's easy to build
       packages.${system}.default-rig = self.rigs.${system}.default.home;
     };
 }
@@ -202,15 +201,17 @@ means that your `flake.nix` has a `some-flake` input that exposes the `riglets.f
 **NOTE:** The main reason to use a TOML file instead of listing everything in your `flake.nix` is not just because TOML is more well-known than Nix syntax.
 It's mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below).
 
-#### Advanced approach
+#### Advanced option: combine with Nix
 
 Build rigs directly in Nix when a more complex configuration is needed:
 
 ```nix
 {
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   inputs.rigup.url = "github:YPares/rigup.nix";
+  inputs.foo.url = "github:bar/foo";
 
-  outputs = { self, rigup, nixpkgs, ... }@inputs:
+  outputs = { self, rigup, nixpkgs, foo, ... }@inputs:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
@@ -220,18 +221,31 @@ Build rigs directly in Nix when a more complex configuration is needed:
       rigs.${system}.custom = rigup.lib.buildRig {
         inherit pkgs;
         modules = [
-          some.advanced.riglet # extra modules
+          self.riglets.aaa # Will use `$PROJECT_ROOT/riglets/{aaa.nix,aaa/default.nix}`
+          foo.riglets.bbb  # Use external riglets defined by our inputs
+          foo.riglets.ccc
+          # Extra config is given in the form of a simple in-line Nix module,
+          # with or without `{ config, pkgs, riglib, ... }` arguments
           {
-            # More advanced config, that e.g. requires direct access to some Nix functions
-            agent.complexOption = { ... };
+            config = {
+              # More advanced config, that e.g. requires direct access to some Nix functions,
+              # or even takes the form of Nix functions:
+              aaa-config.i-need-a-derivation = pkgs.someDerivationBuilder "..." "........";
+              bbbModuleOpts.conditions.is-x-y-pair-valid = x: y: x * y <= 42.420000000000001;
+            }
           }
         ];
       };
 
+      # (Same as before) Optionally expose more directly whole rigs as output packages
       packages.${system}.custom-rig = self.rigs.${system}.custom.home;
     };
 }
 ```
+
+You can completely sidestep the `rigup.toml`, or define some simple rigs in the `rigup.toml` and some more advanced ones in Nix code (if so please don't put everything in your `flake.nix`, the above is just for the sake of the example).
+
+**NOTE:** Even if you don't use a `rigup.toml`, it's **still necessary** to use `rigup { inherit inputs; }` so it discovers which riglets are defined in your `$PROJECT_ROOT/riglets/` and sets up the `riglets` output of your flake.
 
 ## Features
 
