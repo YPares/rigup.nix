@@ -17,13 +17,12 @@
       rigupLib = import ./lib { };
     in
     blueprint { inherit inputs; }
-    # Expose the example riglets
+    # Expose the example riglets & rig
     // rigupLib.resolveProject { inherit inputs; }
     // {
-      # Makes the flake itself directly usable as a function
+      # Make the flake itself directly usable as a function by user flakes
       __functor = self: self.lib.resolveProject;
 
-      # Templates for bootstrapping new projects
       templates.default = {
         path = ./templates/default;
         description = "Basic rigup project with example riglet";

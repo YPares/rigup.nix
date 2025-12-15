@@ -49,7 +49,7 @@ This project defines example riglets, and an example rig combining them.
 
 ```bash
 # Build a simple but complete agent rig:
-nix build github:YPares/rigup.nix#rigs.x86_64-linux.default.home
+nix build github:YPares/rigup.nix#rigs.x86_64-linux.example-rig.home
 
 # Discover available riglets
 cat result/RIG.md
@@ -277,7 +277,8 @@ rigup.nix/
 ├── riglets/
 │   ├── agent-rig.nix    # Meta-documentation (a riglet about the agent rig system)
 │   └── ...              # Example riglets
-└── flake.nix            # Exposes riglets & example rigs
+├── rigup.toml           # Declares the example rig
+└── flake.nix            # Exposes the Nix library + the above riglets & rig as outputs
 ```
 
 ## TODO
