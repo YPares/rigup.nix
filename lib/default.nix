@@ -25,7 +25,7 @@ let
               # Symlink derivation or path to output path
               ''
                 mkdir -p "$out/$(dirname "${path}")"
-                ln -s ${value} "$out/${path}"
+                ln -sL ${value} "$out/${path}"
               ''
             else
               # Write string content to file
@@ -45,7 +45,7 @@ let
   #   - env: combined buildEnv of all tools
   #   - docs: attrset of riglet name -> docs derivation
   #   - meta: attrset of riglet name -> metadata
-  #   - home: complete agent directory (bin/ + docs/)
+  #   - home: complete agent directory (RIG.toml + bin/ + [share/ + ...] + docs/)
   buildRig =
     {
       modules,
@@ -75,6 +75,7 @@ let
         ]
         ++ modules;
       };
+
       # Combined tools from all riglets
       env = pkgs.buildEnv {
         inherit name;
@@ -93,23 +94,23 @@ let
     {
       inherit env docs meta;
 
-      # Complete agent home directory with bin/ and docs/
+      # Complete agent home directory
       home = pkgs.runCommand "${name}-home" { } ''
         mkdir -p $out
 
         # Add RIG.md manifest at top level
-        cp ${manifest} $out/RIG.md
+        ln -sL ${manifest} $out/RIG.md
 
-        # Symlink all tools to bin/ (if env has a bin directory)
-        if [ -d ${env}/bin ]; then
-          ln -s ${env}/bin $out/bin
-        fi
+        # Symlink all env subfolders (notably bin/)
+        for f in ${env}/*; do
+          ln -sL "$f" $out/
+        done
 
         # Create docs/ with subdirs per riglet
         mkdir -p $out/docs
         ${lib.concatStringsSep "\n" (
           lib.mapAttrsToList (rigletName: rigletDocs: ''
-            ln -s ${rigletDocs} $out/docs/${rigletName}
+            ln -sL ${rigletDocs} $out/docs/${rigletName}
           '') docs
         )}
 
@@ -119,7 +120,9 @@ let
           lib.mapAttrsToList (
             _: riglet:
             lib.optionalString (riglet.config-files != null) ''
-              cp -r ${riglet.config-files}/* $out/.config/
+              for f in ${riglet.config-files}/*; do
+                ln -sL "$f" $out/.config/
+              done
             ''
           ) evaluated.config.riglets
         )}
