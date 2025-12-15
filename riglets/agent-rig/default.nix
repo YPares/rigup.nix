@@ -4,8 +4,6 @@
 }:
 {
   config.riglets.agent-rig = {
-    tools = [ ];
-
     meta = {
       name = "Agent Rig System";
       description = "Understanding and working with rigup's riglet system";

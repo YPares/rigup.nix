@@ -23,20 +23,6 @@
       # Make the flake itself directly usable as a function by user flakes
       __functor = self: self.lib.resolveProject;
 
-      templates.default = {
-        path = ./templates/default;
-        description = "Basic rigup project with example riglet";
-        welcomeText = ''
-          # Project initialized!
-
-          # Next steps
-
-          1. Edit riglets/my-first-riglet.nix to add your tools and documentation
-          2. Update rigup.toml to configure your rig
-          3. Build your rig: nix build
-          4. Explore the output: cat result/RIG.md
-          5. Learn more: https://github.com/YPares/rigup.nix
-        '';
-      };
+      templates = import ./templates;
     };
 }

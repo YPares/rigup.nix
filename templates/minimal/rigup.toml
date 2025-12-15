@@ -1,0 +1,12 @@
+# rigup configuration
+# Minimal template: uses only external riglets, no local riglets folder
+
+[rigs.default.riglets]
+# Include riglets from external flake inputs
+# rigup = []
+# Include riglets from your own flake
+# self = []
+
+# Optional: Add configuration for riglets that define options
+# [rigs.default.config.some-option]
+# value = "example"

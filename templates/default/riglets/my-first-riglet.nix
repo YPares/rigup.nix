@@ -1,6 +1,7 @@
 {
   config,
   pkgs,
+  inputs,
   riglib,
   ...
 }:

@@ -34,6 +34,7 @@ the example rig defined here.
 ```bash
 # Initialize a new project from the template
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
+# ...or use `-t github:YPares/rigup.nix#minimal` for a project which should not define any local riglet
 
 # Build your rig
 nix build
@@ -144,6 +145,8 @@ Then add to it a `<riglet-name>.nix` file:
 
 }
 ```
+
+...or just ask your agent to do it! :) `rigup.nix` comes with the `riglet-creator` riglet that teaches your agent to write riglets and... and, ahem, yes that's becoming very meta, sorry about that.
 
 Just as with regular Agent Skills, the point of separating the docs into several files
 is to allow [_progressive disclosure_](https://en.wikipedia.org/wiki/Progressive_disclosure).
