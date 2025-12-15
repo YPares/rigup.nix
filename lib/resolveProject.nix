@@ -11,8 +11,14 @@
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
 }:
 let
-  # Read rigup.toml from repository root
-  rigupToml = builtins.fromTOML (builtins.readFile (inputs.self + "/rigup.toml"));
+  rigupTomlPath = (inputs.self + "/rigup.toml");
+
+  # Read rigup.toml from repository root if it exists
+  rigupToml =
+    if builtins.pathExists rigupTomlPath then
+      builtins.fromTOML (builtins.readFile rigupTomlPath)
+    else
+      { };
 
   # Auto-discover all riglets from riglets/ directory
   rigletsDir = inputs.self + "/riglets";
@@ -86,7 +92,7 @@ let
               name = rigName;
               modules = resolvedModules ++ [ configModule ];
             };
-        }) (builtins.attrNames rigupToml.rigs)
+        }) (builtins.attrNames (rigupToml.rigs or { }))
       );
     }) systems
   );
