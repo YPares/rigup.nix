@@ -276,19 +276,20 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 - **Auto-generated manifests:** RIG.md lists all capabilities
 - **Reproducible:** Nix ensures consistent tool versions
 
-## Architecture
+## Layout of this repository
 
 ```
 rigup.nix/
 ├── lib/
-│   ├── default.nix      # riglib (common functions to define riglets)
-│   ├── manifest.nix     # RIG.md generation
-│   └── rigletSchema.nix # Riglet type definitions
+│   ├── default.nix       # riglib (common functions to define riglets)
+│   ├── manifest.nix      # RIG.md generation
+│   └── rigletSchema.nix  # Riglet type definitions
 ├── riglets/
-│   ├── agent-rig.nix    # Meta-documentation (a riglet about the agent rig system)
-│   └── ...              # Example riglets
-├── rigup.toml           # Declares the example rig
-└── flake.nix            # Exposes the Nix library + the above riglets & rig as outputs
+│   ├── agent-rig         # Meta-documentation (a riglet about the agent rig system)
+│   ├── riglet-creator    # A port of Anthropics' skill-creator Skill to the rig system
+│   └── ...               # Other example riglets
+├── rigup.toml            # Declares the example rig
+└── flake.nix             # Exposes the Nix library + the above riglets & rig as outputs
 ```
 
 ## TODO
