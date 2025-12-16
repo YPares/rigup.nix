@@ -1,11 +1,13 @@
 # This is a port of https://github.com/anthropics/skills/tree/main/skills/skill-creator
 # to the Agent rig system
+self:
 {
   riglib,
   ...
 }:
 {
-  imports = [ ../agent-rig ];
+  # Use self.riglets.* for inter-riglet imports to ensure proper deduplication
+  imports = [ self.riglets.agent-rig ];
 
   config.riglets.riglet-creator = {
     meta = {

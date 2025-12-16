@@ -1,3 +1,4 @@
+_:
 {
   config,
   pkgs,

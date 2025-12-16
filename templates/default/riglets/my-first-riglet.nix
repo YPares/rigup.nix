@@ -1,7 +1,11 @@
+# First argument: the defining flake's `self`
+# Use `_:` if you don't need access to `self.inputs.*` or `self.riglets.*`
+_:
+
+# Second argument: module args from evalModules
 {
   config,
   pkgs,
-  inputs,
   riglib,
   ...
 }:

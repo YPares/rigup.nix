@@ -81,6 +81,13 @@ Then add to it a `<riglet-name>.nix` file:
 ```nix
 # riglets/my-riglet.nix
 
+# First argument: the defining flake's `self` - gives access to:
+#   - `self.inputs.*` for external package dependencies
+#   - `self.riglets.*` for inter-riglet imports
+# Use `_:` if you don't need access to `self`
+_:
+
+# Second argument: module args from evalModules
 # - config is the final aggregated config of the rig using my-riglet,
 # - pkgs is your usual imported nixpkgs,
 # - riglib is injected by rigup, and contains utility functions to build riglets
@@ -162,6 +169,55 @@ riglets/
 
 This is useful to break up a riglet into various Nix or raw text files to make it more manageable.
 `rigup` will discover and treat both layouts identically.
+
+#### Inter-riglet dependencies
+
+If a riglet depends on another (e.g., builds on its concepts or requires its tools), use `imports` with `self.riglets.*`:
+
+```nix
+# riglets/advanced-riglet.nix
+self:
+{ riglib, ... }: {
+  # Import the base riglet - if both are added to a rig, evalModules deduplicates
+  imports = [ self.riglets.base-riglet ];
+
+  config.riglets.advanced-riglet = {
+    # ...
+  };
+}
+```
+
+**Important:** Always use `self.riglets.*` for imports, never path-based imports like `./base-riglet.nix`. The `self.riglets.*` form ensures proper deduplication when the same riglet is included both directly and via imports.
+
+For dependencies on riglets from external flakes:
+
+```nix
+self:
+{ riglib, ... }: {
+  imports = [ self.inputs.other-flake.riglets.some-riglet ];
+  # ...
+}
+```
+
+#### Using external packages
+
+Riglets can access packages from external flakes via `self.inputs`:
+
+```nix
+self:
+{ pkgs, riglib, ... }: {
+  config.riglets.my-riglet = {
+    # Use pkgs.system to select the right platform
+    tools = [
+      self.inputs.some-tool.packages.${pkgs.system}.default
+      pkgs.git  # Regular nixpkgs packages still available
+    ];
+    # ...
+  };
+}
+```
+
+This lets riglets bundle their own dependencies without requiring consumers to know about them.
 
 ### Creating a rig
 

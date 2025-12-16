@@ -41,6 +41,12 @@ Riglets are Nix modules with access to `riglib` helpers
 ### Example Riglet
 
 ```nix
+# First argument: the defining flake's `self`
+# Gives access to `self.inputs.*` and `self.riglets.*`
+# Use `_:` if you don't need it
+_:
+
+# Second argument: module args from evalModules
 { config, pkgs, lib, riglib, ... }: {
   # Riglet-specific options (optional)
   options.myRiglet = {
@@ -154,6 +160,8 @@ This controls the information/token-count ratio:
 
 ## Cross-Riglet Interaction
 
+### Sharing options via `config`
+
 Riglets can reference each other's options via `config`:
 
 ```nix
@@ -164,6 +172,44 @@ options.agent.user.name = lib.mkOption { ... };
 config.riglets.typst-reporter.docs = ''
   # ... template using config.agent.user.name
 '';
+```
+
+### Inter-riglet dependencies via `imports`
+
+If a riglet depends on another, use `imports` with `self.riglets.*`:
+
+```nix
+self:
+{ riglib, ... }: {
+  # Import the base riglet - evalModules deduplicates if both are in the rig
+  imports = [ self.riglets.base-riglet ];
+
+  config.riglets.advanced-riglet = { ... };
+}
+```
+
+**IMPORTANT:** Always use `self.riglets.*` for imports, never path-based imports like `./base-riglet.nix`. The `self.riglets.*` form ensures proper deduplication.
+
+For riglets from external flakes:
+
+```nix
+imports = [ self.inputs.other-flake.riglets.some-riglet ];
+```
+
+### Using external packages
+
+Access packages from external flakes via `self.inputs`:
+
+```nix
+self:
+{ pkgs, riglib, ... }: {
+  config.riglets.my-riglet = {
+    tools = [
+      self.inputs.some-tool.packages.${pkgs.system}.default
+      pkgs.git
+    ];
+  };
+}
 ```
 
 ## Defining Rigs in Projects
