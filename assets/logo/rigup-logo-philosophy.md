@@ -1,0 +1,13 @@
+# Circuit Luminescence
+
+A design philosophy where precision engineering meets ephemeral light. The aesthetic draws from two seemingly opposing worlds: the rigid, mathematical order of circuit boards and the soft, oscillating glow of old CRT monitors. This tension—between cold apparatus and warm luminescence—creates visual poetry through technical restraint.
+
+The visual language is rooted in **interconnected systems**: nodes and traces form the backbone of composition, suggesting machinery that thinks, apparatus that breathes. These circuit pathways aren't mere decoration—they're the structural DNA of the design, conveying that complexity emerges from simple, interconnected components. The palette is deliberately limited to create maximum impact: deep navy as void, cyan and magenta as the twin pillars of nostalgic technology, amber as the warm human presence within cold systems.
+
+**Chromatic displacement** becomes a design principle, not a glitch. By splitting color channels (red, green, blue offset in subtle ways), the design acknowledges both analog decay and digital precision simultaneously. This technique—borrowed from old printing misregistration and modern digital aesthetics—creates depth without literal three-dimensionality. The aberration suggests that perfection is impossible and somehow more beautiful for it; the system reveals its own seams, celebrating the gap between intention and execution.
+
+**Materiality is fundamental**: horizontal scan lines evoke the phosphor dots of CRT screens, a rhythm that structures the entire composition. These lines aren't background noise—they're the heartbeat of the design, a tactile reminder that this is physical light, not abstract digital space. Every element sits within this grid, anchored by this rhythm. Typography appears sparingly, integrated as a visual element rather than informational overlay. Text becomes form; form becomes meaning.
+
+The craft lies in **meticulous precision**: every trace placed with mathematical accuracy, every color chosen through painstaking chromatic calibration, every spacing decision reflecting countless refinements. This is apparatus-as-art, the product of someone who understands both the mathematics of circuits and the poetry of glowing screens. The work appears as though hundreds of hours were invested in perfecting what seems deceptively simple—a visual system so refined that each element feels inevitable, necessary, irreplaceable.
+
+This is the aesthetic of **systems within systems**: nested structures, modular components, recursive beauty. It celebrates the idea that sophisticated wholes emerge from elegant simplicity, that apparatus can be luminous, that precision and poetry need not compete.
