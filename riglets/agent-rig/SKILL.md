@@ -267,7 +267,7 @@ For config not representable in TOML:
       pkgs = import nixpkgs { inherit system; };
     in
     resolved // {
-      rigs.$${system}.custom = rigup.lib.buildRig {
+      rigs.${system}.custom = rigup.lib.buildRig {
         inherit inputs pkgs;
         name = "my-custom-rig";
         modules = [
