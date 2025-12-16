@@ -134,7 +134,7 @@ let
       '';
     };
 
-  resolveProject = import ./resolveProject.nix { inherit rigupLib; };
+  resolveProject = import ./resolveProject.nix rigupLib;
 
   rigupLib = {
     inherit writeFileTree buildRig resolveProject;

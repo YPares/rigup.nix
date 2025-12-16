@@ -1,6 +1,4 @@
-# Auto-discover riglets from riglets/ folder and resolve rigs from rigup.toml
-{ rigupLib, ... }:
-
+rigupLib:
 # Resolves complete project structure from rigup.toml configuration
 # Arguments:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
@@ -10,91 +8,56 @@
   inputs,
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
 }:
+with builtins;
 let
-  rigupTomlPath = (inputs.self + "/rigup.toml");
-
-  # Read rigup.toml from repository root if it exists
-  rigupToml =
-    if builtins.pathExists rigupTomlPath then
-      builtins.fromTOML (builtins.readFile rigupTomlPath)
-    else
-      { };
+  inherit (inputs.nixpkgs.lib) genAttrs;
 
   # Auto-discover all riglets from riglets/ directory
   rigletsDir = inputs.self + "/riglets";
-  rigletEntries = if builtins.pathExists rigletsDir then builtins.readDir rigletsDir else { };
-
-  # Find .nix files (excluding default.nix in root)
-  nixFileRiglets = builtins.filter (
-    name: builtins.match ".*\\.nix" name != null && name != "default.nix"
-  ) (builtins.attrNames rigletEntries);
-
-  # Find directories containing default.nix
-  dirRiglets = builtins.filter (
-    name:
-    rigletEntries.${name} == "directory" && builtins.pathExists (rigletsDir + "/${name}/default.nix")
-  ) (builtins.attrNames rigletEntries);
-
-  # Combine both types into riglets attrset
-  riglets = builtins.listToAttrs (
-    # .nix files: strip extension
-    (builtins.map (name: {
-      name = builtins.replaceStrings [ ".nix" ] [ "" ] name;
-      value = rigletsDir + "/${name}";
-    }) nixFileRiglets)
-    ++
-      # directories: use directory name as-is
-      (builtins.map (name: {
-        name = name;
+  rigletsDirEntries = if pathExists rigletsDir then readDir rigletsDir else { };
+  riglets = listToAttrs (
+    map
+      (name: {
+        # .nix files: strip extension
+        name = replaceStrings [ ".nix" ] [ "" ] name;
         value = rigletsDir + "/${name}";
-      }) dirRiglets)
+      })
+      (
+        filter (
+          name:
+          (match ".*\\.nix$" name != null && name != "default.nix")
+          || (rigletsDirEntries.${name} == "directory" && pathExists (rigletsDir + "/${name}/default.nix"))
+        ) (attrNames rigletsDirEntries)
+      )
   );
 
-  # Resolve riglets from the new TOML structure
+  rigupTomlPath = inputs.self + "/rigup.toml";
+  # Read rigup.toml from repository root if it exists
+  rigupTomlContents = if pathExists rigupTomlPath then fromTOML (readFile rigupTomlPath) else { };
+
+  # Resolve riglets from the TOML structure
   # Takes riglets attrset from TOML: { self = ["riglet1", ...]; input = ["riglet2", ...]; }
-  # Returns list of resolved module paths
-  resolveRiglets =
+  # Returns list of resolved modules
+  rigletsSpecToModules =
     rigletsSpec:
-    builtins.concatLists (
-      builtins.attrValues (
-        builtins.mapAttrs (
-          inputName: rigletNames:
-          builtins.map (
-            rigletName:
-            if inputName == "self" then riglets.${rigletName} else inputs.${inputName}.riglets.${rigletName}
-          ) rigletNames
-        ) rigletsSpec
-      )
+    concatLists (
+      attrValues (mapAttrs (input: names: map (n: inputs.${input}.riglets.${n}) names) rigletsSpec)
     );
 
   # Build rigs for all systems
-  rigs = builtins.listToAttrs (
-    builtins.map (system: {
-      name = system;
-      value = builtins.listToAttrs (
-        builtins.map (rigName: {
-          name = rigName;
-          value =
-            let
-              rigDef = rigupToml.rigs.${rigName};
-
-              # Resolve riglets from TOML spec to actual module paths
-              resolvedModules = if rigDef ? riglets then resolveRiglets rigDef.riglets else [ ];
-
-              # Convert TOML config to inline module
-              configModule = if rigDef ? config then rigDef.config else { };
-
-              # Build the rig
-              pkgs = import inputs.nixpkgs { inherit system; };
-            in
-            rigupLib.buildRig {
-              inherit pkgs;
-              name = rigName;
-              modules = resolvedModules ++ [ configModule ];
-            };
-        }) (builtins.attrNames (rigupToml.rigs or { }))
-      );
-    }) systems
+  rigs = genAttrs systems (
+    system:
+    mapAttrs (
+      rigName: rigDef:
+      let
+        pkgs = import inputs.nixpkgs { inherit system; };
+      in
+      rigupLib.buildRig {
+        inherit pkgs;
+        name = rigName;
+        modules = rigletsSpecToModules (rigDef.riglets or [ ]) ++ [ (rigDef.config or { }) ];
+      }
+    ) (rigupTomlContents.rigs or { })
   );
 in
 {
