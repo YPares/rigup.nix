@@ -9,6 +9,7 @@ self = [
   "riglet-creator",
   "jj-basics",
   "typst-reporter",
+  "nix-module-system",
 ]
 # Riglets from external flake inputs would go here:
 # <input> = ["some-external-riglet-from-<input>"]

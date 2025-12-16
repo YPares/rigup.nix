@@ -5,7 +5,7 @@
 # Include riglets from this repository
 self = ["my-first-riglet"]
 # Include riglets from external inputs
-rigup = ["agent-rig"]
+rigup = ["agent-rig", "riglet-creator", "nix-module-system"]
 
 # Configuration for the riglets (if they define options)
 # [rigs.default.config.some-option]

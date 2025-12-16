@@ -328,6 +328,7 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 - **Declarative composition:** Module system for riglet interaction
 - **Auto-generated manifests:** RIG.md lists all capabilities
 - **Reproducible:** Nix ensures consistent tool versions
+- **Self-documenting:** Riglets like `agent-rig`, `riglet-creator`, and `nix-module-system` teach agents how the system works — so they can help you write Nix and extend your rig. Learn Nix as a side effect, with AI assistance.
 
 ## Layout of this repository
 
@@ -338,8 +339,9 @@ rigup.nix/
 │   ├── manifest.nix      # RIG.md generation
 │   └── rigletSchema.nix  # Riglet type definitions
 ├── riglets/
-│   ├── agent-rig         # Meta-documentation (a riglet about the agent rig system)
-│   ├── riglet-creator    # A port of Anthropics' skill-creator Skill to the rig system
+│   ├── agent-rig         # Meta-documentation about the rig system
+│   ├── riglet-creator    # Guide to writing riglets
+│   ├── nix-module-system # Dark corners of Nix modules (evalModules, mkDefault, etc.)
 │   └── ...               # Other example riglets
 ├── rigup.toml            # Declares the example rig
 └── flake.nix             # Exposes the Nix library + the above riglets & rig as outputs
