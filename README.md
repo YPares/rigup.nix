@@ -16,13 +16,12 @@ A _riglet_ is _executable knowledge_:
 - a set of operations, instructions, processes, a.k.a a new [skill](https://code.claude.com/docs/en/skills) for your agent. These instructions are _lazily_ loaded: your agent reads them when it needs to, or is prompted to
 - the tools (nix packages) needed to execute these instructions
 - the configuration for these tools (if any)
-- the riglets it depends from (if any), ie. those it builds upon, ensuring that tools and knowledge from these base riglets are always available too to your agent
 
 By combining the relevant riglets together, you build your agent's _rig_: the tools it needs to work on your project, and the operational knowledge it needs to use those tools properly and efficiently.
 
 `rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies
 
-In short, `rigup` is **Claude Skills + explicit Skill dependencies + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
+In short, `rigup` is **Claude Skills + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
 
 ## Quick start
 
@@ -83,18 +82,9 @@ Then add to it a `<riglet-name>.nix` file:
 # riglets/my-riglet.nix
 
 # - config is the final aggregated config of the rig using my-riglet,
-# - inputs is your flake inputs, as passed to `rigup`,
 # - pkgs is your usual imported nixpkgs,
 # - riglib is injected by rigup, and contains utility functions to build riglets
-{ config, inputs, pkgs, riglib, ... }: {
-
-  # (Optional) Which riglet(s) should `my-riglet` depend from.
-  # If `my-riglet` is added to a rig, this ensures that its dependencies
-  # are always added as well
-  imports = [
-    ./path/to/dependency.nix  # A locally defined riglet
-    inputs.foo.riglets.bar    # A riglet exposed by an input flake
-  ]
+{ config, pkgs, riglib, ... }: {
 
   # Each riglet must declare itself under config.riglets.<riglet-name>
   config.riglets.my-riglet = {
@@ -243,7 +233,7 @@ It is mainly because pure data (that can already cover a large set of use cases)
     rigup { inherit inputs; } // {
       # Override or extend with custom rigs
       rigs.${system}.custom = rigup.lib.buildRig {
-        inherit inputs pkgs;
+        inherit pkgs;
         modules = [
           self.riglets.aaa # Will use `$PROJECT_ROOT/riglets/{aaa.nix,aaa/default.nix}`
           foo.riglets.bbb  # Use external riglets defined by our inputs

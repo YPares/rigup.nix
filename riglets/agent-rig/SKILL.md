@@ -154,10 +154,6 @@ This controls the information/token-count ratio:
 
 ## Cross-Riglet Interaction
 
-Riglets can interact in two ways:
-
-### Referencing Other Riglets' Configuration
-
 Riglets can reference each other's options via `config`:
 
 ```nix
@@ -169,41 +165,6 @@ config.riglets.typst-reporter.docs = ''
   # ... template using config.agent.user.name
 '';
 ```
-
-### Declaring Riglet Dependencies
-
-Riglets can depend on other riglets using Nix module `imports`. This ensures that when a riglet is included in a rig, its dependencies are automatically included as well:
-
-**Local riglets (same project):**
-```nix
-{ config, pkgs, lib, riglib, ... }:
-{
-  imports = [ ../agent-rig ];
-  
-  config.riglets.my-riglet = {
-    # ...
-  };
-}
-```
-
-**External riglets (from flake inputs):**
-```nix
-{ config, pkgs, lib, riglib, inputs, ... }:
-{
-  imports = [ inputs.some-flake.riglets.useful-riglet ];
-  
-  config.riglets.my-riglet = {
-    # ...
-  };
-}
-```
-
-**Key points:**
-- Use `imports = [ path-to-riglet ]` to declare that this riglet depends on another
-- Local paths point to the riglet's directory (which uses `default.nix`)
-- External paths reference riglets from flake inputs via the module system
-- When a riglet with dependencies is loaded, all its dependencies are automatically included
-- The Nix module system handles deduplication: if the same riglet is imported multiple times, it only appears once in the final rig
 
 ## Defining Rigs in Projects
 
@@ -268,8 +229,8 @@ For config not representable in TOML:
     in
     resolved // {
       rigs.${system}.custom = rigup.lib.buildRig {
-        inherit inputs pkgs;
         name = "my-custom-rig";
+        inherit pkgs;
         modules = [
           rigup.riglets.jj-basics
           {

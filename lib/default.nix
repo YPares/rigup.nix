@@ -47,9 +47,8 @@ let
   #   - home: complete rig directory (RIG.toml + bin/ + [lib/ + share/ + ...] + docs/)
   buildRig =
     {
-      inputs,
-      pkgs,
       modules,
+      pkgs,
       name ? "agent-rig",
     }:
     with pkgs.lib;
@@ -65,9 +64,9 @@ let
       evaluated = evalModules {
         modules = [
           {
-            # Pass pkgs, riglib, and inputs to all modules
+            # Pass pkgs and riglib to all modules
             _module.args = {
-              inherit pkgs riglib inputs;
+              inherit pkgs riglib;
             };
           }
           ./rigletSchema.nix
