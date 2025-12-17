@@ -12,13 +12,10 @@
       blueprint,
       ...
     }:
-    let
-      # Import lib functions directly to avoid circular dependency
-      rigupLib = import ./lib { };
-    in
     blueprint { inherit inputs; }
     # Expose the example riglets & rig
-    // rigupLib.resolveProject { inherit inputs; }
+    #   (lib imported directly to avoid circular dependency)
+    // (import ./lib { }).resolveProject { inherit inputs; }
     // {
       # Make the flake itself directly usable as a function by user flakes
       __functor = self: self.lib.resolveProject;

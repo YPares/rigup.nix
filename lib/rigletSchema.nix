@@ -1,3 +1,4 @@
+_selfLib:
 # Base module that defines common riglet structure
 { pkgs, ... }:
 with pkgs.lib;
