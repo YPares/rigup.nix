@@ -330,7 +330,17 @@ writeShellApplication {
 ```
 
 For instance, if you want to include a Python script to the riglet, package it properly with `buildPythonApplication` so ALL its dependencies are present.
-Listing all Nix facilities for packaging tools in every language is beyond the scope of this document, but could be added later as further `references/*.md` files.
+
+#### Language-specific packaging guides
+
+See the references directory for detailed guides on packaging tools in specific languages:
+- [Python](references/packaging-python.md) - `buildPythonApplication` and modern `pyproject.toml` support
+- [Node.js/JavaScript](references/packaging-nodejs.md) - `buildNpmPackage` for npm-based projects
+- [Rust](references/packaging-rust.md) - `buildRustPackage` with `cargoHash` or `Cargo.lock`
+- [Go](references/packaging-go.md) - `buildGoModule` with `vendorHash`
+- [Haskell](references/packaging-haskell.md) - `haskellPackages.developPackage` and `callCabal2nix`
+- [Ruby](references/packaging-ruby.md) - `bundlerApp` and `bundlerEnv` for gems
+- [Java/Kotlin](references/packaging-java-kotlin.md) - `buildMavenPackage` and Gradle approaches
 
 #### About external package-managers (uv, npm...)
 
