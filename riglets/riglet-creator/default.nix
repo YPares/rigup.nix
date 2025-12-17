@@ -13,7 +13,7 @@ self:
     meta = {
       name = "Riglet Creator";
       description = "Guide for creating effective riglets. Use when creating new riglets or improving existing ones, defining riglet structure, metadata, documentation patterns, or integrating tools with Nix.";
-      intent = "cookbook";
+      intent = "playbook";
       whenToUse = [
         "Creating new riglets"
         "Improving existing riglets"
