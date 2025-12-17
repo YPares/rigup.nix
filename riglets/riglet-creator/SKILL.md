@@ -6,6 +6,20 @@ For the structural/technical side of riglets (what goes in the Nix module, metad
 
 ## Core Principles
 
+### Define the Main Intent
+
+Ask yourself: what is the end goal here? What should this riglet teach?
+The `intent` metadata is there to help you here. It should guide how you approach the writing of a riglet.
+As a reminder, the possible intents are:
+- sourcebook: compendium of knowledge, glossary, useful domain knowledge
+- toolbox: open-ended set of tools related together
+- cookbook: operational know-how, heuristics, tricks and techniques that are useful to apprehend an otherwise complex toolset or domain
+- playbook: specific procedure or workflow to follow in a rigorous manner
+
+A riglet should fall under **one** of these categories. If several apply, then it might be a better idea to split it into several.
+**Discuss that with your user.** Several riglets, each one with a clear focus, are better than one unorganized riglet that tries to cover everything without a real goal.
+Remember riglets can depend on each other via `imports`, so for example a very specialized "playbook" can depend on tools explained and documented in a more general "toolbox".
+
 ### Concise is Key
 
 Agents share context windows with conversation history, system instructions, and other riglets in the rig. Context is a shared resource.
