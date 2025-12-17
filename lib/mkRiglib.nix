@@ -39,4 +39,13 @@ pkgs: {
         );
     in
     pkgs.runCommand "file-tree" { } (mkFileCommands "" tree);
+
+  # Convert a script path to a package by wrapping it with writeShellScriptBin
+  # Derives the executable name from the script's filename (without extension)
+  wrapScriptPath =
+    scriptPath:
+    let
+      scriptName = baseNameOf (toString scriptPath);
+    in
+    pkgs.writeShellScriptBin scriptName (builtins.readFile scriptPath);
 }

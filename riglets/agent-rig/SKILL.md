@@ -58,7 +58,14 @@ _:
 
   # Riglet definition
   config.riglets.my-riglet = {
-    tools = [ pkgs.tool1 pkgs.tool2 ];
+    # Tools can be:
+    # - Nix packages: pkgs.jujutsu, pkgs.git, etc.
+    # - Script paths: ./scripts/my-script (auto-wrapped as executables)
+    tools = [
+      pkgs.tool1
+      pkgs.tool2
+      ./scripts/helper-script  # Becomes executable "helper-script"
+    ];
 
     # Metadata for discovery and context
     meta = {
@@ -145,6 +152,7 @@ This controls the information/token-count ratio:
 - Example: `jj."config.toml"` → `.config/jj/config.toml`
 - Can use `pkgs.formats.toml`, `.json`, `.yaml` to generate config files from Nix data
 - Can use plain strings for shell scripts or plain text configs
+
 
 ### Helper Functions to Use
 

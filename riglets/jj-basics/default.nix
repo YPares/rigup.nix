@@ -23,7 +23,11 @@ _:
   };
 
   config.riglets.jj-basics = {
-    tools = [ pkgs.jujutsu ];
+    tools = [
+      pkgs.jujutsu
+      ./scripts/jj-desc-read
+      ./scripts/jj-desc-edit
+    ];
 
     meta = {
       name = "JJ Basics";
@@ -111,6 +115,34 @@ _:
         # Make edits
         jj new  # Return to tip
         ```
+
+        ### Utility Scripts
+
+        This riglet provides helper scripts for working with change descriptions:
+
+        **Read a revision's description:**
+        ```bash
+        jj-desc-read           # Read current change's description
+        jj-desc-read @-        # Read parent change's description
+        ```
+
+        **Edit description by piping through a command:**
+        ```bash
+        # Replace text in description
+        jj-desc-edit sed 's/foo/bar/g'
+
+        # Convert to uppercase
+        jj-desc-edit awk '{print toupper($0)}'
+
+        # Edit specific revision
+        jj-desc-edit @- sed 's/WIP/DONE/'
+
+        # Advanced regex replacement
+        jj-desc-edit perl -pe 's/bug-(\d+)/issue-$1/g'
+        ```
+
+        These scripts are useful for programmatically modifying change descriptions,
+        which is common when automating workflows or batch-updating descriptions.
       '';
 
       references."revsets.md" = ''

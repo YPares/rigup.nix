@@ -12,16 +12,17 @@ selfLib:
 }:
 with pkgs.lib;
 let
+  riglib = selfLib.mkRiglib pkgs;
+
   # Evaluate the module system with all riglet modules
   evaluated = evalModules {
     modules = [
       {
         # Pass pkgs, system and riglib to all modules
         _module.args = {
-          inherit pkgs;
+          inherit pkgs riglib;
           inherit (pkgs.stdenv.hostPlatform) system;
           # Helpers available to riglets, with pkgs already bound
-          riglib = selfLib.mkRiglib pkgs;
         };
       }
       selfLib.rigletSchema
@@ -29,10 +30,15 @@ let
     ++ modules;
   };
 
+  # Normalize a tool item: if it's a path, wrap it; otherwise return as-is
+  normalizeTool = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
+
   # Combined tools from all riglets
   env = pkgs.buildEnv {
     inherit name;
-    paths = flatten (mapAttrsToList (_: riglet: riglet.tools) evaluated.config.riglets);
+    paths = flatten (
+      mapAttrsToList (_: riglet: map normalizeTool riglet.tools) evaluated.config.riglets
+    );
   };
 
   # Docs per riglet

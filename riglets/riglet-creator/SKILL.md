@@ -122,6 +122,8 @@ Primary use cases:
 See references/advanced.md for deeper patterns.
 ```
 
+Remain concise in this section, DO NOT duplicate info that is already in the `meta.description` and `meta.whenToUse`.
+
 For documentation patterns, see [patterns.md](references/patterns.md).
 
 ### Documentation Patterns
@@ -140,6 +142,11 @@ For proven patterns to organize riglet documentation, see [patterns.md](referenc
 **Use imperative/infinitive form**:
 - Good: "Use jj to manage changes"
 - Avoid: "This riglet manages changes" or "JJ is a version control system"
+
+**Avoid using bold text as pseudo section headers**:
+You can go up to level 4 headers (`####`). The Rig manifest may show a table of contents of the riglets' SKILL.md files, and it detects headers starting at level 2 (`##`).
+Therefore, structuring with proper Markdown headers helps making this table of contents meaningful and evocative of what the SKILL.md will contain.
+For the same reason, do not go deeper than level 4, this would make the ToC more cluttered that it needs to.
 
 **Include concrete examples**:
 ```markdown
@@ -237,6 +244,107 @@ Use clear, specific names:
 - `checklists.md` - Reusable checklists
 - `domain-name.md` - Domain-specific knowledge (for multi-domain riglets)
 - `syntax-reference.md` - Detailed syntax specifications
+
+## Packaging Custom Tools or Scripts with Riglets
+
+Operations that are expected to be commonly performed when using the riglet can and probably SHOULD be provided as helper scripts.
+It's Nix, so tools can be created on the fly and properly packaged with the usual builders like `writeShellScriptBin`, `writeShellApplication` or even `stdenv.mkDerivation`, but riglets have a simple option for simple cases.
+
+### Simple cases: write local scripts and list paths in `tools`
+
+The `tools` field supports direct file paths to scripts, which are automatically wrapped as executable packages:
+
+**How it works:**
+- Script paths (e.g., `./scripts/helper[.sh]`) are detected and wrapped using `writeShellScriptBin`
+- Final executable name is derived from filename (with extension if it has any, so prefer without extensions)
+- Scripts become available in the rig's `bin/` directory alongside other tools
+
+**This is intended ONLY for SIMPLE sh or bash scripts which have NO DEPENDENCIES besides what is already listed in `tools`** (as they will be together in `$PATH` once the rig is built).
+
+**Example directory-based riglet with scripts:**
+````nix
+_:
+{ pkgs, riglib, ... }: {
+  config.riglets.my-riglet = {
+    tools = [
+      pkgs.jujutsu
+      ./scripts/jj-desc-read  # → executable "jj-desc-read"
+      ./scripts/jj-desc-edit  # → executable "jj-desc-edit"
+    ];
+
+    docs = riglib.writeFileTree {
+      "SKILL.md" = ''
+        # My Riglet
+
+        ## Utility Scripts
+
+        **Read a revision:**
+        ```bash
+        jj-desc-read @
+        ```
+
+        **Edit description programmatically:**
+        ```bash
+        jj-desc-edit sed 's/foo/bar/g'
+        ```
+      '';
+    };
+
+    meta = {
+      name = "My Riglet";
+      description = "JJ utilities with helper scripts";
+      # ... other metadata
+    };
+  };
+}
+````
+
+**Directory structure:**
+```
+riglets/my-riglet/
+├── default.nix
+└── scripts/
+    ├── jj-desc-read
+    └── jj-desc-edit
+```
+
+### Advanced cases: make a custom tool via a custom derivation
+
+For cases when you need more control over the packaging of the tools, consider the usual Nix builders from nixpkgs.
+
+`writeShellApplication` e.g. can package an inlined script with its dependencies:
+
+```nix
+writeShellApplication {
+  name = "show-nixos-org";
+
+  runtimeInputs = [
+    curl
+    w3m
+  ];
+
+  text = ''
+    curl -s 'https://nixos.org' | w3m -dump -T text/html
+  '';
+}
+```
+
+For instance, if you want to include a Python script to the riglet, package it properly with `buildPythonApplication` so ALL its dependencies are present.
+Listing all Nix facilities for packaging tools in every language is beyond the scope of this document, but could be added later as further `references/*.md` files.
+
+#### About external package-managers (uv, npm...)
+
+If the riglet assumes that Python scripting will have to be done **manually** as part of **executing the riglet's instructions**, then prefer relying on `uvx` (provided through `tools = [ pkgs.uv ... ]`) and including usage instructions in the riglet's docs. Same goes for JS/TS with `npx`, etc.
+
+**But** in such case DO:
+- include a proper `pyproject.toml`/`package.json`/etc. as an asset file (`<riglet-folder>/assets/<foo>/pyproject.toml`)
+- refer to it in the main riglet's doc
+- **MAKE SURE it is packaged via the `docs` of the riglet** (either as part of a path to a folder, or as an arg to `riglib.writeFileTree`)
+
+The GOLDEN RULE is: **users of a riglet must NEVER have to install ANYTHING globally on their system to use this riglet!!**.
+This is why use of `uvx`, `npx`, etc (i.e. anything installing packages in a **project-scoped** fashion) is tolerated, but `pip install` **IS NOT**.
+
+However **whenever you can**, proper packaging of ALL dependencies, packages etc. through Nix is **always** preferable to enable easy one-command installation of the whole rig.
 
 ## The Riglet Creation Process
 

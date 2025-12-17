@@ -11,7 +11,12 @@ with pkgs.lib;
           options = {
             tools = mkOption {
               description = "List of tools this riglet provides";
-              type = types.listOf types.package;
+              type = types.listOf (
+                types.oneOf [
+                  types.package
+                  types.path
+                ]
+              );
               default = [ ];
             };
 
