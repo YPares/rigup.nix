@@ -78,14 +78,15 @@ Then add to it a `<riglet-name>.nix` file:
 # First argument: the defining flake's `self` - gives access to:
 #   - `self.inputs.*` for external package dependencies
 #   - `self.riglets.*` for inter-riglet imports
-# Use `_:` if you don't need access to `self`
+# Just use `_` if you don't need it
 _:
 
-# Second argument: module args from evalModules
+# Second argument: module args constructed by the _user_ of the riglet, when the full rig is built
 # - config is the final aggregated config of the rig using my-riglet,
 # - pkgs is your usual imported nixpkgs,
+# - system is just pkgs.stdenv.hostPlatform.system, for quicker access
 # - riglib is injected by rigup, and contains utility functions to build riglets
-{ config, pkgs, riglib, ... }: {
+{ config, pkgs, system, riglib, ... }: {
 
   # Each riglet must declare itself under config.riglets.<riglet-name>
   config.riglets.my-riglet = {
@@ -199,14 +200,14 @@ Riglets can access packages from external flakes via `self.inputs`:
 
 ```nix
 self:
-{ pkgs, riglib, ... }: {
+{ pkgs, system, riglib, ... }: {
   config.riglets.my-riglet = {
-    # Use pkgs.system to select the right platform
-    tools = [
-      self.inputs.some-tool.packages.${pkgs.system}.default
-      pkgs.git  # Regular nixpkgs packages still available
-    ];
-    # ...
+    tools =
+      let someFlakePkgs = self.inputs.some-flake.packages.${system};
+      in [
+        someFlakePkgs.default
+        pkgs.git
+      ];
   };
 }
 ```

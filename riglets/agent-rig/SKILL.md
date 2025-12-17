@@ -202,12 +202,17 @@ Access packages from external flakes via `self.inputs`:
 
 ```nix
 self:
-{ pkgs, riglib, ... }: {
+{ pkgs, system, riglib, ... }: {
   config.riglets.my-riglet = {
-    tools = [
-      self.inputs.some-tool.packages.${pkgs.system}.default
-      pkgs.git
-    ];
+    tools =
+      # Use the provided system to select the right platform
+      # (`system` arg == `pkgs.stdenv.hostPlatform.system` == `pkgs.system` but last one is deprecated)
+      let someFlakePkgs = self.inputs.some-flake.packages.${system};
+      in [
+        someFlakePkgs.foo
+        someFlagePkgs.bar
+        pkgs.git
+      ];
   };
 }
 ```

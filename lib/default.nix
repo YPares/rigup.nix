@@ -64,9 +64,10 @@ let
       evaluated = evalModules {
         modules = [
           {
-            # Pass pkgs and riglib to all modules
+            # Pass pkgs, system and riglib to all modules
             _module.args = {
               inherit pkgs riglib;
+              inherit (pkgs.stdenv.hostPlatform) system;
             };
           }
           ./rigletSchema.nix
