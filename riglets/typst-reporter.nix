@@ -28,6 +28,7 @@ _:
     meta = {
       name = "Typst Reporter";
       description = "Generate professional reports and documents using Typst";
+      intent = "cookbook";
       whenToUse = [
         "Creating reports or documentation"
         "Generating PDFs from markup"

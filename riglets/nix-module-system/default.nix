@@ -9,6 +9,7 @@ _:
     meta = {
       name = "Nix Module System: Dark Corners";
       description = "Practical knowledge about lib.evalModules that's hard to find in official docs — deduplication, priority, debugging";
+      intent = "sourcebook";
       whenToUse = [
         "Debugging 'option defined multiple times' errors"
         "Debugging 'infinite recursion' errors"

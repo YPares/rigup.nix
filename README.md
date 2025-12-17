@@ -98,6 +98,8 @@ _:
     # provides and when it should be consulted
     meta = {
       name = "My Riglet";
+      intent = "cookbook"; # 'sourcebook', 'toolbox', 'cookbook', or 'playbook',
+                           # what should the agent expect from this riglet: general knowledge that may come useful vs. highly specific procedure(s) to follow
       description = "What this provides";
       whenToUse = [ "When you need X" ];
       keywords = [ "search" "terms" ];

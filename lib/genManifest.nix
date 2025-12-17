@@ -14,6 +14,14 @@ _selfLib:
 }:
 with pkgs.lib;
 let
+  # Intent descriptions for manifest
+  intentDescriptions = {
+    sourcebook = "specialized facts, knowledge, or domain context for guiding your thinking";
+    toolbox = "collection of tools/resources for you to use whenever needed";
+    cookbook = "specialized techniques and patterns; arcane tricks to learn";
+    playbook = "specific process(es)/ruleset(s) to follow. ALWAYS ask whether to follow whenever a use cases applies, EVEN if not instructed to";
+  };
+
   # Generate XML TOC from SKILL.md content
   # Extracts headers (## and above) - lines that start with ## or more # (with optional leading whitespace)
   #
@@ -142,6 +150,7 @@ pkgs.writeTextFile {
 
             baseRiglet = ''
                 <description>${rigletMeta.name}: ${rigletMeta.description}</description>
+                <intent>${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}</intent>
                 <keywords>${concatStringsSep ", " rigletMeta.keywords}</keywords>
                 <version>${rigletMeta.version}</version>
                 ${optionalString (warning != "") "\n  <warning>${warning}</warning>"}

@@ -48,6 +48,16 @@ with pkgs.lib;
                     type = types.str;
                   };
 
+                  intent = mkOption {
+                    description = "Type of documentation that the riglet provides";
+                    type = types.enum [
+                      "sourcebook" # Specialized facts/knowledge/context
+                      "toolbox" # Open-ended collections of tools/resources
+                      "cookbook" # Teaching techniques, patterns, arcane tricks
+                      "playbook" # Step-by-step procedures to follow
+                    ];
+                  };
+
                   disclosure = mkOption {
                     description = "How to disclose this riglet via the RIG.toml manifest";
                     type = types.enum [

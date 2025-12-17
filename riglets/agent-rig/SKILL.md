@@ -71,6 +71,7 @@ _:
     meta = {
       name = "My Riglet"; # Human readable name
       description = "What this riglet provides";
+      intent = "cookbook";  # sourcebook | toolbox | cookbook | playbook
       whenToUse = [
         "Situation 1" # When the AI Agent should use this riglet's recipes and tools
         "Situation 2"
@@ -110,6 +111,13 @@ _:
 **The full exact Nix module schema of a riglet is defined here:** %%RIGLET_SCHEMA%%
 
 ### Metadata
+
+**About meta.intent:**
+Primary focus/intent of the riglet:
+- `sourcebook` - Specialized facts, knowledge, terminology, or domain context for guiding thinking
+- `toolbox` - Collections of tools/resources with minimal context on how they work together. Open-ended by nature
+- `cookbook` - Teaching specialized techniques and patterns; arcane tricks agents may lack
+- `playbook` - Step-by-step procedures for executing specific workflows
 
 **About meta.status:**
 Maturity level:

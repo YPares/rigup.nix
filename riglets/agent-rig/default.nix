@@ -8,6 +8,7 @@ _:
     meta = {
       name = "Agent Rig System";
       description = "Understanding and working with rigup's riglet system";
+      intent = "sourcebook";
       whenToUse = [
         "Learning about the rig architecture"
         "Creating new riglets"
