@@ -96,9 +96,12 @@ pkgs.writeTextFile {
     - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you.
 
     **Tools:**
-    - ALL tools from ALL riglets are in `./bin/`—use directly or add to PATH: `export PATH="$PWD/bin:$PATH"`
-    - Tool configuration is pre-merged into `.config/` (standard tool config location). Activate: `export XDG_CONFIG_HOME="$PWD/.config"` before running tools
-    - For unexplained tool behavior, consult `./lib/` or `./share/` (if they exist), but SKILL.md is your primary reference
+    - ALL tools from ALL riglets are in `./bin/`.
+      ALWAYS add to $PATH if not already present: `export PATH="$PWD/bin:$PATH"`.
+      Do NOT just call a tool directly by relative/absolute path: tools in ./bin/ may **call each other by name** and thus need to ALL be in $PATH.
+    - Tool configuration is pre-merged into `.config/` (standard tool config location).
+      Make sure $XDG_CONFIG_HOME is correctly set to this folder (`export XDG_CONFIG_HOME="$PWD/.config"`) **before** running tools.
+    - For unexplained tool behavior, consult `./lib/` or `./share/` (if they exist), but SKILL.md is your **primary reference**
 
     ## Error Cases
 
