@@ -24,7 +24,7 @@ with pkgs.lib;
             };
 
             config-files = mkOption {
-              description = "Configuration files derivation (use rigwriteFileTree)";
+              description = "Configuration files folder (XDG_CONFIG_DIR) derivation";
               default = null;
               type = types.nullOr types.package;
             };

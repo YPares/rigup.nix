@@ -1,7 +1,7 @@
 { ... }:
 let
   lib = {
-    writeFileTree = import ./writeFileTree.nix lib;
+    mkRiglib = import ./mkRiglib.nix lib;
     buildRig = import ./buildRig.nix lib;
     resolveProject = import ./resolveProject.nix lib;
     genManifest = import ./genManifest.nix lib;

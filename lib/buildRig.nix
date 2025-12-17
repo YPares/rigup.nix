@@ -21,10 +21,7 @@ let
           inherit pkgs;
           inherit (pkgs.stdenv.hostPlatform) system;
           # Helpers available to riglets, with pkgs already bound
-          riglib = {
-            writeFileTree = selfLib.writeFileTree pkgs;
-            # Future helpers can be added here
-          };
+          riglib = selfLib.mkRiglib pkgs;
         };
       }
       selfLib.rigletSchema
