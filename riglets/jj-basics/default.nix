@@ -25,7 +25,8 @@ _:
   config.riglets.jj-basics = {
     tools = [
       pkgs.jujutsu
-    ] ++ riglib.useScriptFolder ./scripts;
+    ]
+    ++ riglib.useScriptFolder ./scripts;
 
     meta = {
       name = "JJ Basics";

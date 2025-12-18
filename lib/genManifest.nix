@@ -4,16 +4,23 @@ flake:
 # Arguments:
 #   - name: the name of the rig
 #   - meta: attrset of all riglet metadata
-#   - docs: attrset of all riglet docs derivations
+#   - docAttrs: attrset of all riglet docs derivations
 #   - pkgs: nixpkgs
+#   - mode: shell or home
 # Returns: derivation containing RIG.md
 {
   name,
   meta,
-  docs,
+  docAttrs,
   pkgs,
+  mode,
 }:
+assert (_: mode == "home" || mode == "shell") ''genManifest: mode is not "home" or "shell"'';
 let
+  rigHome = if mode == "home" then "." else throw "genManifest: Manifest not built for 'home' mode";
+  docsRoot = if mode == "home" then "./docs" else "$RIG_DOCS";
+  toolFolder = if mode == "home" then "./.local" else "$RIG_TOOLS";
+
   inherit (pkgs.stdenv.hostPlatform) system;
   inherit (flake.packages.${system}) extract-md-toc;
 
@@ -53,15 +60,15 @@ let
     with pkgs.lib;
     let
       warning = warningFromMeta rigletMeta;
-      docsDrv = docs.${rigletName} or null;
+      docsDrv = docAttrs.${rigletName} or null;
       skillMdStorePath = "${docsDrv}/SKILL.md";
-      skillMdRelativePath = "docs/${rigletName}/SKILL.md";
+      skillMdRelativePath = "${docsRoot}/${rigletName}/SKILL.md";
       skillMdContent = if docsDrv == null then null else builtins.readFile skillMdStorePath;
       hasToC = rigletMeta.disclosure == "shallow-toc" || rigletMeta.disclosure == "deep-toc";
     in
     {
       "@name" = rigletName;
-      "@docRoot" = "doc/${rigletName}/";
+      "@docRoot" = "${docsRoot}/${rigletName}/";
       description = "${rigletMeta.name}: ${rigletMeta.description}";
       intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
       keywords = concatStringsSep ", " rigletMeta.keywords;
@@ -110,9 +117,13 @@ in
 pkgs.writeTextFile {
   name = "RIG.md";
   text = ''
-    --- The folder containing this file and ALL its recursive subfolders are READ ONLY ---
+    ${
+      pkgs.lib.optionalString (
+        mode == "home"
+      ) "--- The folder containing this file and ALL its recursive subfolders are READ ONLY ---
 
-    # Your Rig
+"
+    }# Your Rig
 
     Hello. The **rig** you will be using today is called "${name}".
     Your rig is made up of **riglets**—each provides specialized capabilities, domain knowledge, and all tools needed to execute that knowledge, packaged with configuration and metadata.
@@ -127,39 +138,37 @@ pkgs.writeTextFile {
 
     1. **Check RIG.md's `whenToUse` sections** - Find riglets matching your task
     2. **Read SKILL.md for each matching riglet** - This is where executable knowledge lives
-    3. **Use tools from `./bin/`** - All riglet tools are available there
-    4. **Set config automatically**: `export XDG_CONFIG_HOME="$PWD/.config"` before running tools (this applies riglet-provided tool configurations)
+    3. ${
+      if mode == "home" then
+        "**Activate the environment and use tools mentioned in SKILL.md or reference files:** `source ${rigHome}/activate.sh` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
+      else
+        "**Use tools mentioned in SKILL.md or references files**"
+    }
 
     ### Access Resources
 
     **Documentation:**
-    - Main doc: `./docs/<riglet-name>/SKILL.md`
-    - Reference files: `./docs/<riglet-name>/references/<topic>.md` (mentioned within SKILL.md when relevant—don't hunt proactively)
+    - Main doc: `${docsRoot}/<riglet-name>/SKILL.md`
+    - Reference files: `${docsRoot}/<riglet-name>/references/<topic>.md` (mentioned within SKILL.md when relevant—don't hunt proactively)
     - Relative paths in docs are ALWAYS relative **to the file mentioning them**
     - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you.
-
-    **Tools:**
-    - ALL tools from ALL riglets are in `./bin/`.
-      ALWAYS add to $PATH if not already present: `export PATH="$PWD/bin:$PATH"`.
-      Do NOT just call a tool directly by relative/absolute path: tools in ./bin/ may **call each other by name** and thus need to ALL be in $PATH.
-    - Tool configuration is pre-merged into `.config/` (standard tool config location).
-      Make sure $XDG_CONFIG_HOME is correctly set to this folder (`export XDG_CONFIG_HOME="$PWD/.config"`) **before** running tools.
-    - For unexplained tool behavior, consult `./lib/` or `./share/` (if they exist), but SKILL.md is your **primary reference**
+    - For unexplained tool behavior, consult `${toolFolder}/lib/` or `${toolFolder}/share/` (if they exist), but SKILL.md is your **primary reference**"
 
     ## Error Cases
 
     If ANY of the following cases happens, IMMEDIATELY STOP EVERYTHING and NOTIFY THE USER:
 
-    - A tool which a riglet's doc tells you to use is NOT available in `./bin/`
+    - A tool which a riglet's doc tells you to use is NOT available ${
+      pkgs.lib.optionalString (mode == "home") "after sourcing ${rigHome}/activate.sh"
+    }
     - A doc file mentions by RELATIVE path some file that does not seem to exist
-    - A doc file mentions by ABSOLUTE path some file OUTSIDE of `/nix/store/` 
+    - A doc file mentions by ABSOLUTE path some file OUTSIDE of /nix/store/
 
     ANY occurence of ANY of these events is considered a **missing dependency**—the riglet's specification **has** to be fixed and the rig rebuilt before continuing.
 
     ## Contents of the Rig
 
     ${builtins.readFile (
-      (pkgs.formats.xml { withHeader = false; }).generate "${name}-manifest.xml" (rigToXml name)
-    )}
-  '';
+      (pkgs.formats.xml { withHeader = false; }).generate "${name}-${mode}-manifest.xml" (rigToXml name)
+    )}'';
 }

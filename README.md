@@ -92,7 +92,7 @@ _:
   config.riglets.my-riglet = {
 
     # (Optional) The tools needed by this riglet
-    tools = [ pkgs.mytool ];
+    tools = [ pkgs.mytool ./path/to/some/script.sh ];
 
     # The metadata that will enable your agent to know what this riglet
     # provides and when it should be consulted
@@ -243,10 +243,14 @@ Your `flake.nix` should be:
   inputs.rigup.url = "github:YPares/rigup.nix";
 
   outputs = { self, rigup, ... }@inputs:
-    let system = "...";
+    let
+      system = "x86_64-linux";
+      rig = self.rigs.${system}.default;
     in rigup { inherit inputs; } // {
-      # Expose the whole rig directly as an output package, so it is easy to build
-      packages.${system}.default-rig = self.rigs.${system}.default.home;
+      # Expose the whole rig directly as an output package, so it is easy to build as a folder
+      packages.${system}.default-rig = rig.home;
+      # Expose the whole rig directly as an output devShell, so you can enter it directly
+      devShells.${system}.default-rig = rig.shell;
     };
 }
 ```
@@ -255,6 +259,13 @@ Finally, build the rig with:
 
 ```shell
 nix build .#default-rig -o my-default-rig
+ls -la ./my-default-rig
+```
+
+...or enter it through a sub-shell with:
+
+```shell
+nix develop .#default-rig
 ```
 
 The riglets listed in your `rigup.toml` **must** match your flake inputs and what exists in your project. As a general case:

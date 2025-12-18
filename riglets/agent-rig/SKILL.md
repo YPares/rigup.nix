@@ -23,14 +23,16 @@ A project-level structure that declares which riglets are active:
 A Nix library and future CLI tool: http://github.com/YPares/rigup.nix
 
 The lib contains:
-- `buildRig` function: evaluates riglet modules and ensures they comply with the riglet schema used by rigup. Returns the rig as an attrset: `{ env = ...; meta = { <riglet> = ... }; docs = { <riglet> = ...; }; home = ...; }`
+- `buildRig` function: evaluates riglet modules and ensures they comply with the riglet schema used by rigup. Returns the rig as an attrset: `{ env = <derivation>; meta = { <riglet> = {...}; }; docAttrs = { <riglet> = <derivation>; }; docs = <derivation>; home = <derivation>; shell = <derivation>; }`
 - `resolveProject` function: inspects the `riglets/` folder of a project and its `rigup.toml` to find out which riglets and rigs it defines. It calls `buildRig` for each rig in the `rigup.toml`
 
 **buildRig outputs:**
 - `env` - Tools combined through nixpkgs `buildEnv` function (bin/, share/, etc.)
 - `meta.<riglet>` - Per-riglet metadata (discovery info structured as a Nix attrset)
-- `docs.<riglet>` - Per-riglet documentation derivations
-- `home` - Complete agent directory: RIG.md + bin/ + docs/ + .config/
+- `docAttrs.<riglet>` - Per-riglet documentation derivations
+- `docs` - One derivation (folder) with docs for all riglets (one subfolder for each)
+- `home` - Complete agent directory: RIG.md + .local/ + docs/ + .config/
+- `shell` - Development shell (mkShell) with RIG_HOME, XDG_CONFIG_HOME, and PATH configured
 
 CLI will provide convenient rig edition & access to rig outputs (e.g. starting a shell with all env vars needed set to operate the rig)
 
@@ -285,10 +287,12 @@ Then use `rigup.lib.resolveProject` in your flake.nix:
 
 **`resolveProject` outputs:**
 - `riglets.<riglet>` - Auto-discovered riglet modules
-- `rigs.<system>.<rig>.env` - Tools only
-- `rigs.<system>.<rig>.docs.<riglet>` - Per-riglet docs
+- `rigs.<system>.<rig>.env` - Folder. Contains `bin`, `lib`, `share`, etc. subfolders with tools
 - `rigs.<system>.<rig>.meta.<riglet>` - Per-riglet metadata
-- `rigs.<system>.<rig>.home` - Complete environment (RIG.md + bin/ + docs/ + .config/)
+- `rigs.<system>.<rig>.docAttrs.<riglet>` - Per-riglet docs (attrset)
+- `rigs.<system>.<rig>.docs` - Folder. Per-riglet docs (one subfolder for each)
+- `rigs.<system>.<rig>.home` - Folder. Complete environment (RIG.md + .local/ + docs/ + .config/)
+- `rigs.<system>.<rig>.shell` - Development shell with environment configured
 
 ### Advanced: Directly use buildRig for complex config
 
@@ -396,6 +400,8 @@ In some project:
 In the project defining the riglets OR in another one importing it as an input flake:
 
 1. Use the riglets in the `rigup.toml` to build rigs
+2. Set an output package to export the whole rig's `home` derivation:
+   `packages.<system>.<pkg> = self.rigs.<system>.<rig-name>.home`
 2. Set an output package to export the whole rig's `home` derivation:
    `packages.<system>.<pkg> = self.rigs.<system>.<rig-name>.home`
 
