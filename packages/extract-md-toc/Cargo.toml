@@ -1,0 +1,13 @@
+[package]
+name = "extract-md-toc"
+version = "0.1.0"
+edition = "2021"
+description = "Extract table of contents from markdown files with line numbers"
+license = "MIT"
+
+[dependencies]
+pulldown-cmark = "0.12"
+
+[[bin]]
+name = "extract-md-toc"
+path = "src/main.rs"

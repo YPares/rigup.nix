@@ -143,12 +143,14 @@ Boolean flag indicating riglet is currently non-functional:
 Enum controlling how much information about the riglet is exposed in RIG.md
 - `none` - Riglet not mentioned in RIG.md. Agent won't know it exists unless manually browsing the rig or user mentions it
 - `lazy` - Description, `whenToUse`, keywords, and basic metadata included. Paths to documentation provided (default)
-- `toc` - Like `lazy`, plus an auto-generated table of contents from SKILL.md with line numbers for efficient navigation
+- `shallow-toc` - Like `lazy`, plus an auto-generated table of contents showing levels 1-2 headers from SKILL.md with line numbers for efficient navigation
+- `deep-toc` - Like `shallow-toc`, but includes all header levels (1-6) for comprehensive navigation
 - `eager` - Full top-level SKILL.md content embedded directly in RIG.md
 
 This controls the information/token-count ratio:
 - most riglets use `lazy` to avoid overwhelming agents during discovery
-- foundational riglets use `toc` to enable efficient pinpointing
+- foundational riglets use `shallow-toc` to enable efficient pinpointing of major sections
+- complex riglets use `deep-toc` when agents need to navigate deeply nested documentation
 - `eager` should only be used for very short SKILL.md
 
 ### Tool Config Files

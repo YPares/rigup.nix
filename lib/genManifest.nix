@@ -1,5 +1,5 @@
 # rigup flake's self
-_flake:
+flake:
 # Generate RIG.md manifest file from rig metadata and docs
 # Arguments:
 #   - name: the name of the rig
@@ -13,8 +13,10 @@ _flake:
   docs,
   pkgs,
 }:
-with pkgs.lib;
 let
+  inherit (pkgs.stdenv.hostPlatform) system;
+  inherit (flake.packages.${system}) extract-md-toc;
+
   # Intent descriptions for manifest
   intentDescriptions = {
     sourcebook = "specialized facts, knowledge, or domain context for guiding your thinking";
@@ -23,55 +25,17 @@ let
     playbook = "specific process(es)/ruleset(s) to follow. ALWAYS ask whether to follow whenever a use cases applies, EVEN if not instructed to";
   };
 
-  # Generate XML TOC from SKILL.md content
-  # Extracts headers (## and above) - lines that start with ## or more # (with optional leading whitespace)
-  #
-  # Level-1 headers are left out for now (in order not to mistake comments inside code blocks for headers)
+  # Generate XML TOC from SKILL.md using extract-md-toc tool
+  # shallow=true: level 1-2 headings only
+  # shallow=false: all headings
   generateToc =
-    rigletName: content:
-    if content == null then
-      ""
-    else
-      let
-        # Split by lines
-        lines = splitString "\n" content;
-        # Create indices (0-based)
-        indices = builtins.genList (i: i) (length lines);
-        # Check if line starts with ## or more (possibly after spaces/tabs)
-        isHeader =
-          line:
-          let
-            trimmed = ltrimString line;
-          in
-          (hasPrefix "##" trimmed);
-        # Helper to strip leading whitespace
-        ltrimString =
-          s:
-          if s == "" then
-            ""
-          else if hasPrefix " " s then
-            ltrimString (substring 1 (-1) s)
-          else if hasPrefix "\t" s then
-            ltrimString (substring 1 (-1) s)
-          else
-            s;
-        # Filter all header lines
-        headerLinesWithNums = filter (lineNum: isHeader (builtins.elemAt lines lineNum)) indices;
-        # Convert to TOC entries in XML format
-        tocEntries = map (
-          lineNum:
-          let
-            line = builtins.elemAt lines lineNum;
-          in
-          "<entry line=\"${toString (lineNum + 1)}\">${line}</entry>"
-        ) headerLinesWithNums;
-      in
-      if headerLinesWithNums == [ ] then
-        ""
-      else
-        "<toc source=\"docs/${rigletName}/SKILL.md\">\n    "
-        + concatStringsSep "\n    " tocEntries
-        + "\n  </toc>\n";
+    rigletName: file: shallow:
+    let
+      tocOut = pkgs.runCommand "toc-${rigletName}" { } ''
+        ${extract-md-toc}/bin/extract-md-toc ${if shallow then "--max-level 2" else ""} ${file} > $out
+      '';
+    in
+    "<toc source=\"docs/${rigletName}/SKILL.md\">\n    " + builtins.readFile tocOut + "  </toc>\n";
 in
 pkgs.writeTextFile {
   name = "RIG.md";
@@ -126,60 +90,65 @@ pkgs.writeTextFile {
 
     <rigSystem name="${name}">
 
-    ${concatStringsSep "\n" (
-      mapAttrsToList (
-        rigletName: rigletMeta:
-        if rigletMeta.disclosure == "none" then
-          ""
-        else
-          let
-            warning =
-              if rigletMeta.broken then
-                "🚨 BROKEN: This riglet is non-functional. IMMEDIATELY notify the user. Do not use unless explicitly authorized."
-              else if rigletMeta.status == "experimental" then
-                "⚠️ EXPERIMENTAL: This riglet may change or contain bugs. If you encounter issues, consult the user before proceeding."
-              else if rigletMeta.status == "draft" then
-                "⚠️ DRAFT: Incomplete riglet. Expect missing features and bugs. Always confirm with user before relying on this."
-              else if rigletMeta.status == "deprecated" then
-                "⚠️ DEPRECATED: No longer maintained. Check RIG.md for recommended alternatives, or ask user."
-              else if rigletMeta.status == "example" then
-                "ℹ️ EXAMPLE: Pedagogical riglet for demonstrating patterns. Not meant for production usage."
-              else
-                "";
+    ${
+      with pkgs.lib;
+      concatStringsSep "\n" (
+        mapAttrsToList (
+          rigletName: rigletMeta:
+          if rigletMeta.disclosure == "none" then
+            ""
+          else
+            let
+              warning =
+                if rigletMeta.broken then
+                  "🚨 BROKEN: This riglet is non-functional. IMMEDIATELY notify the user. Do not use unless explicitly authorized."
+                else if rigletMeta.status == "experimental" then
+                  "⚠️ EXPERIMENTAL: This riglet may change or contain bugs. If you encounter issues, consult the user before proceeding."
+                else if rigletMeta.status == "draft" then
+                  "⚠️ DRAFT: Incomplete riglet. Expect missing features and bugs. Always confirm with user before relying on this."
+                else if rigletMeta.status == "deprecated" then
+                  "⚠️ DEPRECATED: No longer maintained. Check RIG.md for recommended alternatives, or ask user."
+                else if rigletMeta.status == "example" then
+                  "ℹ️ EXAMPLE: Pedagogical riglet for demonstrating patterns. Not meant for production usage."
+                else
+                  "";
 
-            docsDrv = docs.${rigletName} or null;
+              docsDrv = docs.${rigletName} or null;
 
-            baseRiglet = ''
-                <description>${rigletMeta.name}: ${rigletMeta.description}</description>
-                <intent>${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}</intent>
-                <keywords>${concatStringsSep ", " rigletMeta.keywords}</keywords>
-                <version>${rigletMeta.version}</version>
-                ${optionalString (warning != "") "\n  <warning>${warning}</warning>"}
-                <whenToUse>
-              ${concatStringsSep "\n" (map (case: "    <useCase>${case}</useCase>") rigletMeta.whenToUse)}
-                </whenToUse>
-            '';
+              baseRiglet = ''
+                  <description>${rigletMeta.name}: ${rigletMeta.description}</description>
+                  <intent>${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}</intent>
+                  <keywords>${concatStringsSep ", " rigletMeta.keywords}</keywords>
+                  <version>${rigletMeta.version}</version>
+                  ${optionalString (warning != "") "\n  <warning>${warning}</warning>"}
+                  <whenToUse>
+                ${concatStringsSep "\n" (map (case: "    <useCase>${case}</useCase>") rigletMeta.whenToUse)}
+                  </whenToUse>
+              '';
 
-            readSkillMd = docsDrv: if docsDrv == null then null else builtins.readFile "${docsDrv}/SKILL.md";
+              readSkillMd = docsDrv: if docsDrv == null then null else builtins.readFile "${docsDrv}/SKILL.md";
 
-            inlined = (
-              if rigletMeta.disclosure == "toc" then
-                "  ${generateToc rigletName (readSkillMd docsDrv)}"
-              else if rigletMeta.disclosure == "eager" then
-                "  <content source=\"docs/${rigletName}/SKILL.md\">\n" + readSkillMd docsDrv + "  </content>"
-              else
-                # lazy
-                ""
-            );
-          in
-          ''
-            <riglet name="${rigletName}" docRoot="docs/${rigletName}/">
-            ${baseRiglet}
-            ${inlined}
-            </riglet>
-          ''
-      ) meta
-    )}
+              hasToC = rigletMeta.disclosure == "shallow-toc" || rigletMeta.disclosure == "deep-toc";
+
+              inlined = (
+                if hasToC then
+                  "  ${generateToc rigletName "${docsDrv}/SKILL.md" (rigletMeta.disclosure == "shallow-toc")}"
+                else if rigletMeta.disclosure == "eager" then
+                  "  <content source=\"docs/${rigletName}/SKILL.md\">\n" + readSkillMd docsDrv + "  </content>"
+                else
+                  # lazy
+                  ""
+              );
+            in
+            ''
+              <riglet name="${rigletName}" docRoot="docs/${rigletName}/">
+              ${baseRiglet}
+              ${inlined}
+              </riglet>
+            ''
+        ) meta
+      )
+    }
 
     </rigSystem>
   '';
