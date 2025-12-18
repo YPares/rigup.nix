@@ -1,7 +1,7 @@
 # rigup flake's self
 _flake:
 # Helper functions to use for riglet declarations
-pkgs: {
+pkgs: rec {
   # Convert nested attribute set to directory tree of files
   # Usage: writeFileTree pkgs { "SKILL.md" = "..."; references."foo.md" = "..."; }
   # Creates: derivation with SKILL.md and references/foo.md
@@ -49,4 +49,21 @@ pkgs: {
       scriptName = baseNameOf (toString scriptPath);
     in
     pkgs.writeShellScriptBin scriptName (builtins.readFile scriptPath);
+
+  # Convert all files in a folder to a list of wrapped script packages
+  # Usage: tools = [ x y z ] ++ riglib.useScriptFolder ./scripts
+  # Returns a list where each file is wrapped via wrapScriptPath
+  useScriptFolder =
+    folderPath:
+    with pkgs.lib;
+    let
+      # Read directory contents - returns attrset { filename = "regular" | "directory" | ... }
+      dirContents = builtins.readDir folderPath;
+      # Filter to only regular files (exclude directories, symlinks, etc.)
+      files = filterAttrs (name: type: type == "regular") dirContents;
+      # Convert each file to absolute path
+      scriptPaths = mapAttrsToList (name: _type: folderPath + "/${name}") files;
+    in
+    # Wrap each script path into a package
+    map wrapScriptPath scriptPaths;
 }

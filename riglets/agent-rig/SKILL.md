@@ -176,6 +176,14 @@ This controls the information/token-count ratio:
   - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
   - Derivations (e.g., `pkgs.writeText` or `(pkgs.formats.<format> {}).generate`)
 
+**riglib.useScriptFolder** converts all files in a folder to wrapped tool packages:
+- Takes a folder path as argument
+- Returns a list that can be concatenated with other tools
+- Each regular file in the folder becomes an executable tool
+- Automatically filters out directories and non-regular files
+- Example: `tools = [ pkgs.git ] ++ riglib.useScriptFolder ./scripts`
+- Each script gets wrapped via `wrapScriptPath` (filename becomes command name)
+
 ## Cross-Riglet Interaction
 
 ### Sharing options via `config`

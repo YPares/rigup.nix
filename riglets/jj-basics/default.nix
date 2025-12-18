@@ -25,9 +25,7 @@ _:
   config.riglets.jj-basics = {
     tools = [
       pkgs.jujutsu
-      ./scripts/jj-desc-read
-      ./scripts/jj-desc-edit
-    ];
+    ] ++ riglib.useScriptFolder ./scripts;
 
     meta = {
       name = "JJ Basics";
