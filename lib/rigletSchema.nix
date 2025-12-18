@@ -72,7 +72,7 @@ with pkgs.lib;
                   };
 
                   whenToUse = mkOption {
-                    description = "Situations when this riglet should be loaded";
+                    description = "Situations when this riglet should be at least partially consulted. Empty list means IMMEDIATELY at startup";
                     type = types.listOf types.str;
                     default = [ ];
                   };

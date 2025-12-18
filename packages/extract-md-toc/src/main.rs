@@ -134,17 +134,9 @@ fn extract_toc(content: &str, max_level: Option<u8>) {
         }
     }
 
-    // Output XML entries
+    // Output entries
     for (line_num, text) in entries {
-        // Escape XML special characters in the text
-        let escaped = text
-            .replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;")
-            .replace('"', "&quot;")
-            .replace('\'', "&apos;");
-
-        println!("<entry line=\"{}\">{}</entry>", line_num, escaped);
+        println!("Line {}: {}", line_num, text);
     }
 }
 

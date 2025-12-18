@@ -25,17 +25,87 @@ let
     playbook = "specific process(es)/ruleset(s) to follow. ALWAYS ask whether to follow whenever a use cases applies, EVEN if not instructed to";
   };
 
+  statusWarnings = {
+    experimental = "⚠️ EXPERIMENTAL: This riglet may change or contain bugs. If you encounter issues, consult the user before proceeding.";
+    draft = "⚠️ DRAFT: Incomplete riglet. Expect missing features and bugs. Always confirm with user before relying on this.";
+    deprecated = "⚠️ DEPRECATED: No longer maintained. Check RIG.md for recommended alternatives, or ask user.";
+    example = "ℹ️ EXAMPLE: Pedagogical riglet for demonstrating patterns. Not meant for production usage.";
+  };
+
+  warningFromMeta =
+    rigletMeta:
+    if rigletMeta.broken then
+      "🚨 BROKEN: This riglet is non-functional. IMMEDIATELY notify the user. Do not use unless explicitly authorized."
+    else
+      statusWarnings.${rigletMeta.status} or null;
+
   # Generate XML TOC from SKILL.md using extract-md-toc tool
   # shallow=true: level 1-2 headings only
   # shallow=false: all headings
   generateToc =
     rigletName: file: shallow:
+    pkgs.runCommand "toc-${rigletName}" { } ''
+      ${extract-md-toc}/bin/extract-md-toc ${if shallow then "--max-level 2" else ""} ${file} > $out
+    '';
+
+  rigletToXml =
+    rigletName: rigletMeta:
+    with pkgs.lib;
     let
-      tocOut = pkgs.runCommand "toc-${rigletName}" { } ''
-        ${extract-md-toc}/bin/extract-md-toc ${if shallow then "--max-level 2" else ""} ${file} > $out
-      '';
+      warning = warningFromMeta rigletMeta;
+      docsDrv = docs.${rigletName} or null;
+      skillMdStorePath = "${docsDrv}/SKILL.md";
+      skillMdRelativePath = "docs/${rigletName}/SKILL.md";
+      skillMdContent = if docsDrv == null then null else builtins.readFile skillMdStorePath;
+      hasToC = rigletMeta.disclosure == "shallow-toc" || rigletMeta.disclosure == "deep-toc";
     in
-    "<toc source=\"docs/${rigletName}/SKILL.md\">\n    " + builtins.readFile tocOut + "  </toc>\n";
+    {
+      "@name" = rigletName;
+      "@docRoot" = "doc/${rigletName}/";
+      description = "${rigletMeta.name}: ${rigletMeta.description}";
+      intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
+      keywords = concatStringsSep ", " rigletMeta.keywords;
+      inherit (rigletMeta) version;
+    }
+    // (if warning != null then { inherit warning; } else { })
+    // {
+      whenToUse =
+        if length rigletMeta.whenToUse == 0 then "IMMEDIATELY!!" else { useCase = rigletMeta.whenToUse; };
+    }
+    // (
+      if hasToC then
+        {
+          inlinedInfo = {
+            "@source" = skillMdRelativePath;
+            tableOfContents = "\n${
+              builtins.readFile (generateToc rigletName skillMdStorePath (rigletMeta.disclosure == "shallow-toc"))
+            }";
+          };
+        }
+      else if rigletMeta.disclosure == "eager" then
+        {
+          inlinedInfo = {
+            "@source" = skillMdRelativePath;
+            fullContent = "\n${skillMdContent}";
+          };
+        }
+      else
+        # lazy
+        { }
+    );
+
+  rigToXml = rigName: {
+    rigSystem = [
+      {
+        "@name" = rigName;
+        # Will generate ONE <riglet ...>...</riglet> node PER element in the associated list:
+        riglet = pkgs.lib.mapAttrsToList (
+          rigletName: rigletMeta:
+          if rigletMeta.disclosure == "none" then "" else rigletToXml rigletName rigletMeta
+        ) meta;
+      }
+    ];
+  };
 in
 pkgs.writeTextFile {
   name = "RIG.md";
@@ -88,68 +158,8 @@ pkgs.writeTextFile {
 
     ## Contents of the Rig
 
-    <rigSystem name="${name}">
-
-    ${
-      with pkgs.lib;
-      concatStringsSep "\n" (
-        mapAttrsToList (
-          rigletName: rigletMeta:
-          if rigletMeta.disclosure == "none" then
-            ""
-          else
-            let
-              warning =
-                if rigletMeta.broken then
-                  "🚨 BROKEN: This riglet is non-functional. IMMEDIATELY notify the user. Do not use unless explicitly authorized."
-                else if rigletMeta.status == "experimental" then
-                  "⚠️ EXPERIMENTAL: This riglet may change or contain bugs. If you encounter issues, consult the user before proceeding."
-                else if rigletMeta.status == "draft" then
-                  "⚠️ DRAFT: Incomplete riglet. Expect missing features and bugs. Always confirm with user before relying on this."
-                else if rigletMeta.status == "deprecated" then
-                  "⚠️ DEPRECATED: No longer maintained. Check RIG.md for recommended alternatives, or ask user."
-                else if rigletMeta.status == "example" then
-                  "ℹ️ EXAMPLE: Pedagogical riglet for demonstrating patterns. Not meant for production usage."
-                else
-                  "";
-
-              docsDrv = docs.${rigletName} or null;
-
-              baseRiglet = ''
-                  <description>${rigletMeta.name}: ${rigletMeta.description}</description>
-                  <intent>${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}</intent>
-                  <keywords>${concatStringsSep ", " rigletMeta.keywords}</keywords>
-                  <version>${rigletMeta.version}</version>
-                  ${optionalString (warning != "") "\n  <warning>${warning}</warning>"}
-                  <whenToUse>
-                ${concatStringsSep "\n" (map (case: "    <useCase>${case}</useCase>") rigletMeta.whenToUse)}
-                  </whenToUse>
-              '';
-
-              readSkillMd = docsDrv: if docsDrv == null then null else builtins.readFile "${docsDrv}/SKILL.md";
-
-              hasToC = rigletMeta.disclosure == "shallow-toc" || rigletMeta.disclosure == "deep-toc";
-
-              inlined = (
-                if hasToC then
-                  "  ${generateToc rigletName "${docsDrv}/SKILL.md" (rigletMeta.disclosure == "shallow-toc")}"
-                else if rigletMeta.disclosure == "eager" then
-                  "  <content source=\"docs/${rigletName}/SKILL.md\">\n" + readSkillMd docsDrv + "  </content>"
-                else
-                  # lazy
-                  ""
-              );
-            in
-            ''
-              <riglet name="${rigletName}" docRoot="docs/${rigletName}/">
-              ${baseRiglet}
-              ${inlined}
-              </riglet>
-            ''
-        ) meta
-      )
-    }
-
-    </rigSystem>
+    ${builtins.readFile (
+      (pkgs.formats.xml { withHeader = false; }).generate "${name}-manifest.xml" (rigToXml name)
+    )}
   '';
 }
