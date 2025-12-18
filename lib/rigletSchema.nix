@@ -64,7 +64,8 @@ with pkgs.lib;
                     type = types.enum [
                       "none"
                       "lazy"
-                      "toc"
+                      "shallow-toc"
+                      "deep-toc"
                       "eager"
                     ];
                     default = "lazy";
