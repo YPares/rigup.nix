@@ -1,11 +1,9 @@
-{ ... }:
-let
-  lib = {
-    mkRiglib = import ./mkRiglib.nix lib;
-    buildRig = import ./buildRig.nix lib;
-    resolveProject = import ./resolveProject.nix lib;
-    genManifest = import ./genManifest.nix lib;
-    rigletSchema = import ./rigletSchema.nix lib;
-  };
-in
-lib
+# 'flake' is the rigup flake's 'self'
+{ flake, ... }:
+{
+  mkRiglib = import ./mkRiglib.nix flake;
+  buildRig = import ./buildRig.nix flake;
+  resolveProject = import ./resolveProject.nix flake;
+  genManifest = import ./genManifest.nix flake;
+  rigletSchema = import ./rigletSchema.nix flake;
+}

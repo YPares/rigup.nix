@@ -9,16 +9,18 @@
 
   outputs =
     inputs@{
+      self,
       blueprint,
       ...
     }:
+    # bluprint's docs: https://github.com/numtide/blueprint/tree/main/docs/content/getting-started
     blueprint { inherit inputs; }
     # Expose the example riglets & rig
-    #   (lib imported directly to avoid circular dependency)
-    // (import ./lib { }).resolveProject { inherit inputs; }
+    # -- lib imported directly to avoid circular dependency
+    // (import ./lib { flake = self; }).resolveProject { inherit inputs; }
     // {
       # Make the flake itself directly usable as a function by user flakes
-      __functor = self: self.lib.resolveProject;
+      __functor = _: self.lib.resolveProject;
 
       templates = import ./templates;
     };

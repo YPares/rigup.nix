@@ -1,4 +1,5 @@
-_selfLib:
+# rigup flake's self
+_flake:
 # Base module that defines common riglet structure
 { pkgs, ... }:
 with pkgs.lib;

@@ -1,4 +1,5 @@
-selfLib:
+# rigup flake's self
+flake:
 # Resolves complete project structure from rigup.toml configuration
 # Arguments:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
@@ -84,7 +85,7 @@ let
       let
         pkgs = import inputs.nixpkgs { inherit system; };
       in
-      selfLib.buildRig {
+      flake.lib.buildRig {
         inherit pkgs;
         name = rigName;
         modules = rigletsSpecToModules (rigDef.riglets or [ ]) ++ [ (rigDef.config or { }) ];

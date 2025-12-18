@@ -1,4 +1,5 @@
-_selfLib:
+# rigup flake's self
+_flake:
 # Helper functions to use for riglet declarations
 pkgs: {
   # Convert nested attribute set to directory tree of files

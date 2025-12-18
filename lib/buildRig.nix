@@ -1,4 +1,5 @@
-selfLib:
+# rigup flake's self
+flake:
 # Evaluate a rig from a set of riglet modules
 # Returns an attrset with:
 #   - env: combined buildEnv of all tools
@@ -12,7 +13,7 @@ selfLib:
 }:
 with pkgs.lib;
 let
-  riglib = selfLib.mkRiglib pkgs;
+  riglib = flake.lib.mkRiglib pkgs;
 
   # Evaluate the module system with all riglet modules
   evaluated = evalModules {
@@ -25,7 +26,7 @@ let
           # Helpers available to riglets, with pkgs already bound
         };
       }
-      selfLib.rigletSchema
+      flake.lib.rigletSchema
     ]
     ++ modules;
   };
@@ -48,7 +49,7 @@ let
   meta = mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
 
   # Generate RIG.md manifest from metadata and docs
-  manifest = selfLib.genManifest {
+  manifest = flake.lib.genManifest {
     inherit
       name
       meta

@@ -1,4 +1,5 @@
-_selfLib:
+# rigup flake's self
+_flake:
 # Generate RIG.md manifest file from rig metadata and docs
 # Arguments:
 #   - name: the name of the rig
