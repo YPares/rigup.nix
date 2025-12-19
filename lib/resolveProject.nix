@@ -11,10 +11,8 @@ flake:
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
   checkRigs ? false,
 }:
-with builtins;
+with inputs.nixpkgs.lib;
 let
-  inherit (inputs.nixpkgs.lib) genAttrs;
-
   # Auto-discover all riglets from riglets/ directory
   # Riglets can be either:
   #   - Plain modules: { config, pkgs, ... }: { ... }
@@ -22,52 +20,35 @@ let
   # Self-aware modules receive the defining flake's `self`, allowing access to
   # `self.inputs.*` for external deps and `self.riglets.*` for inter-riglet imports.
   rigletsDir = inputs.self + "/riglets";
-  rigletsDirEntries = if pathExists rigletsDir then readDir rigletsDir else { };
 
-  # All riglets MUST be self-aware: self: { config, pkgs, ... }: { ... }
-  # The first argument receives the defining flake's `self`, giving access to:
-  #   - `self.inputs.*` for external package dependencies
-  #   - `self.riglets.*` for inter-riglet imports (ensures deduplication)
-  # Riglets that don't need `self` should use `_:` to ignore it.
-  #
-  # Each riglet is wrapped with a unique `key` for evalModules deduplication.
+  # Each riglet takes self as a first argument, and is wrapped by creating a dummy module whose sole purpose is to import the riglet and define a unique `key` for evalModules deduplication.
   # This ensures that if riglet A imports riglet B, and B is also added explicitly,
   # evalModules only processes B once.
-  applyFlakeSelf =
-    name: path:
-    let
-      module = (import path) inputs.self;
-    in
-    {
-      # Include flake outPath in key to avoid collisions across flakes
-      key = "riglet:${inputs.self.outPath}:${name}";
-      imports = [ module ];
-    };
+  applyFlakeSelf = name: path: {
+    # Include flake outPath in key to avoid collisions across flakes
+    key = "riglet:${inputs.self.outPath}:${name}";
+    imports = [ (import path inputs.self) ];
+  };
 
-  riglets = listToAttrs (
-    map
+  riglets = concatMapAttrs (
+    fileName: entry:
+    optionalAttrs
       (
-        filename:
+        (match ".*\\.nix$" fileName != null && fileName != "default.nix")
+        || (entry == "directory" && pathExists (rigletsDir + "/${fileName}/default.nix"))
+      )
+      (
         let
           # .nix files: strip extension; directories: keep as-is
-          name = replaceStrings [ ".nix" ] [ "" ] filename;
+          rigletName = replaceStrings [ ".nix" ] [ "" ] fileName;
         in
         {
-          inherit name;
-          value = applyFlakeSelf name (rigletsDir + "/${filename}");
+          "${rigletName}" = applyFlakeSelf rigletName (rigletsDir + "/${fileName}");
         }
       )
-      (
-        filter (
-          name:
-          (match ".*\\.nix$" name != null && name != "default.nix")
-          || (rigletsDirEntries.${name} == "directory" && pathExists (rigletsDir + "/${name}/default.nix"))
-        ) (attrNames rigletsDirEntries)
-      )
-  );
+  ) (if pathExists rigletsDir then builtins.readDir rigletsDir else { });
 
   rigupTomlPath = inputs.self + "/rigup.toml";
-  # Read rigup.toml from repository root if it exists
   rigupTomlContents = if pathExists rigupTomlPath then fromTOML (readFile rigupTomlPath) else { };
 
   # Resolve riglets from the TOML structure
@@ -94,25 +75,16 @@ let
       }
     ) (rigupTomlContents.rigs or { })
   );
+
+  checks = genAttrs systems (
+    system:
+    concatMapAttrs (name: rig: {
+      "rigup-${name}-home" = rig.home;
+      "rigup-${name}-shell" = rig.shell;
+    }) rigs.${system}
+  );
 in
 {
   inherit riglets rigs;
 }
-// (
-  if checkRigs then
-    {
-      checks = genAttrs systems (
-        system:
-        foldl' (
-          acc: name:
-          acc
-          // {
-            "rigup-${name}-home" = rigs.${system}.${name}.home;
-            "rigup-${name}-shell" = rigs.${system}.${name}.shell;
-          }
-        ) { } (attrNames rigs.${system})
-      );
-    }
-  else
-    { }
-)
+// (if checkRigs then { inherit checks; } else { })
