@@ -246,7 +246,11 @@ Your `flake.nix` should be:
     let
       system = "x86_64-linux";
       rig = self.rigs.${system}.default;
-    in rigup { inherit inputs; } // {
+    in rigup {
+      inherit inputs;
+      # Include this if you want your rigs to be built as part of `nix flake check`
+      #checkRigs = true;
+    } // {
       # Expose the whole rig directly as an output package, so it is easy to build as a folder
       packages.${system}.default-rig = rig.home;
       # Expose the whole rig directly as an output devShell, so you can enter it directly

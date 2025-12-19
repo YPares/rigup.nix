@@ -4,10 +4,12 @@ flake:
 # Arguments:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
 #   - systems: list of systems to generate rigs for (e.g., ["x86_64-linux"])
-# Returns: { riglets = {...}; rigs.<system>.<rig> = {...}; }
+#   - checkRigs: if true, all rigs' home & shell derivations will be included into checks.${system}
+# Returns: { riglets = {...}; rigs.<system>.<rig> = {...}; [ checks.<system>."<rig>-{home,shell}" = <derivation> ] }
 {
   inputs,
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
+  checkRigs ? false,
 }:
 with builtins;
 let
@@ -96,3 +98,21 @@ in
 {
   inherit riglets rigs;
 }
+// (
+  if checkRigs then
+    {
+      checks = genAttrs systems (
+        system:
+        foldl' (
+          acc: name:
+          acc
+          // {
+            "rigup-${name}-home" = rigs.${system}.${name}.home;
+            "rigup-${name}-shell" = rigs.${system}.${name}.shell;
+          }
+        ) { } (attrNames rigs.${system})
+      );
+    }
+  else
+    { }
+)

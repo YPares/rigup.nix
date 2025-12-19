@@ -16,13 +16,17 @@
     inputs@{
       self,
       blueprint,
+      nixpkgs,
       ...
     }:
     # bluprint's docs: https://github.com/numtide/blueprint/tree/main/docs/content/getting-started
     blueprint { inherit inputs; }
     # Expose the example riglets & rig
     # -- lib imported directly to avoid circular dependency
-    // (import ./lib { flake = self; }).resolveProject { inherit inputs; }
+    // (import ./lib { flake = self; }).resolveProject {
+      inherit inputs;
+      checkRigs = true;
+    }
     // {
       # Make the flake itself directly usable as a function by user flakes
       __functor = _: self.lib.resolveProject;
