@@ -23,6 +23,5 @@
       __functor = _: self.lib.resolveProject;
 
       templates = import ./templates;
-      devShells.x86_64-linux.default = self.rigs.x86_64-linux.example-rig.shell;
     };
 }

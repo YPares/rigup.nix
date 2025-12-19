@@ -5,6 +5,9 @@ This project uses [rigup](https://github.com/YPares/rigup.nix) to package AI age
 ## Quick Start
 
 ```bash
+# Access the rig via a sub-shell
+nix develop
+
 # Build your rig
 nix build
 

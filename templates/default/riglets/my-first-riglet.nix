@@ -15,6 +15,7 @@ _:
     meta = {
       name = "My First Riglet";
       description = "Example riglet to get you started";
+      intent = "cookbook";
       whenToUse = [
         "When this riglet will no longer be a draft"
       ];
