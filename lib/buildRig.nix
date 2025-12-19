@@ -3,9 +3,15 @@ flake:
 # Evaluate a rig from a set of riglet modules
 # Returns an attrset with:
 #   - env: combined buildEnv of all tools
-#   - docs: attrset of riglet name -> docs derivation
+#   - config: combined buildEnv of all tools
+#   - docAttrs: attrset of riglet name -> docs derivation
+#   - docs: folder of all docs (one subfolder per riglet)
 #   - meta: attrset of riglet name -> metadata
 #   - home: complete rig directory (RIG.md + bin/ + docs/ + .config/)
+#   - shell: complete rig, in devShell form (slightly different manifest
+#            to directly read from nix store instead of local symlinks)
+#   - extend: function that takes a list of extra riglets and combines them
+#             with those of the rig
 {
   modules,
   pkgs,
@@ -149,6 +155,13 @@ let
         printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤${reset}\n"
       '';
   };
+
+  extend =
+    extraModules:
+    flake.lib.buildRig {
+      inherit pkgs name;
+      modules = modules ++ extraModules;
+    };
 in
 {
   inherit
@@ -159,5 +172,6 @@ in
     meta
     home
     shell
+    extend
     ;
 }
