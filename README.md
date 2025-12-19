@@ -15,7 +15,7 @@ By combining the relevant riglets together, you build your agent's _rig_: the to
 
 `rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies
 
-In short, `rigup` is **Claude Skills + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
+In short, `rigup` is **parametrable agent skills + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
 
 ## Quick start
 
