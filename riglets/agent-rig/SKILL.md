@@ -73,7 +73,7 @@ _:
     meta = {
       name = "My Riglet"; # Human readable name
       description = "What this riglet provides";
-      intent = "cookbook";  # sourcebook | toolbox | cookbook | playbook
+      intent = "cookbook";  # base | sourcebook | toolbox | cookbook | playbook
       whenToUse = [
         "Situation 1" # When the AI Agent should use this riglet's recipes and tools
         "Situation 2"

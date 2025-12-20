@@ -23,27 +23,30 @@ with pkgs.lib;
 
             docs = mkOption {
               description = "Documentation derivation or path (folder)";
-              type = types.oneOf [
-                types.package
-                types.path
-              ];
+              type = types.nullOr (
+                types.oneOf [
+                  types.package
+                  types.path
+                ]
+              );
+              default = null;
             };
 
             config-files = mkOption {
-              description = "Configuration files folder (XDG_CONFIG_DIR) derivation";
+              description = "Configuration files folder derivation to place under $XDG_CONFIG_HOME";
+              type = types.nullOr (
+                types.oneOf [
+                  types.package
+                  types.path
+                ]
+              );
               default = null;
-              type = types.nullOr types.package;
             };
 
             meta = mkOption {
               description = "Metadata describing when and how to use this riglet";
               type = types.submodule {
                 options = {
-                  name = mkOption {
-                    description = "Human-readable riglet name";
-                    type = types.str;
-                  };
-
                   description = mkOption {
                     description = "Brief description of what this riglet provides";
                     type = types.str;
@@ -52,15 +55,16 @@ with pkgs.lib;
                   intent = mkOption {
                     description = "Type of documentation that the riglet provides";
                     type = types.enum [
+                      "base" # Only to serve as a base for imports, e.g. to expose config options to be reused
                       "sourcebook" # Specialized facts/knowledge/context
                       "toolbox" # Open-ended collections of tools/resources
-                      "cookbook" # Teaching techniques, patterns, arcane tricks
-                      "playbook" # Step-by-step procedures to follow
+                      "cookbook" # Set of techniques, patterns, arcane tricks
+                      "playbook" # Behavioural instructions and triggers, step-by-step procedures to follow
                     ];
                   };
 
                   disclosure = mkOption {
-                    description = "How to disclose this riglet via the RIG.toml manifest";
+                    description = "How to disclose this riglet's via the RIG.md manifest";
                     type = types.enum [
                       "none"
                       "lazy"
@@ -72,7 +76,7 @@ with pkgs.lib;
                   };
 
                   whenToUse = mkOption {
-                    description = "Situations when this riglet should be at least partially consulted. Empty list means IMMEDIATELY at startup";
+                    description = "Situations when this riglet should be (at least partially) consulted. Empty list means IMMEDIATELY at startup";
                     type = types.listOf types.str;
                     default = [ ];
                   };

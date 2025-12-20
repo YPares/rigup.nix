@@ -26,6 +26,7 @@ let
 
   # Intent descriptions for manifest
   intentDescriptions = {
+    base = throw "Riglets with intent \"base\" should not be disclosed in the manifest: set meta.disclosure = \"none\"";
     sourcebook = "specialized facts, knowledge, or domain context for guiding your thinking";
     toolbox = "collection of tools/resources for you to use whenever needed";
     cookbook = "specialized techniques and patterns; arcane tricks to learn";
@@ -69,7 +70,7 @@ let
     {
       "@name" = rigletName;
       "@docRoot" = "${docsRoot}/${rigletName}/";
-      description = "${rigletMeta.name}: ${rigletMeta.description}";
+      inherit (rigletMeta) description;
       intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
       keywords = concatStringsSep ", " rigletMeta.keywords;
       inherit (rigletMeta) version;

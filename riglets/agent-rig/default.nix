@@ -6,7 +6,6 @@ _:
 {
   config.riglets.agent-rig = {
     meta = {
-      name = "Agent Rig System";
       description = "Understanding and working with rigup's riglet system";
       intent = "sourcebook";
       whenToUse = [

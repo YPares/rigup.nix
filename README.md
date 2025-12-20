@@ -88,7 +88,12 @@ _:
 # - riglib is injected by rigup, and contains utility functions to build riglets
 { config, pkgs, system, riglib, ... }: {
 
+  # (Optional) Which riglets to extend from (whether from self or other flakes)
+  # If this riglet is included in a rig, ALL the riglets it imports will automatically be included as well
+  imports = [ ... ];
+
   # Each riglet must declare itself under config.riglets.<riglet-name>
+  # <riglet-name> MUST be the SAME as the file name, minus the .nix extension
   config.riglets.my-riglet = {
 
     # (Optional) The tools needed by this riglet
@@ -99,7 +104,7 @@ _:
     meta = {
       name = "My Riglet";
       intent = "cookbook";
-        # 'sourcebook', 'toolbox', 'cookbook', or 'playbook':
+        # 'base', 'sourcebook', 'toolbox', 'cookbook', or 'playbook':
         # what should the agent expect from this riglet: general knowledge
         # that may come useful vs. highly specific procedure(s) to follow
       description = "What this provides";

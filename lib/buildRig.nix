@@ -55,27 +55,21 @@ let
   meta = mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
 
   # XDG_CONFIG_HOME folder
-  config = pkgs.runCommand "${name}-config" { } ''
-    mkdir -p $out
-    ${concatStringsSep "\n" (
-      mapAttrsToList (
-        _: riglet:
-        optionalString (riglet.config-files != null) ''
-          for f in ${riglet.config-files}/*; do
-            ln -sL "$f" $out/
-          done
-        ''
-      ) evaluated.config.riglets
-    )}
-  '';
+  config = pkgs.symlinkJoin {
+    name = "${name}-config";
+    paths = map (riglet: riglet.config-files) (attrValues evaluated.config.riglets);
+  };
 
   # Docs folder (with symlinks to docs for all riglets)
   docs = pkgs.runCommand "${name}-docs" { } ''
     mkdir -p $out
     ${concatStringsSep "\n" (
-      mapAttrsToList (rigletName: rigletDocs: ''
-        ln -sL ${rigletDocs} $out/${rigletName}
-      '') docAttrs
+      mapAttrsToList (
+        rigletName: rigletDocs:
+        optionalString (rigletDocs != null) ''
+          ln -sL ${rigletDocs} $out/${rigletName}
+        ''
+      ) docAttrs
     )}
   '';
 

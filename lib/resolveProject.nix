@@ -14,11 +14,6 @@ flake:
 with inputs.nixpkgs.lib;
 let
   # Auto-discover all riglets from riglets/ directory
-  # Riglets can be either:
-  #   - Plain modules: { config, pkgs, ... }: { ... }
-  #   - Self-aware modules: self: { config, pkgs, ... }: { ... }
-  # Self-aware modules receive the defining flake's `self`, allowing access to
-  # `self.inputs.*` for external deps and `self.riglets.*` for inter-riglet imports.
   rigletsDir = inputs.self + "/riglets";
 
   # Each riglet takes self as a first argument, and is wrapped by creating a dummy module whose sole purpose is to import the riglet and define a unique `key` for evalModules deduplication.

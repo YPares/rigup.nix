@@ -11,6 +11,7 @@ For the structural/technical side of riglets (what goes in the Nix module, metad
 Ask yourself: what is the end goal here? What should this riglet teach?
 The `intent` metadata is there to help you here. It should guide how you approach the writing of a riglet.
 As a reminder, the possible intents are:
+- base: "abstract" riglet (e.g. to define options) solely meant to be imported by others to factorize configuration. Cannot be disclosed in a manifest
 - sourcebook: compendium of knowledge, glossary, useful domain knowledge
 - toolbox: open-ended set of tools related together
 - cookbook: operational know-how, heuristics, tricks and techniques that are useful to apprehend an otherwise complex toolset or domain

@@ -29,7 +29,6 @@ _:
     ++ riglib.useScriptFolder ./scripts;
 
     meta = {
-      name = "JJ Basics";
       description = "Jujutsu version control fundamentals and workflows";
       intent = "cookbook";
       whenToUse = [

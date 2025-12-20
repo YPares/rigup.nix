@@ -11,7 +11,6 @@ self:
 
   config.riglets.riglet-creator = {
     meta = {
-      name = "Riglet Creator";
       description = "Guide for creating effective riglets. Use when creating new riglets or improving existing ones, defining riglet structure, metadata, documentation patterns, or integrating tools with Nix.";
       intent = "playbook";
       whenToUse = [
