@@ -7,15 +7,15 @@
 self = [
   "agent-rig",
   "riglet-creator",
-  "jj-basics",
-  "typst-reporter",
+  "jj-basics",  # Imports agent-identity
+  "typst-reporter",  # Import agent-identity
   "nix-module-system",
 ]
 # Riglets from external flake inputs would go here:
 # <input> = ["some-external-riglet-from-<input>"]
 
 # Configuration for this rig (inline Nix module)
-[rigs.example-rig.config.agent.user]
+[rigs.example-rig.config.agent.identity]
 name = "Test Agent"
 email = "test@example.com"
 

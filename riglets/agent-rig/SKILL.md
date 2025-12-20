@@ -193,12 +193,12 @@ This controls the information/token-count ratio:
 Riglets can reference each other's options via `config`:
 
 ```nix
-# jj-basics defines agent.user.name
-options.agent.user.name = lib.mkOption { ... };
+# agent-identity defines agent.identity.name
+options.agent.identity.name = lib.mkOption { ... };
 
 # typst-reporter uses it
 config.riglets.typst-reporter.docs = ''
-  # ... template using config.agent.user.name
+  # ... template using config.agent.identity.name
 '';
 ```
 
@@ -256,7 +256,7 @@ Add a `rigup.toml` file to your project root:
 self = ["my-riglet"]
 rigup = ["jj-basics"]
 
-[rigs.default.config.agent.user]
+[rigs.default.config.agent.identity]
 name = "Alice"
 email = "alice@example.com"
 ```

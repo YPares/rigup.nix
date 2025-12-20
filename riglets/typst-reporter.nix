@@ -1,4 +1,4 @@
-_:
+self:
 {
   config,
   pkgs,
@@ -7,6 +7,8 @@ _:
   ...
 }:
 {
+  imports = [ self.riglets.agent-identity ];
+
   options.typst = {
     template = lib.mkOption {
       type = lib.types.enum [
@@ -48,13 +50,13 @@ _:
 
     config-files = riglib.writeFileTree {
       typst."template.typ" = ''
-        // Default ${config.typst.template} template for ${config.agent.user.name}
-        #set document(author: "${config.agent.user.name}")
+        // Default ${config.typst.template} template for ${config.agent.identity.name}
+        #set document(author: "${config.agent.identity.name}")
         #set page(numbering: "1")
 
         = Report Title
 
-        By ${config.agent.user.name}
+        By ${config.agent.identity.name}
 
         == Section
 
@@ -72,12 +74,12 @@ _:
 
         ```bash
         cat > report.typ <<'EOF'
-        #set document(author: "${config.agent.user.name}")
+        #set document(author: "${config.agent.identity.name}")
         #set page(numbering: "1")
 
         = My Report
 
-        By ${config.agent.user.name} (_${config.agent.user.email}_)
+        By ${config.agent.identity.name} (_${config.agent.identity.email}_)
 
         == Introduction
 

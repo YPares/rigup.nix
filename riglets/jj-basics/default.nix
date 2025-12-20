@@ -1,26 +1,12 @@
-_:
+self:
 {
   config,
   pkgs,
-  lib,
   riglib,
   ...
 }:
 {
-  # Define shared options at top level
-  options.agent.user = {
-    name = lib.mkOption {
-      type = lib.types.str;
-      example = "AI-Agent";
-      description = "AI Agent's username for version control and documentation";
-    };
-
-    email = lib.mkOption {
-      type = lib.types.str;
-      example = "foo@bar.qux";
-      description = "AI Agent's email address (can be fake)";
-    };
-  };
+  imports = [ self.riglets.agent-identity ];
 
   config.riglets.jj-basics = {
     tools = [
@@ -52,8 +38,8 @@ _:
     config-files = riglib.writeFileTree {
       jj."config.toml" = (pkgs.formats.toml { }).generate "jj-config" {
         user = {
-          name = config.agent.user.name;
-          email = config.agent.user.email;
+          name = config.agent.identity.name;
+          email = config.agent.identity.email;
         };
       };
     };
@@ -64,7 +50,7 @@ _:
 
         ## Quick Reference
 
-        Configured for: **${config.agent.user.name}** <${config.agent.user.email}>
+        Configured for: **${config.agent.identity.name}** <${config.agent.identity.email}>
 
         ### Essential Commands
 

@@ -236,7 +236,7 @@ rigup = ["jj-basics", "typst-reporter"]  # From the rigup flake input
 self = ["my-local-riglet"]               # From your riglets/ folder
 
 # Configuration for the riglets used in this rig
-[rigs.default.config.agent.user]
+[rigs.default.config.agent.identity]
 name = "Alice"  # This is used by both jj-basics & typst-reporter example riglets
 email = "alice@example.com"
 ```
