@@ -71,7 +71,6 @@ _:
 
     # Metadata for discovery and context
     meta = {
-      name = "My Riglet"; # Human readable name
       description = "What this riglet provides";
       intent = "cookbook";  # base | sourcebook | toolbox | cookbook | playbook
       whenToUse = [
@@ -350,7 +349,8 @@ export PATH="$(nix build .#rigs.<system>.default.home --no-link --print-out-path
 
 **RIG.md manifest:**
 The home directory includes a `RIG.md` file that lists all available riglets with:
-- Human-readable name and description
+- Name
+- Description
 - When to use each riglet
 - Keywords for searching
 - Documentation paths
