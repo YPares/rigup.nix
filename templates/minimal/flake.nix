@@ -9,16 +9,8 @@
 
   outputs =
     {
-      self,
       rigup,
-      flake-utils,
       ...
     }@inputs:
-    rigup { inherit inputs; }
-    // flake-utils.lib.eachDefaultSystem (system: {
-      # Make the rig(s) directly buildable
-      packages = builtins.mapAttrs (_name: rig: rig.home) self.rigs.${system};
-      # Make the rig(s) exposable in sub shell
-      devShells = builtins.mapAttrs (_name: rig: rig.shell) self.rigs.${system};
-    });
+    rigup { inherit inputs; };
 }

@@ -8,7 +8,7 @@ self = [
   "agent-rig",
   "riglet-creator",
   "jj-basics",  # Imports agent-identity
-  "typst-reporter",  # Import agent-identity
+  "typst-reporter",  # Imports agent-identity
   "nix-module-system",
 ]
 # Riglets from external flake inputs would go here:

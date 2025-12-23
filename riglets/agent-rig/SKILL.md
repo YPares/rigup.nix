@@ -34,7 +34,7 @@ The lib contains:
 - `home` - Complete agent directory: RIG.md + .local/ + docs/ + .config/
 - `shell` - Development shell (mkShell) with RIG_HOME, XDG_CONFIG_HOME, and PATH configured
 
-CLI will provide convenient rig edition & access to rig outputs (e.g. starting a shell with all env vars needed set to operate the rig)
+The `rigup` CLI tool provides convenient access to rig outputs, via commands like `rigup build` and `rigup shell`.
 
 ## Riglet Structure
 
@@ -372,8 +372,8 @@ nix build .#rigs.<system>.default.env
 # View metadata for a specific riglet
 nix eval .#rigs.<system>.default.meta.<riglet> --json | jq
 
-# Search all riglet keywords (future rigup CLI will do this)
-nix eval .#rigs.<system>.default.meta --json | jq 'to_entries | map({riglet: .key, keywords: .value.keywords})'
+# List all riglets provided by the flake's self and inputs
+rigup list inputs
 ```
 
 **Read riglet documentation:**

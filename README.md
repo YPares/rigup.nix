@@ -19,7 +19,17 @@ In short, `rigup` is **parametrable agent skills + lightweight [home management]
 
 ## Quick start
 
-You can create a new project from the template provided by this repository, or even directly build
+First, install the `rigup` CLI tool:
+
+```bash
+nix profile add github:YPares/rigup#rigup
+```
+
+_**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
+
+This CLI tool makes it easier to build rigs or open them as subshells, and to get information about available riglets.
+
+You can then create a new project from the templates provided by this repository, or even directly build
 the example rig defined here.
 
 ### Create a new project
@@ -27,33 +37,40 @@ the example rig defined here.
 ```bash
 # Initialize a new project from the template
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
-# ...or use `-t github:YPares/rigup.nix#minimal` for a project which should not define any local riglet
+
+# List available riglets from flake's self and inputs
+rigup list inputs
 
 # Build your rig
-nix build
+rigup build default # this builds .#rigs.<system>.default.home and outputs a symlink
 
 # Explore the rig
-cat result/RIG.md
+cat .rigup/default/RIG.md
+
+# Or open the rig as a sub-shell instead of creating a local symlink
+rigup shell default
 ```
 
 This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
+
+Alternatively, use `nix flake init -t github:YPares/rigup.nix#minimal` for a project which should not define any local riglet
 
 ### Use the example rig from this project
 
 This project defines example riglets, and an example rig combining them.
 
 ```bash
-# Build a simple but complete agent rig:
-nix build github:YPares/rigup.nix#rigs.x86_64-linux.example-rig.home
+git clone https://github.com/YPares/rigup.nix && cd rigup.nix
+rigup build example-rig
 
 # Discover available riglets
-cat result/RIG.md
+cat .rigup/example-rig/RIG.md
 
 # Use the tools
-./result/bin/jj --version
+.rigup/example-rig/bin/jj --version
 
 # Read the documentation
-cat result/docs/jj-basics/SKILL.md
+cat .rigup/example-rig/docs/jj-basics/SKILL.md
 ```
 
 ## Deeper dive
@@ -255,11 +272,6 @@ Your `flake.nix` should be:
       inherit inputs;
       # Include this if you want your rigs to be built as part of `nix flake check`
       #checkRigs = true;
-    } // {
-      # Expose the whole rig directly as an output package, so it is easy to build as a folder
-      packages.${system}.default-rig = rig.home;
-      # Expose the whole rig directly as an output devShell, so you can enter it directly
-      devShells.${system}.default-rig = rig.shell;
     };
 }
 ```
@@ -267,14 +279,14 @@ Your `flake.nix` should be:
 Finally, build the rig with:
 
 ```shell
-nix build .#default-rig -o my-default-rig
-ls -la ./my-default-rig
+rigup build default
+ls -la ./rigup/default
 ```
 
 ...or enter it through a sub-shell with:
 
 ```shell
-nix develop .#default-rig
+rigup shell default
 ```
 
 The riglets listed in your `rigup.toml` **must** match your flake inputs and what exists in your project. As a general case:
@@ -288,7 +300,7 @@ means that your `flake.nix` has a `some-flake` input that exposes the `riglets.f
 `self` is just a special case of that, as every flake has an implicit `self` input which is the flake itself.
 
 **NOTE:** The main reason to use a TOML file instead of always defining everything as Nix code is not _just_ because TOML is (much) more well-known than Nix syntax.
-It is mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code (see [TODO section](#todo) below).
+It is mainly because pure data (that can already cover a large set of use cases) is easier to manipulate via CLI tools than Nix code.
 
 #### Advanced option: combine with Nix
 
@@ -325,9 +337,6 @@ It is mainly because pure data (that can already cover a large set of use cases)
           }
         ];
       };
-
-      # (Same as before) Optionally expose more directly whole rigs as output packages
-      packages.${system}.custom-rig = self.rigs.${system}.custom.home;
     };
 }
 ```
@@ -369,11 +378,10 @@ rigup.nix/
 ## TODO
 
 - Add `checks` to riglets: automated and/or through-agent testing that a riglet is working as intended
-- `rigup` CLI tool for convenient rig access and manipulation of the `rigup.toml` file, via an interface like:
+- More commands for the `rigup` CLI tool for convenient rig access and manipulation of the `rigup.toml` file, via an interface like:
   - `rigup add --rig <rig> --input <flake-url> <riglet>`
   - `rigup config list --rig <rig>`
   - `rigup config set --rig <rig> foo.bar.qux <value>`
-  - `rigup start --rig <rig> claude`
   - etc.
 - [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
 - More example riglets

@@ -16,7 +16,6 @@
     inputs@{
       self,
       blueprint,
-      nixpkgs,
       ...
     }:
     # bluprint's docs: https://github.com/numtide/blueprint/tree/main/docs/content/getting-started
