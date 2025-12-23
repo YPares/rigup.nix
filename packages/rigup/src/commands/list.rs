@@ -4,7 +4,6 @@ use crate::types::RigletMeta;
 use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::env;
 use std::process::Command;
 use textwrap::{wrap, Options};
 
@@ -22,17 +21,22 @@ fn wrap_with_prefix(text: &str, prefix: &str, terminal_width: usize) -> String {
         .join("\n")
 }
 
-pub fn list_inputs() -> Result<()> {
-    let flake_root = get_flake_root()?;
+pub fn list_inputs(flake: Option<String>) -> Result<()> {
     let system = get_system();
+    let flake_path = flake.unwrap_or_else(|| ".".to_string());
 
-    // Change to flake root directory
-    env::set_current_dir(&flake_root).into_diagnostic()?;
+    // Build the flake expression
+    let flake_expr = if flake_path == "." {
+        let flake_root = get_flake_root()?;
+        format!("builtins.getFlake \"{}\"", flake_root.display())
+    } else {
+        format!("builtins.getFlake \"{}\"", flake_path)
+    };
 
     // Use the helper function from rigup.lib to discover all riglets in a single evaluation
     let eval_expr = format!(
         "let \
-           flake = builtins.getFlake (toString ./.); \
+           flake = {}; \
            rigup = if flake ? lib && flake.lib ? discoverInputRiglets \
                    then flake \
                    else flake.inputs.rigup; \
@@ -40,7 +44,7 @@ pub fn list_inputs() -> Result<()> {
            inherit flake; \
            system = \"{}\"; \
          }}",
-        system
+        flake_expr, system
     );
 
     println!("Discovering riglets from flake inputs...\n");

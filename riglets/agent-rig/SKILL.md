@@ -373,7 +373,7 @@ nix build .#rigs.<system>.default.env
 nix eval .#rigs.<system>.default.meta.<riglet> --json | jq
 
 # List all riglets provided by the flake's self and inputs
-rigup list inputs
+rigup list <some-flake-url>
 ```
 
 **Read riglet documentation:**

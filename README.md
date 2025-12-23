@@ -22,7 +22,7 @@ In short, `rigup` is **parametrable agent skills + lightweight [home management]
 First, install the `rigup` CLI tool:
 
 ```bash
-nix profile add github:YPares/rigup
+nix profile add github:YPares/rigup#rigup
 ```
 
 _**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
@@ -44,16 +44,16 @@ the example rig defined here.
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
 
 # List available riglets from flake's self and inputs
-rigup list inputs
+rigup list
 
 # Build your rig
-rigup build default # this builds .#rigs.<system>.default.home and outputs a symlink
+rigup build .#default # this builds .#rigs.<system>.default.home and outputs a symlink
 
 # Explore the rig
 cat .rigup/default/RIG.md
 
 # Or open the rig as a sub-shell instead of creating a local symlink
-rigup shell default
+rigup shell .#default
 ```
 
 This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
@@ -65,17 +65,14 @@ Alternatively, use `nix flake init -t github:YPares/rigup.nix#minimal` for a pro
 This project defines example riglets, and an example rig combining them.
 
 ```bash
-git clone https://github.com/YPares/rigup.nix && cd rigup.nix
-rigup build example-rig
+# Directly build a rig from a remote flake
+rigup build github:YPares/rigup.nix#example-rig
 
-# Discover available riglets
-cat .rigup/example-rig/RIG.md
+# Directly start a rig from a remote flake as a subshell
+rigup shell github:YPares/rigup.nix#example-rig
 
-# Use the tools
-.rigup/example-rig/bin/jj --version
-
-# Read the documentation
-cat .rigup/example-rig/docs/jj-basics/SKILL.md
+# Show the riglets exposed by a remote flake
+rigup list github:YPares/rigup.nix
 ```
 
 ## Deeper dive

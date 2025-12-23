@@ -30,8 +30,7 @@ pub fn get_flake_root() -> Result<PathBuf> {
         return Err(RigupError::NixCommandFailed { code, stderr }.into());
     }
 
-    let metadata: Value = serde_json::from_slice(&output.stdout)
-        .into_diagnostic()?;
+    let metadata: Value = serde_json::from_slice(&output.stdout).into_diagnostic()?;
 
     let resolved_url = metadata
         .get("resolvedUrl")
@@ -46,6 +45,45 @@ pub fn get_flake_root() -> Result<PathBuf> {
         .unwrap_or(resolved_url);
 
     Ok(PathBuf::from(path_str))
+}
+
+/// Parse a flake reference like "<flake>#<rig>"
+/// Returns (flake_path, rig_name)
+///
+/// To avoid ambiguity (following nix flake conventions):
+/// - If no `#` is present, treat as flake reference with default rig
+/// - Current repo MUST use `.#` prefix explicitly
+///
+/// Examples:
+/// - None -> ".#default"
+/// - ".#myrig" -> current repo, myrig
+/// - "github:foo/bar" -> "github:foo/bar#default"
+/// - "github:foo/bar#myrig" -> "github:foo/bar#myrig"
+/// - "example-rig" -> "example-rig#default" (flake reference, NOT rig name!)
+pub fn parse_flake_ref(flake_ref: Option<&str>) -> Result<(String, String)> {
+    let ref_str = flake_ref.unwrap_or(".#default");
+
+    if let Some((flake, rig)) = ref_str.split_once('#') {
+        // Explicit flake#rig format
+        Ok((flake.to_string(), rig.to_string()))
+    } else {
+        // No # means it's a flake reference, default to #default
+        Ok((ref_str.to_string(), "default".to_string()))
+    }
+}
+
+/// Build a complete flake reference for a rig component
+/// Takes parsed flake path and rig name, returns full reference
+pub fn build_flake_ref(
+    flake_path: &str,
+    rig: &str,
+    system: &str,
+    component: &str,
+) -> Result<String> {
+    Ok(format!(
+        "{}#rigs.{}.{}.{}",
+        flake_path, system, rig, component
+    ))
 }
 
 /// Run a nix command and return an error if it fails
