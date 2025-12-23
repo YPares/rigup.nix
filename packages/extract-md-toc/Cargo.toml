@@ -6,7 +6,7 @@ description = "Extract table of contents from markdown files with line numbers"
 license = "MIT"
 
 [dependencies]
-pulldown-cmark = "0.12"
+pulldown-cmark = "^0.13"
 
 [[bin]]
 name = "extract-md-toc"

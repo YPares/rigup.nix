@@ -1,6 +1,7 @@
 # Nix build outputs
 result
 result-*
+.rigup
 
 # Nix develop shells
 .direnv/

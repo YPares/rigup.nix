@@ -6,4 +6,5 @@
   resolveProject = import ./resolveProject.nix flake;
   genManifest = import ./genManifest.nix flake;
   rigletSchema = import ./rigletSchema.nix flake;
+  discoverInputRiglets = import ./discoverInputRiglets.nix flake;
 }
