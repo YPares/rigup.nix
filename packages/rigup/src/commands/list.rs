@@ -1,9 +1,10 @@
 use crate::error::RigupError;
-use crate::nix::get_system;
+use crate::nix::{get_flake_root, get_system};
 use crate::types::RigletMeta;
 use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
+use std::env;
 use std::process::Command;
 use textwrap::{wrap, Options};
 
@@ -22,7 +23,11 @@ fn wrap_with_prefix(text: &str, prefix: &str, terminal_width: usize) -> String {
 }
 
 pub fn list_inputs() -> Result<()> {
+    let flake_root = get_flake_root()?;
     let system = get_system();
+
+    // Change to flake root directory
+    env::set_current_dir(&flake_root).into_diagnostic()?;
 
     // Use the helper function from rigup.lib to discover all riglets in a single evaluation
     let eval_expr = format!(

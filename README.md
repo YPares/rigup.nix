@@ -22,10 +22,15 @@ In short, `rigup` is **parametrable agent skills + lightweight [home management]
 First, install the `rigup` CLI tool:
 
 ```bash
-nix profile add github:YPares/rigup#rigup
+nix profile add github:YPares/rigup
 ```
 
 _**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
+
+If already installed, update with:
+```bash
+nix profile upgrade rigup
+```
 
 This CLI tool makes it easier to build rigs or open them as subshells, and to get information about available riglets.
 
