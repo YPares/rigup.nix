@@ -34,8 +34,23 @@ nix profile upgrade rigup
 
 This CLI tool makes it easier to build rigs or open them as subshells, and to get information about available riglets.
 
-You can then create a new project from the templates provided by this repository, or even directly build
-the example rig defined here.
+You can then create a new project from the templates provided by this repository, or even directly build the example rig defined here.
+
+### Use the example rig from this project
+
+This project defines example riglets, and an example rig combining them.
+
+```bash
+# Show the riglets exposed by a remote flake
+rigup list github:YPares/rigup.nix
+
+# Directly build a rig from a remote flake
+rigup build github:YPares/rigup.nix#example-rig
+  # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
+
+# Directly open a rig from a remote flake in a subshell
+rigup shell github:YPares/rigup.nix#example-rig
+```
 
 ### Create a new project
 
@@ -47,7 +62,7 @@ mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
 rigup list
 
 # Build your rig
-rigup build .#default # this builds .#rigs.<system>.default.home and outputs a symlink
+rigup build ".#default"
 
 # Explore the rig
 cat .rigup/default/RIG.md
@@ -59,21 +74,6 @@ rigup shell .#default
 This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
 
 Alternatively, use `nix flake init -t github:YPares/rigup.nix#minimal` for a project which should not define any local riglet
-
-### Use the example rig from this project
-
-This project defines example riglets, and an example rig combining them.
-
-```bash
-# Directly build a rig from a remote flake
-rigup build github:YPares/rigup.nix#example-rig
-
-# Directly start a rig from a remote flake as a subshell
-rigup shell github:YPares/rigup.nix#example-rig
-
-# Show the riglets exposed by a remote flake
-rigup list github:YPares/rigup.nix
-```
 
 ## Deeper dive
 
@@ -267,10 +267,7 @@ Your `flake.nix` should be:
   inputs.rigup.url = "github:YPares/rigup.nix";
 
   outputs = { self, rigup, ... }@inputs:
-    let
-      system = "x86_64-linux";
-      rig = self.rigs.${system}.default;
-    in rigup {
+    rigup {
       inherit inputs;
       # Include this if you want your rigs to be built as part of `nix flake check`
       #checkRigs = true;
@@ -282,7 +279,6 @@ Finally, build the rig with:
 
 ```shell
 rigup build default
-ls -la ./rigup/default
 ```
 
 ...or enter it through a sub-shell with:
@@ -359,23 +355,6 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 - **Auto-generated manifests:** RIG.md lists all capabilities
 - **Reproducible:** Nix ensures consistent tool versions
 - **Self-documenting:** Riglets like `agent-rig`, `riglet-creator`, and `nix-module-system` teach agents how the system works — so they can help you write Nix and extend your rig. Learn Nix as a side effect, with AI assistance.
-
-## Layout of this repository
-
-```
-rigup.nix/
-├── lib/
-│   ├── default.nix       # riglib (common functions to define riglets)
-│   ├── manifest.nix      # RIG.md generation
-│   └── rigletSchema.nix  # Riglet type definitions
-├── riglets/
-│   ├── agent-rig         # Meta-documentation about the rig system
-│   ├── riglet-creator    # Guide to writing riglets
-│   ├── nix-module-system # Dark corners of Nix modules (evalModules, mkDefault, etc.)
-│   └── ...               # Other example riglets
-├── rigup.toml            # Declares the example rig
-└── flake.nix             # Exposes the Nix library + the above riglets & rig as outputs
-```
 
 ## TODO
 
