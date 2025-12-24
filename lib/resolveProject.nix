@@ -21,7 +21,9 @@ let
   # evalModules only processes B once.
   applyFlakeSelf = name: path: {
     # Include flake outPath in key to avoid collisions across flakes
-    key = "riglet:${inputs.self.outPath}:${name}";
+    key = "riglet:${inputs.self}:${name}";
+    # For error messages - shows full path in Nix store
+    _file = path;
     imports = [ (import path inputs.self) ];
   };
 
@@ -36,9 +38,14 @@ let
         let
           # .nix files: strip extension; directories: keep as-is
           rigletName = replaceStrings [ ".nix" ] [ "" ] fileName;
+          rigletPath =
+            if entry == "directory" then
+              rigletsDir + "/${fileName}/default.nix"
+            else
+              rigletsDir + "/${fileName}";
         in
         {
-          "${rigletName}" = applyFlakeSelf rigletName (rigletsDir + "/${fileName}");
+          "${rigletName}" = applyFlakeSelf rigletName rigletPath;
         }
       )
   ) (if pathExists rigletsDir then builtins.readDir rigletsDir else { });
