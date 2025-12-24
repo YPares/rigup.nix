@@ -71,7 +71,7 @@ rigup build ".#default"
 cat .rigup/default/RIG.md
 
 # Or open the rig as a sub-shell instead of creating a local symlink
-rigup shell .#default
+rigup shell ".#default"
 ```
 
 This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
@@ -281,14 +281,16 @@ Your `flake.nix` should be:
 Finally, build the rig with:
 
 ```shell
-rigup build default
+rigup build ".#default"
 ```
 
 ...or enter it through a sub-shell with:
 
 ```shell
-rigup shell default
+rigup shell ".#default"
 ```
+
+_NOTE: Just like `nix build` and `nix develop` target the `"default"` package or devShell when called without extra args, so do `rigup build` or `rigup shell` by targetting the rig named `"default"`_
 
 The riglets listed in your `rigup.toml` **must** match your flake inputs and what exists in your project. As a general case:
 
@@ -362,10 +364,9 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 ## TODO
 
 - Add `checks` to riglets: automated and/or through-agent testing that a riglet is working as intended
-- More commands for the `rigup` CLI tool for convenient rig access and manipulation of the `rigup.toml` file, via an interface like:
-  - `rigup add --rig <rig> --input <flake-url> <riglet>`
-  - `rigup config list --rig <rig>`
-  - `rigup config set --rig <rig> foo.bar.qux <value>`
+- More commands for the `rigup` CLI tool to conveniently view and set config values:
+  - `rigup config list <flake>#<rig>`
+  - `rigup config set <rig> foo.bar.qux <value>`
   - etc.
 - [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
 - More example riglets
