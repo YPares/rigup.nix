@@ -1,6 +1,6 @@
 use crate::error::RigupError;
 use crate::nix::{get_flake_root, get_system};
-use crate::types::RigletMeta;
+use crate::types::{InputData, RigletMeta};
 use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
@@ -21,7 +21,85 @@ fn wrap_with_prefix(text: &str, prefix: &str, terminal_width: usize) -> String {
         .join("\n")
 }
 
-pub fn list_inputs(flake: Option<String>) -> Result<()> {
+/// Display a riglet's metadata with tree formatting
+fn display_riglet(
+    name: &str,
+    meta: &RigletMeta,
+    prefix: &str,
+    is_last: bool,
+    terminal_width: usize,
+) {
+    let branch = if is_last { "└─" } else { "├─" };
+    let continuation = if is_last { "   " } else { " │ " };
+
+    println!(
+        "{} {} {} (v{}){}",
+        prefix,
+        branch,
+        if meta.broken {
+            format!("{}", name.red().bold())
+        } else {
+            name.green().bold().to_string()
+        },
+        meta.version,
+        (if meta.broken { " BROKEN" } else { "" }).red().bold()
+    );
+
+    // Add 2 extra spaces for detail indentation
+    let item_prefix = format!("{}{}  ", prefix, continuation);
+
+    // Color-code status
+    let status_str = match meta.status.as_str() {
+        "stable" => meta.status.green().to_string(),
+        "experimental" => meta.status.yellow().to_string(),
+        "deprecated" | "draft" => meta.status.red().to_string(),
+        "example" => meta.status.blue().to_string(),
+        _ => meta.status.clone(),
+    };
+
+    println!(
+        "{}Intent: {} {} Status: {}",
+        item_prefix,
+        meta.intent.cyan().bold(),
+        "|".bright_black(),
+        status_str
+    );
+
+    // Wrap description
+    println!(
+        "{}",
+        wrap_with_prefix(&meta.description, &item_prefix, terminal_width)
+    );
+
+    if !meta.keywords.is_empty() {
+        let wrapped = wrap_with_prefix(&meta.keywords.join(", "), &item_prefix, terminal_width);
+        for line in wrapped.lines() {
+            if let Some(text) = line.strip_prefix(&item_prefix) {
+                println!("{}{}", item_prefix, text.bright_black().italic());
+            } else {
+                println!("{}", line);
+            }
+        }
+    }
+
+    if !meta.when_to_use.is_empty() {
+        println!("{}When to use:", item_prefix);
+        for use_case in &meta.when_to_use {
+            let bullet_prefix = format!("{}   ", item_prefix);
+            let wrapped = wrap_with_prefix(use_case, &bullet_prefix, terminal_width);
+            let lines: Vec<&str> = wrapped.lines().collect();
+            if let Some((first, rest)) = lines.split_first() {
+                let text = first.strip_prefix(&bullet_prefix).unwrap_or(first);
+                println!("{} {} {}", item_prefix, "•".magenta(), text);
+                for line in rest {
+                    println!("{}", line);
+                }
+            }
+        }
+    }
+}
+
+pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
     let system = get_system();
     let flake_path = flake.unwrap_or_else(|| ".".to_string());
 
@@ -33,21 +111,22 @@ pub fn list_inputs(flake: Option<String>) -> Result<()> {
         format!("builtins.getFlake \"{}\"", flake_path)
     };
 
-    // Use the helper function from rigup.lib to discover all riglets in a single evaluation
+    // Use the helper function from rigup.lib to discover all riglets and rigs
     let eval_expr = format!(
         "let \
            flake = {}; \
-           rigup = if flake ? lib && flake.lib ? discoverInputRiglets \
+           rigup = if flake ? lib && flake.lib ? listFlake \
                    then flake \
                    else flake.inputs.rigup; \
-         in rigup.lib.discoverInputRiglets {{ \
+         in rigup.lib.listFlake {{ \
            inherit flake; \
            system = \"{}\"; \
+           includeInputs = {}; \
          }}",
-        flake_expr, system
+        flake_expr, system, include_inputs
     );
 
-    println!("Discovering riglets from flake inputs...\n");
+    println!("Discovering riglets and rigs...");
 
     let output = Command::new("nix")
         .args(&["eval", "--impure", "--expr", &eval_expr, "--json"])
@@ -60,102 +139,104 @@ pub fn list_inputs(flake: Option<String>) -> Result<()> {
         return Err(RigupError::NixCommandFailed { code, stderr }.into());
     }
 
-    // Parse the nested structure: { input-name -> { riglet-name -> metadata } }
-    let all_riglets: HashMap<String, HashMap<String, RigletMeta>> =
-        serde_json::from_slice(&output.stdout)
-            .map_err(|e| RigupError::MetadataParseError { source: e })?;
+    // Parse the nested structure: { input-name -> { riglets = {...}, rigs = {...} } }
+    let all_data: HashMap<String, InputData> = serde_json::from_slice(&output.stdout)
+        .map_err(|e| RigupError::MetadataParseError { source: e })?;
 
-    if all_riglets.is_empty() {
-        println!("No inputs with riglets found");
+    if all_data.is_empty() {
+        println!("No inputs with riglets or rigs found");
         return Ok(());
     }
+
+    println!("");
 
     // Get terminal width, default to 80 if not available
     let terminal_width = terminal_size::terminal_size()
         .map(|(w, _)| w.0 as usize)
         .unwrap_or(80);
 
-    println!("{}\n", "Flake inputs with riglets:".bold());
+    for (input_name, data) in all_data {
+        let has_riglets = !data.riglets.is_empty();
+        let has_rigs = !data.rigs.is_empty();
 
-    for (input_name, riglets) in all_riglets {
-        if !riglets.is_empty() {
-            println!("📦 {}", input_name.bright_blue().bold());
+        if !has_riglets && !has_rigs {
+            continue;
+        }
 
-            let riglets_vec: Vec<_> = riglets.into_iter().collect();
+        println!("📦 {}", input_name.bright_blue().bold());
+
+        // Count total sections (riglets and rigs)
+        let section_count = (if has_riglets { 1 } else { 0 }) + (if has_rigs { 1 } else { 0 });
+        let mut section_idx = 0;
+
+        // Display riglets section
+        if has_riglets {
+            section_idx += 1;
+            let is_last_section = section_idx == section_count;
+            let section_branch = if is_last_section { "└─" } else { "├─" };
+            // Emoji takes 2 chars, so we need extra space for alignment
+            let section_prefix = if is_last_section { "   " } else { " │ " };
+
+            println!(" {}🧩 {}", section_branch, "Riglets".bold());
+
+            let riglets_vec: Vec<_> = data.riglets.into_iter().collect();
             let riglets_count = riglets_vec.len();
 
             for (idx, (riglet_name, meta)) in riglets_vec.into_iter().enumerate() {
                 let is_last = idx == riglets_count - 1;
-                let branch = if is_last { "└─" } else { "├─" };
-                let prefix = if is_last { "     " } else { " │   " };
+                display_riglet(&riglet_name, &meta, section_prefix, is_last, terminal_width);
+            }
+        }
+
+        // Display rigs section
+        if has_rigs {
+            section_idx += 1;
+            let is_last_section = section_idx == section_count;
+            let section_branch = if is_last_section { "└─" } else { "├─" };
+            // Emoji takes 2 chars, so we need extra space for alignment
+            let section_prefix = if is_last_section { "   " } else { " │ " };
+
+            println!(" {}📟 {}", section_branch, "Rigs".bold());
+
+            let rigs_vec: Vec<_> = data.rigs.into_iter().collect();
+            let rigs_count = rigs_vec.len();
+
+            for (idx, (rig_name, rig_meta)) in rigs_vec.into_iter().enumerate() {
+                let is_last_rig = idx == rigs_count - 1;
+                let rig_branch = if is_last_rig { "└─" } else { "├─" };
+                // Account for emoji width in parent prefix
+                let rig_prefix = if is_last_rig { "   " } else { " │ " };
 
                 println!(
-                    " {} {} (v{}){}",
-                    branch,
-                    if meta.broken {
-                        format!("{}", riglet_name.red().bold())
-                    } else {
-                        riglet_name.green().bold().to_string()
-                    },
-                    meta.version,
-                    (if meta.broken { " BROKEN" } else { "" }).red().bold()
+                    "{} {} {}",
+                    section_prefix,
+                    rig_branch,
+                    rig_name.cyan().bold()
                 );
 
-                // Color-code status
-                let status_str = match meta.status.as_str() {
-                    "stable" => meta.status.green().to_string(),
-                    "experimental" => meta.status.yellow().to_string(),
-                    "deprecated" | "draft" => meta.status.red().to_string(),
-                    "example" => meta.status.blue().to_string(),
-                    _ => meta.status,
-                };
+                // Display riglets in this rig (just names)
+                let rig_riglets_vec: Vec<_> = rig_meta.riglets.into_iter().collect();
+                let rig_riglets_count = rig_riglets_vec.len();
 
-                println!(
-                    "{}Intent: {} {} Status: {}",
-                    prefix,
-                    meta.intent.cyan().bold(),
-                    "|".bright_black(),
-                    status_str
-                );
+                for (riglet_idx, (riglet_name, riglet_meta)) in
+                    rig_riglets_vec.into_iter().enumerate()
+                {
+                    let is_last_riglet = riglet_idx == rig_riglets_count - 1;
+                    let riglet_branch = if is_last_riglet { "└─" } else { "├─" };
 
-                // Wrap description
-                println!(
-                    "{}",
-                    wrap_with_prefix(&meta.description, prefix, terminal_width)
-                );
-
-                if !meta.keywords.is_empty() {
-                    let wrapped =
-                        wrap_with_prefix(&meta.keywords.join(", "), prefix, terminal_width);
-                    for line in wrapped.lines() {
-                        if let Some(text) = line.strip_prefix(prefix) {
-                            println!("{}{}", prefix, text.bright_black().italic());
-                        } else {
-                            println!("{}", line);
-                        }
-                    }
-                }
-
-                if !meta.when_to_use.is_empty() {
-                    println!("{}When to use:", prefix);
-                    for use_case in &meta.when_to_use {
-                        let bullet_prefix = format!("{}   ", prefix);
-                        let wrapped = wrap_with_prefix(use_case, &bullet_prefix, terminal_width);
-                        // Add cyan bullet to first line only
-                        let lines: Vec<&str> = wrapped.lines().collect();
-                        if let Some((first, rest)) = lines.split_first() {
-                            // Extract the actual text after the prefix
-                            let text = first.strip_prefix(&bullet_prefix).unwrap_or(first);
-                            println!("{} {} {}", prefix, "•".magenta(), text);
-                            for line in rest {
-                                println!("{}", line);
-                            }
-                        }
-                    }
+                    println!(
+                        "{}{} {} {} (v{})",
+                        section_prefix,
+                        rig_prefix,
+                        riglet_branch,
+                        riglet_name.green().bold(),
+                        riglet_meta.version
+                    );
                 }
             }
-            println!();
         }
+
+        println!();
     }
 
     Ok(())

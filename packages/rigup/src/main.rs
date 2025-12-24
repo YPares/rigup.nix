@@ -37,6 +37,9 @@ enum Commands {
         /// Flake to inspect (defaults to ".")
         /// Examples: ".", "github:user/repo"
         flake: Option<String>,
+        /// Include flake inputs (by default only shows "self")
+        #[arg(short, long)]
+        inputs: bool,
     },
 }
 
@@ -50,8 +53,8 @@ fn main() -> Result<()> {
         Commands::Shell { flake_ref, command } => {
             enter_shell(flake_ref, command)?;
         }
-        Commands::List { flake } => {
-            list_inputs(flake)?;
+        Commands::List { flake, inputs } => {
+            list_inputs(flake, inputs)?;
         }
     }
 

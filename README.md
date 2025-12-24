@@ -43,13 +43,16 @@ This project defines example riglets, and an example rig combining them.
 ```bash
 # Show the riglets exposed by a remote flake
 rigup list github:YPares/rigup.nix
+rigup list github:YPares/agent-skills  # A skills repo that packages them via rigup
 
 # Directly build a rig from a remote flake
 rigup build github:YPares/rigup.nix#example-rig
+rigup build github:YPares/agent-skills#claude-code
   # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
 
 # Directly open a rig from a remote flake in a subshell
 rigup shell github:YPares/rigup.nix#example-rig
+rigup shell github:YPares/agent-skills#copilot-cli
 ```
 
 ### Create a new project
