@@ -41,9 +41,9 @@ You can then create a new project from the templates provided by this repository
 This project defines example riglets, and an example rig combining them.
 
 ```bash
-# Show the riglets exposed by a remote flake
+# Show the riglets and rigs exposed by a remote flake
 rigup list github:YPares/rigup.nix
-rigup list github:YPares/agent-skills  # A skills repo that packages them via rigup
+rigup list github:YPares/agent-skills  # A Skills repo that also packages them via rigup
 
 # Directly build a rig from a remote flake
 rigup build github:YPares/rigup.nix#example-rig
@@ -62,7 +62,7 @@ rigup shell github:YPares/agent-skills#copilot-cli
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
 
 # List available riglets from flake's self and inputs
-rigup list
+rigup list --inputs
 
 # Build your rig
 rigup build ".#default"

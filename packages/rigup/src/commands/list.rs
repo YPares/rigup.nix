@@ -204,8 +204,7 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
             for (idx, (rig_name, rig_meta)) in rigs_vec.into_iter().enumerate() {
                 let is_last_rig = idx == rigs_count - 1;
                 let rig_branch = if is_last_rig { "└─" } else { "├─" };
-                // Account for emoji width in parent prefix
-                let rig_prefix = if is_last_rig { "   " } else { " │ " };
+                let rig_continuation = if is_last_rig { "   " } else { " │ " };
 
                 println!(
                     "{} {} {}",
@@ -214,24 +213,26 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
                     rig_name.cyan().bold()
                 );
 
-                // Display riglets in this rig (just names)
-                let rig_riglets_vec: Vec<_> = rig_meta.riglets.into_iter().collect();
-                let rig_riglets_count = rig_riglets_vec.len();
+                // Display riglets in this rig as comma-separated list (like keywords)
+                if !rig_meta.riglets.is_empty() {
+                    let riglet_list: Vec<String> = rig_meta
+                        .riglets
+                        .iter()
+                        .map(|(name, _)| name.clone())
+                        .collect();
 
-                for (riglet_idx, (riglet_name, riglet_meta)) in
-                    rig_riglets_vec.into_iter().enumerate()
-                {
-                    let is_last_riglet = riglet_idx == rig_riglets_count - 1;
-                    let riglet_branch = if is_last_riglet { "└─" } else { "├─" };
+                    // Add 2 extra spaces for detail indentation
+                    let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
+                    let wrapped =
+                        wrap_with_prefix(&riglet_list.join(", "), &item_prefix, terminal_width);
 
-                    println!(
-                        "{}{} {} {} (v{})",
-                        section_prefix,
-                        rig_prefix,
-                        riglet_branch,
-                        riglet_name.green().bold(),
-                        riglet_meta.version
-                    );
+                    for line in wrapped.lines() {
+                        if let Some(text) = line.strip_prefix(&item_prefix) {
+                            println!("{}{}", item_prefix, text.bright_black().italic());
+                        } else {
+                            println!("{}", line);
+                        }
+                    }
                 }
             }
         }
