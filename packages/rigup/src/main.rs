@@ -9,7 +9,7 @@ use miette::Result;
 
 #[derive(Parser)]
 #[command(name = "rigup")]
-#[command(about = "CLI tool for managing rigup rigs", long_about = None)]
+#[command(about = "Build your AI agent's rig\nParameterizable skills and tools, packaged together via Nix modules", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -32,7 +32,7 @@ enum Commands {
         #[arg(short, long, num_args = 1.., allow_hyphen_values = true)]
         command: Vec<String>,
     },
-    /// List all flake inputs that expose riglets
+    /// List all riglets and rigs from a flake and its inputs
     List {
         /// Flake to inspect (defaults to ".")
         /// Examples: ".", "github:user/repo"
