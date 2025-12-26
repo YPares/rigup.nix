@@ -29,11 +29,11 @@ in
     rig:
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "claude" ''
-      #export PATH="${rig.toolRoot}:$(dirname "$0"):$PATH"
-      #export XDG_CONFIG_HOME="${rig.configRoot}"
-      #export RIG_DOCS="${rig.docRoot}"
+      export PATH="${rig.toolRoot}:$(dirname "$0"):$PATH"
+      export XDG_CONFIG_HOME="${rig.configRoot}"
+      export RIG_DOCS="${rig.docRoot}"
 
-      ${pkgs.lib.getExe claude-code} --settings "${mkSettings rig}" "$@"
+      exec ${pkgs.lib.getExe claude-code} --settings "${mkSettings rig}" "$@"
     '';
 
   config.riglets.claude-code = {

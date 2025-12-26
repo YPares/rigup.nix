@@ -19,7 +19,7 @@
       blueprint,
       ...
     }:
-    # bluprint's docs: https://github.com/numtide/blueprint/tree/main/docs/content/getting-started
+    # blueprint's docs: https://github.com/numtide/blueprint/tree/main/docs/content/getting-started
     blueprint { inherit inputs; }
     # Expose the example riglets & rig
     # -- lib imported directly to avoid circular dependency
