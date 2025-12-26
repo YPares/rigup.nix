@@ -36,9 +36,9 @@ in
       exec ${pkgs.lib.getExe claude-code} --settings "${mkSettings rig}" "$@"
     '';
 
-  config.riglets.claude-code = {
+  config.riglets.claude-code-entrypoint = {
     meta = {
-      description = "claude-code integration - entrypoint to launch claude with rig context";
+      description = "Claude Code integration: entrypoint to launch Claude Code with rig context";
       intent = "base";
       disclosure = "none";
       status = "experimental";

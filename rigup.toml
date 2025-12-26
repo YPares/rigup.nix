@@ -25,4 +25,4 @@ template = "simple"
 [rigs.claude-example-rig]
 # Define a rig by extending from an existing one
 extends.self = "example-rig"
-riglets.self = ["claude-code"]
+riglets.self = ["claude-code-entrypoint"]

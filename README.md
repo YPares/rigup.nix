@@ -46,13 +46,14 @@ rigup list github:YPares/rigup.nix
 rigup list github:YPares/agent-skills  # A Skills repo that also packages them via rigup
 
 # Directly build a rig from a remote flake
-rigup build github:YPares/rigup.nix#example-rig
-rigup build github:YPares/agent-skills#claude-code
-  # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
+rigup build github:YPares/rigup.nix#example-rig # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
+rigup build github:YPares/agent-skills#claude
 
 # Directly open a rig from a remote flake in a subshell
 rigup shell github:YPares/rigup.nix#example-rig
-rigup shell github:YPares/agent-skills#copilot-cli
+
+# Directly run a rig's entrypoint (if it has any)
+rigup run github:YPares/agent-skills#claude
 ```
 
 ### Create a new project
