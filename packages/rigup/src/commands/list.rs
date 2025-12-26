@@ -234,6 +234,12 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
                         }
                     }
                 }
+
+                // Display entrypoint if defined
+                if let Some(program) = &rig_meta.entrypoint {
+                    let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
+                    println!("{}Entrypoint: {}", item_prefix, program.green());
+                }
             }
         }
 

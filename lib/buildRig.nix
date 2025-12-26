@@ -2,6 +2,7 @@
 flake:
 # Evaluate a rig from a set of riglet modules
 # Returns an attrset with:
+#   - name: the rig name
 #   - toolRoot: combined tools' bin/, lib/, share/, etc. folders (via symlinks)
 #   - configRoot: combined tools' XDG_CONFIG_HOME (via symlinks)
 #   - docAttrs: attrset of riglet name -> doc folder derivation
@@ -12,6 +13,7 @@ flake:
 #            to directly read from nix store instead of local symlinks)
 #   - extend: function that takes a list of extra riglets and combines them
 #             with those of the rig
+#   - entrypoint: null or file derivation - primary executable for the rig
 {
   modules,
   pkgs,
@@ -19,7 +21,10 @@ flake:
 }:
 with pkgs.lib;
 let
-  riglib = flake.lib.mkRiglib pkgs;
+  # Create the riglib attrset of helper functions, so it can be used by riglets
+  riglib = flake.lib.mkRiglib {
+    inherit pkgs;
+  };
 
   # Evaluate the module system with all riglet modules
   evaluated = evalModules {
@@ -73,16 +78,19 @@ let
     )}
   '';
 
-  # Generate RIG.md manifest from metadata and docs
+  # Generate a RIG.md manifest file from riglet metadata and docs
+  # See lib/genManifest.nix for full documentation
+  # Argument already set: pkgs, name, meta, docRoot
+  # Optional extra args: shownDocRoot, shownToolRoot, shownActivationScript
   genManifest =
     args:
     flake.lib.genManifest (
       {
         inherit
+          pkgs
           name
           meta
           docRoot
-          pkgs
           ;
       }
       // args
@@ -168,16 +176,26 @@ let
       inherit pkgs name;
       modules = modules ++ extraModules;
     };
+
+  # Build the base rig attrset (without entrypoint and extend to avoid circularity)
+  baseRig = {
+    inherit
+      name
+      toolRoot
+      configRoot
+      docAttrs
+      docRoot
+      meta
+      home
+      shell
+      genManifest
+      ;
+  };
 in
-{
-  inherit
-    toolRoot
-    configRoot
-    docAttrs
-    docRoot
-    meta
-    home
-    shell
-    extend
-    ;
+baseRig
+// optionalAttrs (evaluated.config.entrypoint != null) {
+  entrypoint = evaluated.config.entrypoint baseRig;
+}
+// {
+  inherit extend;
 }

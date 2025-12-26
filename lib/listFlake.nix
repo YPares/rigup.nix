@@ -32,13 +32,14 @@ let
       # Extract rigs metadata
       rigsData =
         if input ? rigs && input.rigs ? ${system} && builtins.isAttrs input.rigs.${system} then
-          builtins.mapAttrs (rigName: rig: rig.meta or { }) input.rigs.${system}
+          builtins.mapAttrs (rigName: rig: {
+            riglets = rig.meta or { };
+            entrypoint = if rig ? "entrypoint" then rig.entrypoint.name else null;
+          }) input.rigs.${system}
         else
           { };
-
-      hasData = rigletsData != { } || rigsData != { };
     in
-    if hasData then
+    if rigletsData != { } || rigsData != { } then
       {
         "${inputName}" = {
           riglets = rigletsData;
@@ -49,8 +50,10 @@ let
       { };
 
   # Select which inputs to process
-  inputsToProcess = if includeInputs then ({ self = flake; } // flake.inputs) else { self = flake; };
-
+  inputsToProcess = {
+    self = flake;
+  }
+  // pkgs.lib.optionalAttrs includeInputs flake.inputs;
 in
 # Map over selected inputs and collect metadata
 pkgs.lib.concatMapAttrs processInput inputsToProcess

@@ -5,6 +5,7 @@
 [rigs.example-rig.riglets]
 # Riglets from this repository
 self = [
+  "claude-code",
   "agent-rig",
   "riglet-creator",
   "jj-basics",  # Imports agent-identity

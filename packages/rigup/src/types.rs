@@ -21,8 +21,9 @@ pub struct RigletMeta {
 
 #[derive(Deserialize, Debug)]
 pub struct RigMeta {
-    #[serde(flatten)]
     pub riglets: HashMap<String, RigletMeta>,
+    #[serde(default)]
+    pub entrypoint: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]

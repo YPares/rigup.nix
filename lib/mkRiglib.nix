@@ -1,7 +1,10 @@
 # rigup flake's self
-_flake:
+flake:
+{
+  pkgs, # From nixpkgs
+}:
 # Helper functions to use for riglet declarations
-pkgs: rec {
+rec {
   # Convert nested attribute set to directory tree of files
   # Usage: writeFileTree pkgs { "SKILL.md" = "..."; references."foo.md" = "..."; }
   # Creates: derivation with SKILL.md and references/foo.md

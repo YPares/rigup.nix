@@ -4,7 +4,7 @@ mod nix;
 mod types;
 
 use clap::{Parser, Subcommand};
-use commands::{build_rig, enter_shell, list_inputs};
+use commands::{build_rig, enter_shell, list_inputs, run_entrypoint};
 use miette::Result;
 
 #[derive(Parser)]
@@ -41,6 +41,15 @@ enum Commands {
         #[arg(short, long)]
         inputs: bool,
     },
+    /// Run a rig's entrypoint
+    Run {
+        /// Flake reference in the form <flake>#<rig> (defaults to ".#default")
+        /// Current repo must use ".#" prefix. Examples: ".#myrig", "github:user/repo", "github:user/repo#myrig"
+        flake_ref: Option<String>,
+        /// Arguments to forward to the entrypoint
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -55,6 +64,9 @@ fn main() -> Result<()> {
         }
         Commands::List { flake, inputs } => {
             list_inputs(flake, inputs)?;
+        }
+        Commands::Run { flake_ref, args } => {
+            run_entrypoint(flake_ref, &args)?;
         }
     }
 
