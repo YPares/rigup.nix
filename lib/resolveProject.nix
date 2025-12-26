@@ -66,15 +66,29 @@ let
   rigs = genAttrs systems (
     system:
     mapAttrs (
-      rigName: rigDef:
+      name: rigDef:
       let
         pkgs = import inputs.nixpkgs { inherit system; };
-      in
-      flake.lib.buildRig {
-        inherit pkgs;
-        name = rigName;
         modules = rigletsSpecToModules (rigDef.riglets or [ ]) ++ [ (rigDef.config or { }) ];
-      }
+      in
+      if rigDef ? "extends" then
+        let
+          baseInputs = attrNames rigDef.extends;
+          baseInput =
+            if builtins.length baseInputs != 1 then
+              throw "In rigup.toml - rigs.${name}.extends: Can only extend from ONE base rig"
+            else
+              builtins.head baseInputs;
+          baseRigName = rigDef.extends.${baseInput};
+        in
+        inputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
+          newName = name;
+          extraModules = modules;
+        }
+      else
+        flake.lib.buildRig {
+          inherit pkgs modules name;
+        }
     ) (rigupTomlContents.rigs or { })
   );
 

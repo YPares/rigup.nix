@@ -11,7 +11,7 @@ flake:
 #   - home: complete rig directory (RIG.md + bin/ + docs/ + .config/)
 #   - shell: complete rig, in devShell form (slightly different manifest
 #            to directly read from nix store instead of local symlinks)
-#   - extend: function that takes a list of extra riglets and combines them
+#   - extend: function that takes a list of extra riglet modules and combines them
 #             with those of the rig
 #   - entrypoint: null or file derivation - primary executable for the rig
 {
@@ -171,9 +171,13 @@ let
   };
 
   extend =
-    extraModules:
+    {
+      newName ? name,
+      extraModules ? [ ],
+    }:
     flake.lib.buildRig {
-      inherit pkgs name;
+      inherit pkgs;
+      name = newName;
       modules = modules ++ extraModules;
     };
 

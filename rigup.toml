@@ -5,7 +5,6 @@
 [rigs.example-rig.riglets]
 # Riglets from this repository
 self = [
-  "claude-code",
   "agent-rig",
   "riglet-creator",
   "jj-basics",  # Imports agent-identity
@@ -22,3 +21,8 @@ email = "test@example.com"
 
 [rigs.example-rig.config.typst]
 template = "simple"
+
+[rigs.claude-example-rig]
+# Define a rig by extending from an existing one
+extends.self = "example-rig"
+riglets.self = ["claude-code"]

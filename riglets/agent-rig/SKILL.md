@@ -347,7 +347,7 @@ For config not representable in TOML:
   - `docRoot` - Folder derivation. Combined derivation with docs for all riglets (one subfolder for each)
   - `home` - Folder derivation. All-in-one directory for the rig: RIG.md manifest + .local/ + docs/ + .config/ folders
   - `shell` - Shell derivation (via `pkgs.mkShell`) exposing ready-to-use RIG_MANIFEST, XDG_CONFIG_HOME and PATH env vars
-  - `extend` - Nix function. "Adds" riglets to a pre-existing rig: takes a list of riglets and returns a new rig
+  - `extend` - Nix function. Adds riglets to a pre-existing rig: takes `{newName, extraModules}` and returns a new rig
 
 ## Using a Rig
 

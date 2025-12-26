@@ -110,7 +110,7 @@ _:
 # - riglib is injected by rigup, and contains utility functions to build riglets
 { config, pkgs, system, riglib, ... }: {
 
-  # (Optional) Which riglets to extend from (whether from self or other flakes)
+  # (Optional) Which riglets to depend on (whether from self or other flakes)
   # If this riglet is included in a rig, ALL the riglets it imports will automatically be included as well
   imports = [ ... ];
 
