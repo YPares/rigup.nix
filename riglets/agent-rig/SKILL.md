@@ -128,149 +128,29 @@ The full **Nix module schema** of a riglet is defined in `lib/rigletSchema.nix`.
 
 ### Metadata
 
-**About meta.intent:**
-Primary focus/intent of the riglet:
+When defining a riglet, the `meta` section specifies its purpose, maturity, and visibility. See `references/metadata-guide.md` for comprehensive details on:
 
-- `base` - Config and/or tools without docs; usually to be imported by other riglets without being disclosed via the manifest
-- `sourcebook` - Specialized facts, knowledge, terminology, or domain context for guiding thinking
-- `toolbox` - Open-ended collection of tools/resources with minimal context on how they work together
-- `cookbook` - Specialized techniques and patterns; arcane tricks agents may lack
-- `playbook` - Behavioural instructions; step-by-step procedures for executing specific workflows
+- **meta.intent** - Primary focus (base, sourcebook, toolbox, cookbook, playbook)
+- **meta.status** - Maturity level (stable, experimental, draft, deprecated, example)
+- **meta.version** - Semantic versioning of the riglet's interface
+- **meta.broken** - Temporary non-functional state flag
+- **meta.disclosure** - Visibility control (none, lazy, shallow-toc, deep-toc, eager)
+- **Tool configuration files** - Using XDG Base Directory specification
 
-**About meta.status:**
-Maturity level:
+### Implementation Utilities
 
-- `stable` - Production-ready, well-tested riglet
-- `experimental` - (Default) Usable but may change, not fully battle-tested
-- `draft` - Work in progress, incomplete
-- `deprecated` - No longer maintained, use alternatives
-- `example` - Pedagogical riglet for demonstrating patterns
+See `references/riglib-utilities.md` for details on helper functions available via `riglib`:
 
-Used to add warnings to the rig manifest.
-
-**About meta.version:**
-Semantic version (Default: `"0.1.0"`) of riglet's interface/capabilities:
-
-- Use semver format: `MAJOR.MINOR.PATCH` (e.g., `"1.2.3"`)
-- Increment MAJOR for breaking changes (renamed options, removed features)
-- Increment MINOR for backwards-compatible additions (new options, new docs sections)
-- Increment PATCH for backwards-compatible fixes (doc corrections, bug fixes)
-
-**About meta.broken:**
-Boolean flag (Default: `false`) indicating riglet is currently non-functional:
-
-- Like Nix derivations' `meta.broken`, marks temporary "needs fixing" state
-- Takes precedence over status in warnings in rig manifest
-
-**About meta.disclosure:**
-Enum controlling how much information about the riglet is exposed in RIG.md
-
-- `none` - Riglet not mentioned in RIG.md. Agent won't know it exists unless manually browsing the rig or user mentions it
-- `lazy` - (Default) Description, `whenToUse`, keywords, and basic metadata included. Paths to documentation provided
-- `shallow-toc` - Like `lazy`, plus an auto-generated table of contents showing levels 1-2 headers from SKILL.md with line numbers for efficient navigation
-- `deep-toc` - Like `shallow-toc`, but includes all header levels (1-6) for comprehensive navigation
-- `eager` - Full top-level SKILL.md content directly embedded in RIG.md
-
-This controls the information/token-count ratio:
-
-- most riglets use `lazy` to avoid overwhelming agents during discovery
-- foundational riglets use `shallow-toc` to enable efficient pinpointing of major sections
-- complex riglets use `deep-toc` when agents need to navigate deeply nested documentation
-- `eager` should only be used for very short SKILL.md
-
-### Tool Config Files
-
-**config-files** provides configuration for tools:
-
-- Uses `riglib.writeFileTree` to create `.config/` directory structure
-- Follows XDG Base Directory specification
-- All riglets' config-files are merged into `.config/`
-- Example: `jj."config.toml"` → `.config/jj/config.toml`
-- Can use `pkgs.formats.toml`, `.json`, `.yaml` to generate config files from Nix data
-- Can use plain strings for shell scripts or plain text configs
-
-### Helper Functions to Use
-
-**riglib.writeFileTree** converts nested attrsets to directory trees:
-
-- Takes a single attrset argument
-- `"SKILL.md"` → `SKILL.md`
-- `references."foo.md"` → `references/foo.md`
-- Extensions must be included in attribute names
-- Leaf values can be:
-  - Strings (inline content)
-  - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
-  - Derivations (e.g., `pkgs.writeText` or `(pkgs.formats.<format> {}).generate`)
-
-**riglib.useScriptFolder** converts all files in a folder to wrapped tool packages:
-
-- Takes a folder path as argument
-- Returns a list that can be concatenated with other tools
-- Each regular file in the folder becomes an executable tool
-- Automatically filters out directories and non-regular files
-- Example: `tools = [ pkgs.git ] ++ riglib.useScriptFolder ./scripts`
-- Each script gets wrapped via `wrapScriptPath` (filename becomes command name)
+- **riglib.writeFileTree** - Convert nested attrsets to directory trees
+- **riglib.useScriptFolder** - Convert folder of scripts into wrapped tool packages
 
 ## Cross-Riglet/Flake Interaction
 
-### Sharing options via `config`
+Advanced patterns for composing riglets together and sharing configuration. See `references/advanced-patterns.md` for:
 
-Riglets can reference each other's options via their `config` input arg:
-
-```nix
-# agent-identity defines agent.identity.name
-options.agent.identity.name = lib.mkOption { ... };
-
-# typst-reporter uses it
-"template.typ" = ''
-  ...
-  #set document(author: "${config.agent.identity.name}")
-  ...
-'';
-```
-
-### Dependencies/Inheritance via `imports`
-
-If a riglet depends on another, use `imports` with `self.riglets.*`:
-
-```nix
-self:
-{ riglib, ... }: {
-  # Import the base riglet - evalModules deduplicates if both are in the rig
-  imports = [ self.riglets.base-riglet ];
-
-  config.riglets.advanced-riglet = { ... };
-}
-```
-
-**IMPORTANT:** Always use `self.riglets.*` for imports, never path-based imports like `./base-riglet.nix`. The `self.riglets.*` form ensures proper deduplication.
-
-For riglets from external flakes:
-
-```nix
-imports = [ self.inputs.other-flake.riglets.some-riglet ];
-```
-
-### Using external packages
-
-Access packages from external flakes via `self.inputs`:
-
-```nix
-self:
-{ pkgs, system, riglib, ... }: {
-  config.riglets.my-riglet = {
-    tools =
-      # Use the provided system to select the right platform
-      # (`system` arg == `pkgs.stdenv.hostPlatform.system` == `pkgs.system` but last one is deprecated)
-      let someFlakePkgs = self.inputs.some-flake.packages.${system};
-      in [
-        someFlakePkgs.foo
-        someFlagePkgs.bar
-        pkgs.git
-      ];
-  };
-}
-```
+- Sharing configuration via `config`
+- Dependencies and inheritance via `imports`
+- Using packages from external flakes
 
 ## Defining Rigs in Projects
 
@@ -348,11 +228,12 @@ For config not representable in TOML:
   - `home` - Folder derivation. All-in-one directory for the rig: RIG.md manifest + .local/ + docs/ + .config/ folders
   - `shell` - Shell derivation (via `pkgs.mkShell`) exposing ready-to-use RIG_MANIFEST, XDG_CONFIG_HOME and PATH env vars
   - `extend` - Nix function. Adds riglets to a pre-existing rig: takes `{newName, extraModules}` and returns a new rig
+  - `genManifest` - Nix function. Creates a manifest for this rig, with options to shorten included paths to avoid repeatedly including long explicit paths into the Nix store
 
 ## Using a Rig
 
-The user decides how they and their agent should use the rig: either via its _shell_ or _home_ output derivation.
-In both cases, the agent's entrypoint is the `RIG.md` manifest file. This file lists all available riglets with:
+The user decides how they and their agent should use the rig: either via its _shell_, _home_ or _entrypoint_ output derivations.
+In any case, the agent's focus should be is the `RIG.md` manifest file. This file lists all available riglets with:
 
 - Name
 - Description
@@ -362,7 +243,7 @@ In both cases, the agent's entrypoint is the `RIG.md` manifest file. This file l
 
 Agents should read this file first to understand available capabilities.
 
-### Via `shell` Output
+### `shell` output
 
 The AI agent runs in a subshell: a `$RIG_MANIFEST` env var is set that contains the path to the RIG.md manifest the agent should read.
 Also, `$PATH` and `$XDG_CONFIG_HOME` are already properly set up by the subshell.
@@ -381,7 +262,7 @@ cat $RIG_MANIFEST
 - No risk of using an incorrect tool or config file if the agent misses a step
 - Convenient to use when AI agent runs inside a terminal application (like claude-code)
 
-### Via `home` Output
+### `home` output
 
 The AI agent reads from a complete locally-symlinked "home-like" folder.
 The RIG.md manifest and an activate.sh script will be added _at the root_ of this folder.
@@ -408,19 +289,16 @@ cat .rigup/<rig>/docs/<riglet>/SKILL.md
 - Manifest file is right next to doc files: can refer to them via short and simple relative paths
 - More convenient to use in contexts where setting up env vars is impractical (e.g. AI agent running inside an IDE, like Cursor)
 
-### Direct Integration with Coding Agent Harnesses
+### `entrypoint` output
 
-The "home" and "shell" derivations are made to be generic enough so that at least one of them should cover all user needs without too much extra manual steps, but `rigup` is planned to provide tighter, one-command setups for common coding agent harnesses such as:
+The `entrypoint` output is special in that it **does not exist unless some riglet sets it**, by defining `config.entrypoint`.
+It is mainly used to provide direct integration with common coding agent harnesses.
+Similar to `home` and `shell`, `entrypoint` packages the whole rig as a Nix derivation, but this time as a wrapper shell script that starts the harness with the proper config files and CLI args.
 
-- `claude-code`
-- `cursor-agent`
-- `copilot-cli`
-- Mistral's `vibe`
+`rigup run <flake>#<rig>` executes a rig's entrypoint.
 
-These harnesses and others are already Nix-packaged in numtide's [llm-agents.nix flake](https://github.com/numtide/llm-agents.nix) (previously called "nix-ai-tools").
-
-These integrations will be provided _as riglets too_, once `rigup` enable riglets to define an "entrypoint": a script that would be run by a new CLI command: `rigup run .#rig`.
-Integrations with harnesses listed above should also serve as a reference for users and agents wishing to integrate with other harnesses.
+Claude Code integration is currently available via the `claude-code-entrypoint` riglet.
+See `references/harness-integration.md` for more details.
 
 ## Adding Riglets to a Rig
 
