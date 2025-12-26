@@ -46,24 +46,6 @@ nix build .#extract-md-toc
 nix run .#extract-md-toc -- file.md
 ```
 
-## Integration with genManifest.nix
-
-This tool replaces the hackish "grep for #" approach in `lib/genManifest.nix`. Instead of:
-
-```nix
-# Old approach: simple string matching
-let isHeader = line: hasPrefix "##" (ltrimString line);
-```
-
-Use the proper parser:
-
-```nix
-# New approach: proper markdown parsing
-let tocOutput = pkgs.runCommand "toc" {} ''
-  ${pkgs.extract-md-toc}/bin/extract-md-toc ${docFile}/SKILL.md > $out
-'';
-```
-
 ## Why This Tool?
 
 The previous implementation used simple string matching which:

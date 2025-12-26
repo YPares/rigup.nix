@@ -2,25 +2,27 @@
 flake:
 # Generate RIG.md manifest file from rig metadata and docs
 # Arguments:
-#   - name: the name of the rig
-#   - meta: attrset of all riglet metadata
-#   - docAttrs: attrset of all riglet docs derivations
 #   - pkgs: nixpkgs
 #   - mode: shell or home
+#   - name: the name of the rig
+#   - meta: attrset of all riglet metadata
+#   - docRoot: absolute Nix store path to the folder containing all docs of the rig
+#   - shownDocRoot: path or env var to use as the folder containing all docs, to use in the manifest. Defaults to docRoot
+#   - shownToolRoot: (Optional) path or env var to use as the folder containing bin/, lib/, share/ etc. for all tools of the rig, to indicate the agent they can if needed look for additional info under share/ and lib/
+#   - shownActivationScript: (Optional) path or env var to use as a script path that should be sourced before every command (to set env vars)
 # Returns: derivation containing RIG.md
 {
+  pkgs,
   name,
   meta,
-  docAttrs,
-  pkgs,
-  mode,
+  docRoot,
+  shownDocRoot ? docRoot,
+  shownToolRoot ? null,
+  shownActivationScript ? null,
 }:
-assert (_: mode == "home" || mode == "shell") ''genManifest: mode is not "home" or "shell"'';
+with builtins;
+with pkgs.lib;
 let
-  rigHome = if mode == "home" then "." else throw "genManifest: Manifest not built for 'home' mode";
-  docsRoot = if mode == "home" then "./docs" else "$RIG_DOCS";
-  toolFolder = if mode == "home" then "./.local" else "$RIG_TOOLS";
-
   inherit (pkgs.stdenv.hostPlatform) system;
   inherit (flake.packages.${system}) extract-md-toc;
 
@@ -52,49 +54,53 @@ let
   # shallow=false: all headings
   generateToc =
     rigletName: file: shallow:
-    pkgs.runCommand "toc-${rigletName}" { } ''
+    pkgs.runCommand "${rigletName}-${optionalString shallow "shallow-"}toc" { } ''
       ${extract-md-toc}/bin/extract-md-toc ${if shallow then "--max-level 2" else ""} ${file} > $out
     '';
 
   rigletToXml =
     rigletName: rigletMeta:
-    with pkgs.lib;
-    let
-      warning = warningFromMeta rigletMeta;
-      docsDrv = docAttrs.${rigletName} or null;
-      skillMdStorePath = "${docsDrv}/SKILL.md";
-      skillMdRelativePath = "${docsRoot}/${rigletName}/SKILL.md";
-      skillMdContent = if docsDrv == null then null else builtins.readFile skillMdStorePath;
-      hasToC = rigletMeta.disclosure == "shallow-toc" || rigletMeta.disclosure == "deep-toc";
-    in
     {
       "@name" = rigletName;
-      "@docRoot" = "${docsRoot}/${rigletName}/";
+      "@docRoot" = "${shownDocRoot}/${rigletName}/";
       inherit (rigletMeta) description;
       intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
       keywords = concatStringsSep ", " rigletMeta.keywords;
       inherit (rigletMeta) version;
     }
-    // (if warning != null then { inherit warning; } else { })
-    // {
-      whenToUse =
-        if length rigletMeta.whenToUse == 0 then "IMMEDIATELY!!" else { useCase = rigletMeta.whenToUse; };
+    // (
+      let
+        warning = warningFromMeta rigletMeta;
+      in
+      optionalAttrs (warning != null) { inherit warning; }
+    )
+    // optionalAttrs (rigletMeta.whenToUse != [ ]) {
+      whenToUse.useCase = rigletMeta.whenToUse;
     }
     // (
-      if hasToC then
+      let
+        skillMdPath = "${docRoot}/${rigletName}/SKILL.md";
+        shownSkillMdPath = "${shownDocRoot}/${rigletName}/SKILL.md";
+      in
+      if
+        elem rigletMeta.disclosure [
+          "shallow-toc"
+          "deep-toc"
+        ]
+      then
         {
           inlinedInfo = {
-            "@source" = skillMdRelativePath;
+            "@source" = shownSkillMdPath;
             tableOfContents = "\n${
-              builtins.readFile (generateToc rigletName skillMdStorePath (rigletMeta.disclosure == "shallow-toc"))
+              readFile (generateToc rigletName skillMdPath (rigletMeta.disclosure == "shallow-toc"))
             }";
           };
         }
       else if rigletMeta.disclosure == "eager" then
         {
           inlinedInfo = {
-            "@source" = skillMdRelativePath;
-            fullContent = "\n${skillMdContent}";
+            "@source" = shownSkillMdPath;
+            fullContent = "\n${readFile skillMdPath}";
           };
         }
       else
@@ -103,28 +109,22 @@ let
     );
 
   rigToXml = rigName: {
-    rigSystem = [
-      {
-        "@name" = rigName;
-        # Will generate ONE <riglet ...>...</riglet> node PER element in the associated list:
-        riglet = pkgs.lib.mapAttrsToList (
+    rigSystem = {
+      "@name" = rigName;
+      # Will generate ONE <riglet ...>...</riglet> node PER element in the associated list:
+      riglet = filter (x: x != null) (
+        mapAttrsToList (
           rigletName: rigletMeta:
-          if rigletMeta.disclosure == "none" then "" else rigletToXml rigletName rigletMeta
-        ) meta;
-      }
-    ];
+          if rigletMeta.disclosure == "none" then null else rigletToXml rigletName rigletMeta
+        ) meta
+      );
+    };
   };
 in
 pkgs.writeTextFile {
   name = "RIG.md";
   text = ''
-    ${
-      pkgs.lib.optionalString (
-        mode == "home"
-      ) "--- The folder containing this file and ALL its recursive subfolders are READ ONLY ---
-
-"
-    }# Your Rig
+    # Your Rig
 
     Hello. The **rig** you will be using today is called "${name}".
     Your rig is made up of **riglets**—each provides specialized capabilities, domain knowledge, and all tools needed to execute that knowledge, packaged with configuration and metadata.
@@ -140,8 +140,8 @@ pkgs.writeTextFile {
     1. **Check RIG.md's `whenToUse` sections** - Find riglets matching your task
     2. **Read SKILL.md for each matching riglet** - This is where executable knowledge lives
     3. ${
-      if mode == "home" then
-        "**Activate the environment and use tools mentioned in SKILL.md or reference files:** `source ${rigHome}/activate.sh` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
+      if shownActivationScript != null then
+        "**Activate the environment and use tools mentioned in SKILL.md or reference files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
       else
         "**Use tools mentioned in SKILL.md or references files**"
     }
@@ -149,18 +149,19 @@ pkgs.writeTextFile {
     ### Access Resources
 
     **Documentation:**
-    - Main doc: `${docsRoot}/<riglet-name>/SKILL.md`
-    - Reference files: `${docsRoot}/<riglet-name>/references/<topic>.md` (mentioned within SKILL.md when relevant—don't hunt proactively)
+    - Main doc: `${shownDocRoot}/<riglet-name>/SKILL.md`
+    - Reference files: `${shownDocRoot}/<riglet-name>/references/<topic>.md` (mentioned within SKILL.md when relevant—don't hunt proactively)
     - Relative paths in docs are ALWAYS relative **to the file mentioning them**
     - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you.
-    - For unexplained tool behavior, consult `${toolFolder}/lib/` or `${toolFolder}/share/` (if they exist), but SKILL.md is your **primary reference**"
-
+    ${optionalString (shownToolRoot != null) ''
+      - For unexplained tool behavior, consult `${shownToolRoot}/share/` or `${shownToolRoot}/lib/` (if they exist), but SKILL.md is your **primary reference**
+    ''}
     ## Error Cases
 
     If ANY of the following cases happens, IMMEDIATELY STOP EVERYTHING and NOTIFY THE USER:
 
     - A tool which a riglet's doc tells you to use is NOT available ${
-      pkgs.lib.optionalString (mode == "home") "after sourcing ${rigHome}/activate.sh"
+      optionalString (shownActivationScript != null) "after sourcing ${shownActivationScript}"
     }
     - A doc file mentions by RELATIVE path some file that does not seem to exist
     - A doc file mentions by ABSOLUTE path some file OUTSIDE of /nix/store/
@@ -169,7 +170,7 @@ pkgs.writeTextFile {
 
     ## Contents of the Rig
 
-    ${builtins.readFile (
-      (pkgs.formats.xml { withHeader = false; }).generate "${name}-${mode}-manifest.xml" (rigToXml name)
+    ${readFile (
+      (pkgs.formats.xml { withHeader = false; }).generate "${name}-manifest.xml" (rigToXml name)
     )}'';
 }

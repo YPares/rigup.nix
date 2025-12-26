@@ -2,10 +2,10 @@
 flake:
 # Evaluate a rig from a set of riglet modules
 # Returns an attrset with:
-#   - env: combined buildEnv of all tools
-#   - config: combined buildEnv of all tools
-#   - docAttrs: attrset of riglet name -> docs derivation
-#   - docs: folder of all docs (one subfolder per riglet)
+#   - toolRoot: combined tools' bin/, lib/, share/, etc. folders (via symlinks)
+#   - configRoot: combined tools' XDG_CONFIG_HOME (via symlinks)
+#   - docAttrs: attrset of riglet name -> doc folder derivation
+#   - docRoot: combined riglet docs, one subfolder per riglet (via symlinks)
 #   - meta: attrset of riglet name -> metadata
 #   - home: complete rig directory (RIG.md + bin/ + docs/ + .config/)
 #   - shell: complete rig, in devShell form (slightly different manifest
@@ -41,7 +41,7 @@ let
   normalizeTool = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
 
   # Combined tools from all riglets
-  env = pkgs.buildEnv {
+  toolRoot = pkgs.buildEnv {
     name = "${name}-tools";
     paths = flatten (
       mapAttrsToList (_: riglet: map normalizeTool riglet.tools) evaluated.config.riglets
@@ -55,13 +55,13 @@ let
   meta = mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
 
   # XDG_CONFIG_HOME folder
-  config = pkgs.symlinkJoin {
+  configRoot = pkgs.symlinkJoin {
     name = "${name}-config";
     paths = map (riglet: riglet.config-files) (attrValues evaluated.config.riglets);
   };
 
   # Docs folder (with symlinks to docs for all riglets)
-  docs = pkgs.runCommand "${name}-docs" { } ''
+  docRoot = pkgs.runCommand "${name}-docs" { } ''
     mkdir -p $out
     ${concatStringsSep "\n" (
       mapAttrsToList (
@@ -75,40 +75,46 @@ let
 
   # Generate RIG.md manifest from metadata and docs
   genManifest =
-    mode:
-    flake.lib.genManifest {
-      inherit
-        name
-        meta
-        docAttrs
-        pkgs
-        mode
-        ;
-    };
+    args:
+    flake.lib.genManifest (
+      {
+        inherit
+          name
+          meta
+          docRoot
+          pkgs
+          ;
+      }
+      // args
+    );
 
   # Complete agent home directory
   home = pkgs.runCommand "${name}-home" { } ''
     mkdir -p $out
 
-    # Add RIG.md manifest at top level
-    ln -s ${genManifest "home"} $out/RIG.md
-
-    # Symlink env tools
-    ln -s ${env} $out/.local
+    # Symlink tools
+    ln -s ${toolRoot} $out/.local
 
     # Symlink config
-    ln -s ${config} $out/.config
+    ln -s ${configRoot} $out/.config
 
     # Symlink docs
-    ln -s ${docs} $out/docs
+    ln -s ${docRoot} $out/docs
 
     cat > $out/activate.sh <<EOF
     export PATH="$out/.local/bin:\$PATH"
-    export RIG_MANIFEST="$out/RIG.md"
-    export RIG_DOCS="$out/docs"
     export XDG_CONFIG_HOME="$out/.config"
     EOF
-    chmod +x $out/activate.sh
+
+    # Add RIG.md manifest at top level
+    # The manifest will mention tools and docs by relative path for brevity
+    ln -s ${
+      genManifest {
+        shownDocRoot = "./docs";
+        shownToolRoot = "./.local";
+        shownActivationScript = "./activate.sh";
+      }
+    } $out/RIG.md
   '';
 
   # Development shell with rig environment
@@ -116,13 +122,17 @@ let
     name = "${name}-shell";
 
     # Packages available in the shell. Sets PATH
-    packages = [ env ];
+    packages = [ toolRoot ];
 
     # Other environment variables
-    RIG_MANIFEST = genManifest "shell";
-    RIG_DOCS = docs;
-    RIG_TOOLS = env;
-    XDG_CONFIG_HOME = config;
+    XDG_CONFIG_HOME = configRoot;
+    RIG_DOCS = docRoot;
+    RIG_TOOLS = toolRoot;
+    # The manifest will elude tools and docs full paths via env vars for brevity
+    RIG_MANIFEST = genManifest {
+      shownDocRoot = "$RIG_DOCS";
+      shownToolRoot = "$RIG_TOOLS";
+    };
 
     # Runs when entering the shell
     shellHook =
@@ -133,20 +143,22 @@ let
         reset = "\\033[0m";
       in
       ''
+        if [ -z "$RIGUP_NO_BANNER" ]; then
         printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤\n\n"
         echo "                    ───    ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌┬╮    ───"
         echo "                    ──     ├┼╯ │ │ ├ ┬ : │││ ├─╯     ──"
         echo "                    ───    ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵      ───"
         printf "${reset}\n"
         printf "  ${blue}Now in environment for rig \"${name}\".${reset}\n"
-        printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n"
         printf "  ${yellow}\$RIG_MANIFEST${reset} contains the path of the ${green}RIG.md${reset} that your agent shoud\n"
-        printf "  read first and foremost.\n\n"
+        printf "  read first and foremost.\n"
+        printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n\n"
         printf "  ${blue}Other env vars set:${reset}\n"
+        printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n"
         printf "  ${yellow}RIG_DOCS${reset}=\"$RIG_DOCS\"\n"
-        printf "  ${yellow}RIG_TOOLS${reset}=\"$RIG_TOOLS\"\n"
-        printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n\n"
+        printf "  ${yellow}RIG_TOOLS${reset}=\"$RIG_TOOLS\"\n\n"
         printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤${reset}\n"
+        fi
       '';
   };
 
@@ -159,10 +171,10 @@ let
 in
 {
   inherit
-    env
-    config
+    toolRoot
+    configRoot
     docAttrs
-    docs
+    docRoot
     meta
     home
     shell

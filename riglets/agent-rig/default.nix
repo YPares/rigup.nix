@@ -31,7 +31,7 @@ _:
     docs = riglib.writeFileTree {
       "SKILL.md" =
         with builtins;
-        replaceStrings [ "%%RIGLET_SCHEMA%%" ] [ "${../../lib/rigletSchema.nix}" ] (readFile ./SKILL.md);
+        replaceStrings [ "lib/rigletSchema.nix" ] [ "${../../lib/rigletSchema.nix}" ] (readFile ./SKILL.md);
     };
   };
 }
