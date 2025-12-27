@@ -26,3 +26,8 @@ template = "simple"
 # Define a rig by extending from an existing one
 extends.self = "example-rig"
 riglets.self = ["claude-code-entrypoint"]
+
+[rigs.copilot-example-rig]
+# Define a rig for GitHub Copilot CLI
+extends.self = "example-rig"
+riglets.self = ["copilot-cli-entrypoint"]
