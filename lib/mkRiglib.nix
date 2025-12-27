@@ -69,4 +69,46 @@ rec {
     in
     # Wrap each script path into a package
     map wrapScriptPath scriptPaths;
+
+  # Recursively filter a directory to keep only files with specified extensions
+  # Usage: riglib.filterFileTree ["md" "txt"] ./some/dir
+  # Creates: derivation containing only .md and .txt files (preserving directory structure)
+  # Extensions can be specified with or without leading dots: "md" or ".md" both work
+  filterFileTree =
+    extensions: dirPath:
+    with pkgs.lib;
+    let
+      # Normalize extensions to lowercase without leading dots
+      normalizedExts = map (ext: toLower (removePrefix "." ext)) extensions;
+
+      # Check if a filename has one of the allowed extensions
+      hasAllowedExt =
+        filename:
+        let
+          # Extract extension from filename
+          parts = splitString "." filename;
+          ext = if length parts > 1 then toLower (last parts) else "";
+        in
+        elem ext normalizedExts;
+
+      # Recursively build filtered directory structure as nested attrset
+      buildTree =
+        path:
+        let
+          contents = builtins.readDir path;
+          # Keep directories and files with allowed extensions
+          filtered = filterAttrs (
+            name: type: type == "directory" || (type == "regular" && hasAllowedExt name)
+          ) contents;
+        in
+        mapAttrs (
+          name: type:
+          let
+            fullPath = path + "/${name}";
+          in
+          if type == "directory" then buildTree fullPath # Recurse into directory
+          else fullPath # Include file path
+        ) filtered;
+    in
+    writeFileTree (buildTree dirPath);
 }
