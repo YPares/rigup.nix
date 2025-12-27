@@ -24,7 +24,7 @@ _:
       description = "Give an identity to the agent, to be reused by other riglets that need config like name and email";
       intent = "base";
       disclosure = "none";
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
     };
   };
