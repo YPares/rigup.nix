@@ -22,7 +22,7 @@ In short, `rigup` is **parametrable agent skills + lightweight [home management]
 First, install the `rigup` CLI tool:
 
 ```bash
-nix profile add github:YPares/rigup#rigup
+nix profile add github:YPares/rigup.nix#rigup
 ```
 
 _**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
