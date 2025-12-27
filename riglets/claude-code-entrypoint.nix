@@ -5,7 +5,7 @@ self:
   ...
 }:
 let
-  inherit (self.inputs.llm-agents.packages.${system}) claude-code;
+  inherit (self.inputs.llm-agents-cc.packages.${system}) claude-code;
 
   mkSettings =
     rig:
