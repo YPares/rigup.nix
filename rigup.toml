@@ -28,6 +28,11 @@ typst.template = "simple"
 extends.self = "example-rig"
 riglets.self = ["claude-code"]
 
+[rigs.example-rig-copilot]
+# Define a rig for GitHub Copilot CLI
+extends.self = "example-rig"
+riglets.self = ["copilot-cli"]
+
 # Local (non-committed) overrides:
 # Create `rigup.local.toml` and add it to .gitignore to override config without modifying this file.
 # Local values take precedence:

@@ -216,6 +216,9 @@ let
       modules = modules ++ extraModules;
     };
 
+  # All command names of all tools through the rig
+  commandNames = unique (flatten (map (rigletMeta: rigletMeta.commandNames) (attrValues meta)));
+
   # Build the base rig attrset (without entrypoint and extend to avoid circularity)
   baseRig = {
     inherit
@@ -228,6 +231,7 @@ let
       home
       shell
       genManifest
+      commandNames
       ;
   };
 in

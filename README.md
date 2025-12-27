@@ -56,14 +56,15 @@ rigup show --detailed github:YPares/agent-skills  # A Skills repo that also pack
 
 # Directly build a rig from a remote flake
 rigup build github:YPares/rigup.nix#example-rig # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
-rigup build github:YPares/agent-skills#all-skills-claude
 
 # Directly open a rig from a remote flake in a subshell
 rigup shell github:YPares/rigup.nix#example-rig
 
 # Directly run a rig's entrypoint (if it has any)
-rigup run github:YPares/agent-skills#all-skills-claude
+rigup run github:YPares/agent-skills#claude-rig
   # Then in Claude Code: Ctrl+o to show details, to see the RIG.md manifest that Claude was prompted with via a startup hook
+rigup run github:YPares/agent-skills#copilot-rig
+  # Almost the same rig, but using `copilot-cli` as an entrypoint
 ```
 
 ### Create a new project
@@ -137,7 +138,10 @@ _:
   config.riglets.my-riglet = {
 
     # (Optional) The tools needed by this riglet
-    tools = [ pkgs.mytool ./path/to/some/script.sh ];
+    tools = [
+      pkgs.mytool
+      ./path/to/some/script.sh
+    ];
 
     # The metadata that will enable your agent to know what this riglet
     # provides and when it should be consulted

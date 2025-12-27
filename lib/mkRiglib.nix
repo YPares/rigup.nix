@@ -111,4 +111,34 @@ rec {
         ) filtered;
     in
     writeFileTree (buildTree rootPath);
+
+  # Wrap a set of tools to fix a specific set of environment variables for them
+  wrapWithEnv =
+    {
+      name,
+      tools,
+      env,
+    }:
+    with pkgs.lib;
+    pkgs.symlinkJoin {
+      inherit name;
+      paths = tools;
+      buildInputs = [ pkgs.makeBinaryWrapper ];
+      postBuild =
+        let
+          setFlagsList = concatMap (
+            { name, value }:
+            [
+              "--set"
+              name
+              value
+            ]
+          ) (attrsToList env);
+        in
+        ''
+          for prg in $out/bin/*; do
+            wrapProgram "$prg" ${escapeShellArgs setFlagsList}
+          done
+        '';
+    };
 }
