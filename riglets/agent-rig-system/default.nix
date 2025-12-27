@@ -1,12 +1,16 @@
-_:
+self:
 {
   riglib,
+  system,
+  pkgs,
   ...
 }:
 {
-  config.riglets.agent-rig = {
+  config.riglets.agent-rig-system = {
+    tools = [ pkgs.tree self.packages.${system}.extract-md-toc ];
+
     meta = {
-      description = "Understanding and working with rigup's riglet system - REPLACED BY agent-rig-system";
+      description = "rigup.nix: Understanding and working with riglets and rig system";
       intent = "sourcebook";
       whenToUse = [
         "Learning about the rig architecture"
@@ -23,7 +27,7 @@ _:
         "nix"
         "modules"
       ];
-      status = "deprecated";
+      status = "experimental";
       version = "0.1.0";
       disclosure = "deep-toc";
     };
@@ -31,8 +35,8 @@ _:
     docs = riglib.writeFileTree {
       "SKILL.md" =
         with builtins;
-        replaceStrings [ "lib/rigletSchema.nix" ] [ "${../../lib/rigletSchema.nix}" ] (readFile ../agent-rig-system/SKILL.md);
-      references = ../agent-rig-system/references;
+        replaceStrings [ "lib/rigletSchema.nix" ] [ "${../../lib/rigletSchema.nix}" ] (readFile ./SKILL.md);
+      references = ./references;
     };
   };
 }

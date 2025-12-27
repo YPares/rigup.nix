@@ -5,7 +5,7 @@
 [rigs.example-rig.riglets]
 # Riglets from this repository
 self = [
-  "agent-rig",
+  "agent-rig-system",
   "riglet-creator",
   "jj-basics",  # Imports agent-identity
   "typst-reporter",  # Imports agent-identity

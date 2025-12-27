@@ -1,1 +1,1 @@
-riglets/agent-rig/SKILL.md
+riglets/agent-rig-system/SKILL.md

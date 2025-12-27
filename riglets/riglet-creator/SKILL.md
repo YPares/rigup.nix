@@ -2,7 +2,7 @@
 
 Creating effective riglets means writing knowledge (SKILL.md) that agents will rely on. This guide focuses on how to write high-quality documentation for riglets, organized efficiently.
 
-For the structural/technical side of riglets (what goes in the Nix module, metadata fields, schema), see **agent-rig SKILL.md**.
+For the structural/technical side of riglets (what goes in the Nix module, metadata fields, schema), see the riglet agent-rig-system's `SKILL.md` and `references/metadata-guide.md`.
 
 ## Core Principles
 

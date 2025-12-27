@@ -37,9 +37,7 @@ _:
 
     docs = riglib.writeFileTree {
       "SKILL.md" = ./SKILL.md;
-      references = {
-        "troubleshooting.md" = ./references/troubleshooting.md;
-      };
+      references = ./references;
     };
   };
 }

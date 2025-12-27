@@ -360,7 +360,7 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 - **Declarative composition:** Module system for riglet interaction
 - **Auto-generated manifests:** RIG.md lists all capabilities
 - **Reproducible:** Nix ensures consistent tool versions
-- **Self-documenting:** Riglets like `agent-rig`, `riglet-creator`, and `nix-module-system` teach agents how the system works — so they can help you write Nix and extend your rig. Learn Nix as a side effect, with AI assistance.
+- **Self-documenting:** Riglets like `agent-rig-system`, `riglet-creator`, and `nix-module-system` teach agents how the system works — so they can help you write Nix and extend your rig. Learn Nix as a side effect, with AI assistance.
 
 ## TODO
 

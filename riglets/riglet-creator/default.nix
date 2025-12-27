@@ -7,11 +7,11 @@ self:
 }:
 {
   # Use self.riglets.* for inter-riglet imports to ensure proper deduplication
-  imports = [ self.riglets.agent-rig ];
+  imports = [ self.riglets.agent-rig-system ];
 
   config.riglets.riglet-creator = {
     meta = {
-      description = "Guide for creating effective riglets. Use when creating new riglets or improving existing ones, defining riglet structure, metadata, documentation patterns, or integrating tools with Nix.";
+      description = "rigup.nix: Guide for creating effective riglets";
       intent = "playbook";
       whenToUse = [
         "Creating new riglets"
@@ -22,12 +22,13 @@ self:
         "Bundling tools with riglets"
       ];
       keywords = [
-        "riglet"
+        "riglets"
+        "rig"
         "rigup"
-        "creation"
         "nix"
         "modules"
         "documentation"
+        "creation"
         "skills"
       ];
       status = "experimental";
@@ -36,10 +37,7 @@ self:
 
     docs = riglib.writeFileTree {
       "SKILL.md" = ./SKILL.md;
-      references = {
-        "patterns.md" = ./references/patterns.md;
-        "metadata-guide.md" = ./references/metadata-guide.md;
-      };
+      references = ./references;
     };
   };
 }

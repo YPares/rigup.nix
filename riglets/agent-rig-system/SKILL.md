@@ -243,7 +243,13 @@ In any case, the agent's focus should be is the `RIG.md` manifest file. This fil
 
 Agents should read this file first to understand available capabilities.
 
-### `shell` output
+### `buildRig` output derivations
+
+`buildRig` outputs a Nix attrset ("object") that notably contains several "all-in-one" derivations which all allow an AI agent to access the rig's tools and documentation.
+Which derivation to use depends on what is the most convenient given the user's setup.
+This section lists how and when to use each.
+
+#### `shell` output
 
 The AI agent runs in a subshell: a `$RIG_MANIFEST` env var is set that contains the path to the RIG.md manifest the agent should read.
 Also, `$PATH` and `$XDG_CONFIG_HOME` are already properly set up by the subshell.
@@ -256,13 +262,13 @@ rigup shell ".#<rig>" [-c <command>...] # Does `nix develop ".#rigs.<system>.<ri
 cat $RIG_MANIFEST
 ```
 
-**Advantages of "shell mode":**
+**Advantages of using `shell`:**
 
 - No extra setup needed: a single command gets everything ready to use
 - No risk of using an incorrect tool or config file if the agent misses a step
 - Convenient to use when AI agent runs inside a terminal application (like claude-code)
 
-### `home` output
+#### `home` output
 
 The AI agent reads from a complete locally-symlinked "home-like" folder.
 The RIG.md manifest and an activate.sh script will be added _at the root_ of this folder.
@@ -283,22 +289,36 @@ ls .rigup/<rig>/docs/
 cat .rigup/<rig>/docs/<riglet>/SKILL.md
 ```
 
-**Advantages of "home mode":**
+**Advantages of using `home`:**
 
 - Rig can be rebuilt without having to restart the agent's harness: home folder contents are just symlinks that can be updated, paths remain valid
 - Manifest file is right next to doc files: can refer to them via short and simple relative paths
 - More convenient to use in contexts where setting up env vars is impractical (e.g. AI agent running inside an IDE, like Cursor)
 
-### `entrypoint` output
+#### `entrypoint` output
 
 The `entrypoint` output is special in that it **does not exist unless some riglet sets it**, by defining `config.entrypoint`.
 It is mainly used to provide direct integration with common coding agent harnesses.
 Similar to `home` and `shell`, `entrypoint` packages the whole rig as a Nix derivation, but this time as a wrapper shell script that starts the harness with the proper config files and CLI args.
 
 `rigup run <flake>#<rig>` executes a rig's entrypoint.
+Internally it just runs `nix run <flake>#rigs.<system>.<rig>.entrypoint`.
 
 Claude Code integration is currently available via the `claude-code-entrypoint` riglet.
 See `references/harness-integration.md` for more details.
+
+**Advantages of using `entrypoint`:**
+
+- More direct integration with the harness when such integration exists
+
+### Reading a Rig's Documentation
+
+This riglet (`agent-rig-system`) comes with a few tools to help browsing documentation in general:
+
+- `tree`: The usual Linux command to view file trees. **Always use it with the `-l` flag** as rigup makes heavy use of symlinks to build docs
+- `extract-md-toc`: This is the tool that renders the inline table of contents of the RIG.md manifests (for riglets with `disclosure = "{shallow,deep}-toc";`).
+   It can also be used to extract a similar ToC out of ANY Markdown file: e.g. `extract-md-toc foo.md --max-level 3` will show all headers from `#` to `###` with their line numbers.
+   It can also read from stdin: `extract-md-toc - < foo.md`
 
 ## Adding Riglets to a Rig
 
