@@ -20,22 +20,22 @@ rec {
           mapAttrsToList (
             name: value:
             let
-              path = if prefix == "" then name else "${prefix}/${name}";
-              delimiter = "NIXEOF_${builtins.hashString "sha256" path}";
+              filepath = if prefix == "" then name else "${prefix}/${name}";
+              delimiter = "NIXEOF_${builtins.hashString "sha256" filepath}";
             in
             if isAttrs value && !isDerivation value then
-              mkFileCommands path value # Recurse into nested attrs
+              mkFileCommands filepath value # Recurse into nested attrs
             else if isDerivation value || builtins.isPath value then
               # Symlink derivation or path to output path
               ''
-                mkdir -p "$out/$(dirname "${path}")"
-                ln -sL ${value} "$out/${path}"
+                mkdir -p "$out/$(dirname "${filepath}")"
+                ln -sL ${value} "$out/${filepath}"
               ''
             else
               # Write string content to file
               ''
-                mkdir -p "$out/$(dirname "${path}")"
-                cat > "$out/${path}" <<'${delimiter}'
+                mkdir -p "$out/$(dirname "${filepath}")"
+                cat > "$out/${filepath}" <<'${delimiter}'
                 ${value}
                 ${delimiter}
               ''
@@ -69,4 +69,48 @@ rec {
     in
     # Wrap each script path into a package
     map wrapScriptPath scriptPaths;
+
+  # Recursively filter a directory to keep only files with specified extensions
+  # Usage: riglib.filterFileTree ["md" "txt"] ./some/dir
+  # Creates: derivation containing only .md and .txt files (preserving directory structure)
+  # Extensions can be specified with or without leading dots: "md" or ".md" both work
+  filterFileTree =
+    extensions: rootPath:
+    with pkgs.lib;
+    let
+      # Normalize extensions to lowercase without leading dots
+      normalizedExts = map (ext: toLower (removePrefix "." ext)) extensions;
+
+      # Check if a filename has one of the allowed extensions
+      hasAllowedExt =
+        filename:
+        let
+          # Extract extension from filename
+          parts = splitString "." filename;
+          ext = if length parts > 1 then toLower (last parts) else "";
+        in
+        elem ext normalizedExts;
+
+      # Recursively build filtered directory structure as nested attrset
+      buildTree =
+        folderPath:
+        let
+          contents = builtins.readDir folderPath;
+          # Keep directories and files with allowed extensions
+          filtered = filterAttrs (
+            name: type: type == "directory" || (type == "regular" && hasAllowedExt name)
+          ) contents;
+        in
+        mapAttrs (
+          name: type:
+          let
+            fullPath = folderPath + "/${name}";
+          in
+          if type == "directory" then
+            buildTree fullPath # Recurse into directory
+          else
+            fullPath # Include file path
+        ) filtered;
+    in
+    writeFileTree (buildTree rootPath);
 }
