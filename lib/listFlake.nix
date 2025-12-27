@@ -24,8 +24,11 @@ let
               inherit pkgs;
               modules = builtins.attrValues input.riglets;
             };
+            # Only include riglets that were directly defined in this input,
+            # not those that were pulled in via imports
+            directRigletNames = builtins.attrNames input.riglets;
           in
-          tempRig.meta
+          pkgs.lib.filterAttrs (name: _meta: builtins.elem name directRigletNames) tempRig.meta
         else
           { };
 
