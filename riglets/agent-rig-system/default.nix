@@ -7,7 +7,10 @@ self:
 }:
 {
   config.riglets.agent-rig-system = {
-    tools = [ pkgs.tree self.packages.${system}.extract-md-toc ];
+    tools = [
+      pkgs.tree
+      self.packages.${system}.extract-md-toc
+    ];
 
     meta = {
       description = "rigup.nix: Understanding and working with riglets and rig system";
