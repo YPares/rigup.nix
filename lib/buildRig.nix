@@ -45,6 +45,21 @@ let
   # Normalize a tool item: if it's a path, wrap it; otherwise return as-is
   normalizeTool = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
 
+  # Extract the executable name from a tool (without IFD, using eval-time metadata)
+  getToolExecutableName = tool:
+    if builtins.isPath tool then
+      # For script paths, extract basename
+      builtins.baseNameOf (toString tool)
+    else
+      # For packages, extract the main program name from metadata
+      if tool ? meta.mainProgram then
+        tool.meta.mainProgram
+      else if tool ? pname then
+        tool.pname
+      else
+        # Fallback: parse the name attribute
+        (builtins.parseDrvName tool.name).name;
+
   # Combined tools from all riglets
   toolRoot = pkgs.buildEnv {
     name = "${name}-tools";
@@ -52,6 +67,11 @@ let
       mapAttrsToList (_: riglet: map normalizeTool riglet.tools) evaluated.config.riglets
     );
   };
+
+  # Extract command names per riglet (for documentation and permissions)
+  commandNames = mapAttrs (
+    _: riglet: map getToolExecutableName riglet.tools
+  ) evaluated.config.riglets;
 
   # Docs per riglet
   docAttrs = mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
@@ -191,6 +211,7 @@ let
       docAttrs
       docRoot
       meta
+      commandNames
       home
       shell
       genManifest
