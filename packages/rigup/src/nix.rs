@@ -1,6 +1,7 @@
 use crate::error::RigupError;
 use miette::{IntoDiagnostic, Result};
 use serde_json::Value;
+use std::io::Read;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -119,4 +120,39 @@ pub fn run_nix_command(args: Vec<&str>) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Run a nix eval command that returns JSON, capturing stdout but showing stderr
+/// This is useful for commands that output JSON while showing build progress
+pub fn run_nix_eval_json(eval_expr: &str) -> Result<Value> {
+    let mut child = Command::new("nix")
+        .args(&["eval", "--impure", "--expr", eval_expr, "--json"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .into_diagnostic()?;
+
+    // Read stdout (contains JSON result)
+    let mut stdout = Vec::new();
+    child
+        .stdout
+        .take()
+        .expect("Failed to capture stdout")
+        .read_to_end(&mut stdout)
+        .into_diagnostic()?;
+
+    // Wait for process to complete
+    let status = child.wait().into_diagnostic()?;
+
+    if !status.success() {
+        let code = status.code().unwrap_or(1);
+        return Err(RigupError::NixCommandFailed {
+            code,
+            stderr: "See error output above".to_string(),
+        }
+        .into());
+    }
+
+    // Parse JSON result
+    serde_json::from_slice(&stdout).into_diagnostic()
 }

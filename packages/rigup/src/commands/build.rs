@@ -28,9 +28,9 @@ pub fn build_rig(flake_ref: Option<String>) -> Result<()> {
     let output_path = output_dir.join(&rig);
     let output_path_str = output_path.to_string_lossy().to_string();
 
-    println!("Building rig '{}' for system '{}'...", rig, system);
+    eprintln!("Building rig '{}' for system '{}'...", rig, system);
     run_nix_command(vec!["build", &full_ref, "-o", &output_path_str])?;
 
-    println!("Rig built successfully at: {}", output_path.display());
+    eprintln!("Rig built successfully at: {}", output_path.display());
     Ok(())
 }

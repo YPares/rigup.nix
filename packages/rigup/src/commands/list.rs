@@ -1,10 +1,9 @@
 use crate::error::RigupError;
-use crate::nix::{get_flake_root, get_system};
+use crate::nix::{get_flake_root, get_system, run_nix_eval_json};
 use crate::types::{InputData, RigletMeta};
 use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
-use std::process::Command;
 use textwrap::{wrap, Options};
 
 /// Wrap text to terminal width with a given prefix for each line
@@ -126,29 +125,21 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
         flake_expr, system, include_inputs
     );
 
-    println!("Discovering riglets and rigs...");
+    eprintln!("Discovering riglets and rigs...");
 
-    let output = Command::new("nix")
-        .args(&["eval", "--impure", "--expr", &eval_expr, "--json"])
-        .output()
-        .into_diagnostic()?;
-
-    if !output.status.success() {
-        let code = output.status.code().unwrap_or(1);
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        return Err(RigupError::NixCommandFailed { code, stderr }.into());
-    }
+    // Run nix eval and parse the result
+    let result = run_nix_eval_json(&eval_expr)?;
 
     // Parse the nested structure: { input-name -> { riglets = {...}, rigs = {...} } }
-    let all_data: HashMap<String, InputData> = serde_json::from_slice(&output.stdout)
-        .map_err(|e| RigupError::MetadataParseError { source: e })?;
+    let all_data: HashMap<String, InputData> =
+        serde_json::from_value(result).map_err(|e| RigupError::MetadataParseError { source: e })?;
 
     if all_data.is_empty() {
-        println!("No inputs with riglets or rigs found");
+        eprintln!("No inputs with riglets or rigs found");
         return Ok(());
     }
 
-    println!("");
+    eprintln!("");
 
     // Get terminal width, default to 80 if not available
     let terminal_width = terminal_size::terminal_size()
