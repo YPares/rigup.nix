@@ -8,10 +8,8 @@ let
   inherit (self.inputs.llm-agents.packages.${system}) claude-code;
 
   mkSettings =
-    rig:
+    rig: manifestPath:
     let
-      manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
-
       # Collect all command names from all riglets (via meta), flatten and deduplicate
       rigCommands =
         with pkgs.lib;
@@ -44,13 +42,17 @@ in
   # Define the entrypoint for this rig - launches Claude Code with rig context
   config.entrypoint =
     rig:
+    let
+      manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
+    in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "claude" ''
       export PATH="${rig.toolRoot}/bin:$(dirname "$0"):$PATH"
       export XDG_CONFIG_HOME="${rig.configRoot}"
       export RIG_DOCS="${rig.docRoot}"
+      export RIG_MANIFEST="${manifestPath}"
 
-      exec ${pkgs.lib.getExe claude-code} --settings "${mkSettings rig}" "$@"
+      exec ${pkgs.lib.getExe claude-code} --settings "${mkSettings rig manifestPath}" "$@"
     '';
 
   config.riglets.claude-code-entrypoint = {
