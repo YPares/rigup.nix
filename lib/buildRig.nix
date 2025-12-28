@@ -46,19 +46,20 @@ let
   normalizeTool = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
 
   # Extract the executable name from a tool (without IFD, using eval-time metadata)
-  getToolExecutableName = tool:
+  getToolExecutableName =
+    tool:
     if builtins.isPath tool then
       # For script paths, extract basename
       builtins.baseNameOf (toString tool)
     else
-      # For packages, extract the main program name from metadata
-      if tool ? meta.mainProgram then
-        tool.meta.mainProgram
-      else if tool ? pname then
-        tool.pname
-      else
-        # Fallback: parse the name attribute
-        (builtins.parseDrvName tool.name).name;
+    # For packages, extract the main program name from metadata
+    if tool ? meta.mainProgram then
+      tool.meta.mainProgram
+    else if tool ? pname then
+      tool.pname
+    else
+      # Fallback: parse the name attribute
+      (builtins.parseDrvName tool.name).name;
 
   # Combined tools from all riglets
   toolRoot = pkgs.buildEnv {
@@ -74,7 +75,8 @@ let
   # Metadata per riglet, enriched with computed command names
   meta = mapAttrs (
     rigletName: riglet:
-    riglet.meta // {
+    riglet.meta
+    // {
       # Add computed command names to each riglet's metadata
       commandNames = map getToolExecutableName riglet.tools;
     }

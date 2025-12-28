@@ -7,9 +7,10 @@ self:
 }:
 {
   config.riglets.agent-rig-system = {
-    tools = [
-      pkgs.tree
+    tools = with pkgs; [
       self.packages.${system}.extract-md-toc
+      tree
+      ripgrep
     ];
 
     meta = {

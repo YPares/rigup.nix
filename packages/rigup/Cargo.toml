@@ -13,6 +13,7 @@ miette = { version = "^7.6", features = ["fancy"] }
 owo-colors = "^4.2"
 textwrap = "^0.16"
 terminal_size = "^0.4"
+itertools = "^0.13"
 
 [[bin]]
 name = "rigup"

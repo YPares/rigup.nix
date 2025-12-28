@@ -1,7 +1,8 @@
 use crate::error::RigupError;
 use crate::nix::{get_flake_root, get_system, run_nix_eval_json};
 use crate::types::{InputData, RigletMeta};
-use miette::{IntoDiagnostic, Result};
+use itertools::Itertools;
+use miette::Result;
 use owo_colors::OwoColorize;
 use std::collections::HashMap;
 use textwrap::{wrap, Options};
@@ -16,7 +17,6 @@ fn wrap_with_prefix(text: &str, prefix: &str, terminal_width: usize) -> String {
     wrap(text, options)
         .iter()
         .map(|line| format!("{}{}", prefix, line))
-        .collect::<Vec<_>>()
         .join("\n")
 }
 
@@ -36,9 +36,9 @@ fn display_riglet(
         prefix,
         branch,
         if meta.broken {
-            format!("{}", name.red().bold())
+            name.red().to_string()
         } else {
-            name.green().bold().to_string()
+            name.green().to_string()
         },
         meta.version,
         (if meta.broken { " BROKEN" } else { "" }).red().bold()
@@ -61,7 +61,7 @@ fn display_riglet(
         item_prefix,
         meta.intent.cyan().bold(),
         "|".bright_black(),
-        status_str
+        status_str.bold()
     );
 
     // Wrap description
@@ -82,11 +82,17 @@ fn display_riglet(
     }
 
     if !meta.command_names.is_empty() {
-        let commands_text = format!("Commands: {}", meta.command_names.join(", "));
+        let commands_text = format!(
+            "Tools: {}",
+            meta.command_names
+                .iter()
+                .map(|c| c.cyan().to_string())
+                .join(", ")
+        );
         let wrapped = wrap_with_prefix(&commands_text, &item_prefix, terminal_width);
         for line in wrapped.lines() {
             if let Some(text) = line.strip_prefix(&item_prefix) {
-                println!("{}{}", item_prefix, text.yellow());
+                println!("{}{}", item_prefix, text);
             } else {
                 println!("{}", line);
             }
@@ -215,12 +221,7 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
                 let rig_branch = if is_last_rig { "└─" } else { "├─" };
                 let rig_continuation = if is_last_rig { "   " } else { " │ " };
 
-                println!(
-                    "{} {} {}",
-                    section_prefix,
-                    rig_branch,
-                    rig_name.cyan().bold()
-                );
+                println!("{} {} {}", section_prefix, rig_branch, rig_name.cyan());
 
                 // Display riglets in this rig as comma-separated list (like keywords)
                 if !rig_meta.riglets.is_empty() {
@@ -248,7 +249,7 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
                 // Display entrypoint if defined
                 if let Some(program) = &rig_meta.entrypoint {
                     let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
-                    println!("{}Entrypoint: {}", item_prefix, program.green());
+                    println!("{}Entrypoint: {}", item_prefix, program.magenta());
                 }
             }
         }

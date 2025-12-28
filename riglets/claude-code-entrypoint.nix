@@ -14,9 +14,7 @@ let
 
       # Collect all command names from all riglets (via meta), flatten and deduplicate
       rigCommands = pkgs.lib.unique (
-        pkgs.lib.flatten (
-          map (rigletMeta: rigletMeta.commandNames) (pkgs.lib.attrValues rig.meta)
-        )
+        pkgs.lib.flatten (map (rigletMeta: rigletMeta.commandNames) (pkgs.lib.attrValues rig.meta))
       );
 
       # Generate Bash permissions for each rig tool: "Bash(command:*)"
@@ -25,11 +23,12 @@ let
     (pkgs.formats.json { }).generate "${rig.name}-claude-code-settings.json" {
       # Grant read access to specific Nix store paths that Claude Code needs
       permissions.allow = [
-        "Read(${manifestPath})"           # The RIG.md manifest file
-        "Read(${rig.docRoot}/**)"         # All documentation files
-        "Read(${rig.configRoot}/**)"      # All config files (XDG_CONFIG_HOME)
-        "Read(${rig.toolRoot}/**)"        # Tool files (for inspecting share/, lib/, etc.)
-      ] ++ bashPermissions;               # Allow executing all rig tools
+        "Read(${manifestPath})" # The RIG.md manifest file
+        "Read(${rig.docRoot}/**)" # All documentation files
+        "Read(${rig.configRoot}/**)" # All config files (XDG_CONFIG_HOME)
+        "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
+      ]
+      ++ bashPermissions; # Allow executing all rig tools
 
       hooks.SessionStart = [
         {
