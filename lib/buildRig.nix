@@ -13,7 +13,7 @@ flake:
 #            to directly read from nix store instead of local symlinks)
 #   - extend: function that takes a list of extra riglet modules and combines them
 #             with those of the rig
-#   - entrypoint: null or file derivation - primary executable for the rig
+#   - entrypoint: null, or folder derivation with `bin/<entrypoint_executable>`
 {
   modules,
   pkgs,
@@ -48,9 +48,10 @@ let
   # Extract the executable name from a tool (without IFD, using eval-time metadata)
   getToolExecutableName =
     tool:
-    if builtins.isPath tool then
+    with builtins;
+    if isPath tool then
       # For script paths, extract basename
-      builtins.baseNameOf (toString tool)
+      baseNameOf (toString tool)
     else
     # For packages, extract the main program name from metadata
     if tool ? meta.mainProgram then
@@ -59,7 +60,7 @@ let
       tool.pname
     else
       # Fallback: parse the name attribute
-      (builtins.parseDrvName tool.name).name;
+      (parseDrvName tool.name).name;
 
   # Combined tools from all riglets
   toolRoot = pkgs.buildEnv {

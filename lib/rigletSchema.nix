@@ -121,9 +121,8 @@ with pkgs.lib;
 
     entrypoint = mkOption {
       description = ''
-        Optional entrypoint function for the rig. Only ONE riglet in a rig should define this.
-        Takes the rig attrset and returns a script derivation (e.g., from pkgs.writeShellScript).
-        Used by `rigup run` to launch the rig's primary harness/interface.
+        Optional entrypoint for the rig. Only ONE riglet in a rig should define this.
+        Takes the rig attrset and should return a folder derivation with a SINGLE bin/xxx executable (e.g. via pkgs.writeShellScriptBin).
       '';
       type = types.nullOr (
         types.functionTo (
