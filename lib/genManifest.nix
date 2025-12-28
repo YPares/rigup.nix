@@ -15,9 +15,12 @@ flake:
   pkgs,
   name,
   meta,
+  toolRoot,
   docRoot,
+  configRoot,
+  shownToolRoot ? toolRoot,
   shownDocRoot ? docRoot,
-  shownToolRoot ? null,
+  shownConfigRoot ? configRoot,
   shownActivationScript ? null,
 }:
 with builtins;
@@ -124,14 +127,14 @@ in
 pkgs.writeTextFile {
   name = "RIG.md";
   text = ''
-    # Your Rig
+    # `RIG.md`
 
     Hello. The **rig** you will be using today is called "${name}".
     Your rig is made up of **riglets**—each provides specialized capabilities, domain knowledge, and all tools needed to execute that knowledge, packaged with configuration and metadata.
     Riglets generalize the Agent Skills pattern: a Skill bundled with executable tools, configuration, and metadata.
     Riglets are **hermetic** (all dependencies are explicitly included): any tool, documentation, or configuration missing from a riglet's specification is an IMMEDIATE ERROR.
 
-    Each riglet below has a `<whenToUse>` section—**this is the MOST important section**. It tells you exactly when to consult that riglet.
+    Each riglet below has `intent` and `whenToUse` sections—**these are is the MOST important sections**. They tell you exactly what to expect from the riglet's doc and when to consult it.
 
     ## How to Use
 
@@ -152,9 +155,18 @@ pkgs.writeTextFile {
     - Main doc: `${shownDocRoot}/<riglet-name>/SKILL.md`
     - Reference files: `${shownDocRoot}/<riglet-name>/references/<topic>.md` (mentioned within SKILL.md when relevant—don't hunt proactively)
     - Relative paths in docs are ALWAYS relative **to the file mentioning them**
-    - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you.
+    - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you
     ${optionalString (shownToolRoot != null) ''
-      - For unexplained tool behavior, consult `${shownToolRoot}/share/` or `${shownToolRoot}/lib/` (if they exist), but SKILL.md is your **primary reference**
+      - For unexplained tool behavior or troubleshooting purposes, consult `${shownToolRoot}/` subfolders such as `share/` and `lib/` if they exist, but SKILL.md is your **primary reference**
+    ''}
+    ${optionalString (shownConfigRoot != null) ''
+      **Configuration:**
+      - Config files for tools following the XDG Base Directory Specification is in `${shownConfigRoot}/`. You should NOT have to care about it, ${
+        if (shownActivationScript != null) then
+          "activation script should take care of that"
+        else
+          "needed env vars are already set up"
+      }, it is only mentioned for troubleshooting purposes
     ''}
     ## Error Cases
 

@@ -1,8 +1,10 @@
 # Nix build outputs
 result
 result-*
-.rigup
 
-# Nix develop shells
+# Nix develop/direnv outputs
 .direnv/
 .envrc
+
+# Rigup build outputs
+.rigup

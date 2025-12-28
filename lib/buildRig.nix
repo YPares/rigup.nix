@@ -90,7 +90,9 @@ let
           pkgs
           name
           meta
+          toolRoot
           docRoot
+          configRoot
           ;
       }
       // args

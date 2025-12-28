@@ -1,4 +1,10 @@
-# nix build output symlinks
+# Nix build outputs
 result
 result-*
+
+# Nix develop/direnv outputs
+.direnv/
+.envrc
+
+# Rigup build outputs
 .rigup
