@@ -5,25 +5,38 @@
 [rigs.example-rig.riglets]
 # Riglets from this repository
 self = [
+  "agent-identity",
   "agent-rig-system",
   "riglet-creator",
-  "git-setup",  # Imports agent-identity
-  "jj-basics",  # Imports agent-identity
-  "typst-reporter",  # Imports agent-identity
   "nix-module-system",
+  # The next riglets import agent-identity (which will be deduplicated)
+  "git-setup",
+  "jj-basics",
+  "typst-reporter",
 ]
 # Riglets from external flake inputs would go here:
-# <input> = ["some-external-riglet-from-<input>"]
+# <flake-input> = ["riglet-from-<flake-input>", "etc."]
 
 # Configuration for this rig (inline Nix module)
-[rigs.example-rig.config.agent.identity]
-name = "Test Agent"
-email = "test@example.com"
+[rigs.example-rig.config]
+agent.identity.name = "Test Agent"
+agent.identity.email = "test@example.com"
+typst.template = "simple"
 
-[rigs.example-rig.config.typst]
-template = "simple"
-
-[rigs.claude-example-rig]
-# Define a rig by extending from an existing one
+# Rig defined by extending from example-rig to add direct claude-code integration to it
+[rigs.example-rig-claude]
 extends.self = "example-rig"
 riglets.self = ["claude-code-entrypoint"]
+
+# Actual rig used to work on rigup.nix
+[rigs.default.riglets]
+self = [
+  "claude-code-entrypoint",
+  "git-setup",
+  "riglet-creator",
+  "nix-module-system"
+]
+
+[rigs.default.config.agent.identity]
+name = "Claude"
+email = "claude@anthropics.com"
