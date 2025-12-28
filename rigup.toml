@@ -7,7 +7,7 @@
 self = [
   "agent-rig-system",
   "riglet-creator",
-  "git-basics",  # Imports agent-identity
+  "git-setup",  # Imports agent-identity
   "jj-basics",  # Imports agent-identity
   "typst-reporter",  # Imports agent-identity
   "nix-module-system",
