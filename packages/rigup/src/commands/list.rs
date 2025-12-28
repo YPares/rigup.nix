@@ -155,7 +155,11 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
         .map(|(w, _)| w.0 as usize)
         .unwrap_or(80);
 
-    for (input_name, data) in all_data {
+    // Sort inputs alphabetically for stable output
+    let mut sorted_inputs: Vec<_> = all_data.into_iter().collect();
+    sorted_inputs.sort_by(|a, b| a.0.cmp(&b.0));
+
+    for (input_name, data) in sorted_inputs {
         let has_riglets = !data.riglets.is_empty();
         let has_rigs = !data.rigs.is_empty();
 
@@ -179,7 +183,8 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
 
             println!(" {}🧩 {}", section_branch, "Riglets".bold());
 
-            let riglets_vec: Vec<_> = data.riglets.into_iter().collect();
+            let mut riglets_vec: Vec<_> = data.riglets.into_iter().collect();
+            riglets_vec.sort_by(|a, b| a.0.cmp(&b.0));
             let riglets_count = riglets_vec.len();
 
             for (idx, (riglet_name, meta)) in riglets_vec.into_iter().enumerate() {
@@ -198,7 +203,8 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
 
             println!(" {}📟 {}", section_branch, "Rigs".bold());
 
-            let rigs_vec: Vec<_> = data.rigs.into_iter().collect();
+            let mut rigs_vec: Vec<_> = data.rigs.into_iter().collect();
+            rigs_vec.sort_by(|a, b| a.0.cmp(&b.0));
             let rigs_count = rigs_vec.len();
 
             for (idx, (rig_name, rig_meta)) in rigs_vec.into_iter().enumerate() {
@@ -215,11 +221,12 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
 
                 // Display riglets in this rig as comma-separated list (like keywords)
                 if !rig_meta.riglets.is_empty() {
-                    let riglet_list: Vec<String> = rig_meta
+                    let mut riglet_list: Vec<String> = rig_meta
                         .riglets
                         .iter()
                         .map(|(name, _)| name.clone())
                         .collect();
+                    riglet_list.sort();
 
                     // Add 2 extra spaces for detail indentation
                     let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
