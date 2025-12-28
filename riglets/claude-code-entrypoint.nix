@@ -9,14 +9,24 @@ let
 
   mkSettings =
     rig:
+    let
+      manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
+    in
     (pkgs.formats.json { }).generate "${rig.name}-claude-code-settings.json" {
+      # Grant read access to specific Nix store paths that Claude Code needs
+      permissions.allow = [
+        "Read(${manifestPath})"           # The RIG.md manifest file
+        "Read(${rig.docRoot}/**)"         # All documentation files
+        "Read(${rig.configRoot}/**)"      # All config files (XDG_CONFIG_HOME)
+      ];
+
       hooks.SessionStart = [
         {
           matcher = "startup";
           hooks = [
             {
               type = "command";
-              command = "cat ${rig.genManifest { shownDocRoot = "$RIG_DOCS"; }}";
+              command = "cat ${manifestPath}";
             }
           ];
         }
