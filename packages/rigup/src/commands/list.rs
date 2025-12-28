@@ -81,6 +81,18 @@ fn display_riglet(
         }
     }
 
+    if !meta.command_names.is_empty() {
+        let commands_text = format!("Commands: {}", meta.command_names.join(", "));
+        let wrapped = wrap_with_prefix(&commands_text, &item_prefix, terminal_width);
+        for line in wrapped.lines() {
+            if let Some(text) = line.strip_prefix(&item_prefix) {
+                println!("{}{}", item_prefix, text.yellow());
+            } else {
+                println!("{}", line);
+            }
+        }
+    }
+
     if !meta.when_to_use.is_empty() {
         println!("{}When to use:", item_prefix);
         for use_case in &meta.when_to_use {

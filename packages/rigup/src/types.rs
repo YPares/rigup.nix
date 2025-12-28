@@ -17,6 +17,8 @@ pub struct RigletMeta {
     pub version: String,
     #[serde(rename = "whenToUse", default)]
     pub when_to_use: Vec<String>,
+    #[serde(rename = "commandNames", default)]
+    pub command_names: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
