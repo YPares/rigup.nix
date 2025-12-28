@@ -29,7 +29,7 @@ in
     rig:
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "claude" ''
-      export PATH="${rig.toolRoot}:$(dirname "$0"):$PATH"
+      export PATH="${rig.toolRoot}/bin:$(dirname "$0"):$PATH"
       export XDG_CONFIG_HOME="${rig.configRoot}"
       export RIG_DOCS="${rig.docRoot}"
 
