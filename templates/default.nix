@@ -7,11 +7,12 @@
 
       # Next steps
 
-      1. Edit riglets/my-first-riglet.nix to add your tools and documentation
-      2. Update rigup.toml to configure your rig
-      3. Build your rig: nix build
-      4. Explore the output: cat result/RIG.md
-      5. Learn more: https://github.com/YPares/rigup.nix
+      1. Make sure the `rigup` CLI tool is installed and up to date (`nix profile add github:YPares/rigup.nix#rigup`)
+      2. Edit `riglets/my-first-riglet.nix` to add your tools and documentation
+      3. Edit `rigup.toml` to configure your rig
+      4. Build your rig: `rigup build`
+      5. See the output manifest for your AI agent: `cat .rigup/default/RIG.md`
+      6. Learn more: `https://github.com/YPares/rigup.nix`
     '';
   };
   minimal = {
@@ -22,10 +23,11 @@
 
       # Next steps
 
-      1. Update rigup.toml to configure your rig
-      2. Build your rig: nix build
-      3. Explore the output: cat result/RIG.md
-      4. Learn more: https://github.com/YPares/rigup.nix
+      1. Make sure the `rigup` CLI tool is installed and up to date (`nix profile add github:YPares/rigup.nix#rigup`)
+      2. Edit `rigup.toml` to configure your rig
+      3. Build your rig: `rigup build`
+      4. See the output manifest for your AI agent: `cat .rigup/default/RIG.md`
+      5. Learn more: `https://github.com/YPares/rigup.nix`
     '';
   };
 }
