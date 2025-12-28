@@ -12,9 +12,11 @@ let
     let
       manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
 
-      # Collect all command names from all riglets, flatten and deduplicate
+      # Collect all command names from all riglets (via meta), flatten and deduplicate
       rigCommands = pkgs.lib.unique (
-        pkgs.lib.flatten (pkgs.lib.attrValues rig.commandNames)
+        pkgs.lib.flatten (
+          map (rigletMeta: rigletMeta.commandNames) (pkgs.lib.attrValues rig.meta)
+        )
       );
 
       # Generate Bash permissions for each rig tool: "Bash(command:*)"

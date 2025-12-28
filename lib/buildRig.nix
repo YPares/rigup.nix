@@ -68,16 +68,17 @@ let
     );
   };
 
-  # Extract command names per riglet (for documentation and permissions)
-  commandNames = mapAttrs (
-    _: riglet: map getToolExecutableName riglet.tools
-  ) evaluated.config.riglets;
-
   # Docs per riglet
   docAttrs = mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
 
-  # Metadata per riglet
-  meta = mapAttrs (_: riglet: riglet.meta) evaluated.config.riglets;
+  # Metadata per riglet, enriched with computed command names
+  meta = mapAttrs (
+    rigletName: riglet:
+    riglet.meta // {
+      # Add computed command names to each riglet's metadata
+      commandNames = map getToolExecutableName riglet.tools;
+    }
+  ) evaluated.config.riglets;
 
   # XDG_CONFIG_HOME folder
   configRoot = pkgs.symlinkJoin {
@@ -211,7 +212,6 @@ let
       docAttrs
       docRoot
       meta
-      commandNames
       home
       shell
       genManifest
