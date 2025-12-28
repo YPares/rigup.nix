@@ -8,7 +8,7 @@ self:
 {
   imports = [ self.riglets.agent-identity ];
 
-  config.riglets.git-basics = {
+  config.riglets.git-setup = {
     tools = [ pkgs.git ];
 
     meta = {
