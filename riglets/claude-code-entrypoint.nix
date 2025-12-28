@@ -18,6 +18,7 @@ let
         "Read(${manifestPath})"           # The RIG.md manifest file
         "Read(${rig.docRoot}/**)"         # All documentation files
         "Read(${rig.configRoot}/**)"      # All config files (XDG_CONFIG_HOME)
+        "Read(${rig.toolRoot}/**)"        # Tool files (for inspecting share/, lib/, etc.)
       ];
 
       hooks.SessionStart = [
