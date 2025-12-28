@@ -120,9 +120,10 @@ let
     # The manifest will mention tools and docs by relative path for brevity
     ln -s ${
       genManifest {
+        shownActivationScript = "./activate.sh";
         shownDocRoot = "./docs";
         shownToolRoot = "./.local";
-        shownActivationScript = "./activate.sh";
+        shownConfigRoot = "./.config";
       }
     } $out/RIG.md
   '';
@@ -137,11 +138,9 @@ let
     # Other environment variables
     XDG_CONFIG_HOME = configRoot;
     RIG_DOCS = docRoot;
-    RIG_TOOLS = toolRoot;
-    # The manifest will elude tools and docs full paths via env vars for brevity
+    # The manifest will elude docs full paths via env var for brevity
     RIG_MANIFEST = genManifest {
       shownDocRoot = "$RIG_DOCS";
-      shownToolRoot = "$RIG_TOOLS";
     };
 
     # Runs when entering the shell
