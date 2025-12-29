@@ -1,5 +1,16 @@
 # rigup configuration
 # Define your AI agent rigs here
+#
+# Local overrides: Create rigup.local.toml (gitignored) to override config
+# without modifying this file. Local values take precedence:
+#   - Riglet lists are concatenated
+#   - Config values are deeply merged (local overrides base)
+#
+# Workflow:
+#   1. Create rigup.local.toml with your local config
+#   2. Track it once: git add -f rigup.local.toml
+#   3. Modify anytime - Nix automatically sees changes
+#   4. .gitignore prevents accidental commits
 
 [rigs.default.riglets]
 # Include riglets from this repository
@@ -10,10 +21,3 @@ rigup = ["agent-rig-system"]
 # Configuration for the riglets (if they define options)
 # [rigs.default.config.some-option]
 # value = "example"
-
-# Local overrides:
-# When using the `rigup` CLI tool, you can create a gitignored rigup.local.toml
-# to override rigup.toml without modifying it:
-# - Riglet lists are concatenated
-# - Config values are deeply merged
-# - Extends values are replaced
