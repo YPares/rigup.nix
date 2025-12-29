@@ -1,5 +1,5 @@
 use crate::error::RigupError;
-use crate::nix::{get_flake_root, get_system, run_nix_eval_json};
+use crate::nix::{get_system, resolve_flake_path, run_nix_eval_json};
 use crate::types::{InputData, RigletMeta};
 use itertools::Itertools;
 use miette::Result;
@@ -120,13 +120,8 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
     let system = get_system();
     let flake_path = flake.unwrap_or_else(|| ".".to_string());
 
-    // Build the flake expression
-    let flake_expr = if flake_path == "." {
-        let flake_root = get_flake_root()?;
-        format!("git+file:{}", flake_root.display())
-    } else {
-        flake_path
-    };
+    // Resolve flake path and ensure rigup.local.toml is staged if needed
+    let flake_expr = resolve_flake_path(&flake_path)?;
 
     // Use the helper function from rigup.lib to discover all riglets and rigs
     let eval_expr = format!(

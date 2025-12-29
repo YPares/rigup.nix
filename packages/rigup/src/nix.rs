@@ -1,5 +1,6 @@
 use crate::error::RigupError;
 use miette::{IntoDiagnostic, Result};
+use owo_colors::OwoColorize;
 use serde_json::Value;
 use std::io::Read;
 use std::path::PathBuf;
@@ -73,6 +74,37 @@ pub fn parse_flake_ref(flake_ref: Option<&str>) -> Result<(String, String)> {
     }
 }
 
+/// Ensure rigup.local.toml is staged if it exists in the given directory
+fn ensure_local_toml_staged(flake_root: &PathBuf) -> Result<()> {
+    let local_toml = flake_root.join("rigup.local.toml");
+    if local_toml.exists() {
+        eprintln!(
+            "{} detected. Staging it in git so is included in the flake contents.",
+            "rigup.local.toml".yellow()
+        );
+        // Use git add -f to stage it even though it's gitignored
+        // This allows git+file: references to see it without copying the whole repo
+        let _ = Command::new("git")
+            .args(&["add", "-f", "rigup.local.toml"])
+            .current_dir(flake_root)
+            .output()
+            .into_diagnostic()?;
+        // Ignore errors - if git add fails, the subsequent nix command will fail with a clear error
+    }
+    Ok(())
+}
+
+/// Resolve a flake path, converting "." to git+file: reference and ensuring rigup.local.toml is staged
+pub fn resolve_flake_path(flake_path: &str) -> Result<String> {
+    if flake_path == "." {
+        let flake_root = get_flake_root()?;
+        ensure_local_toml_staged(&flake_root)?;
+        Ok(format!("git+file:{}", flake_root.display()))
+    } else {
+        Ok(flake_path.to_string())
+    }
+}
+
 /// Build a complete flake reference for a rig component
 /// Takes parsed flake path and rig name, returns full reference
 pub fn build_flake_ref(
@@ -81,13 +113,7 @@ pub fn build_flake_ref(
     system: &str,
     component: &str,
 ) -> Result<String> {
-    let resolved_path = if flake_path == "." {
-        let flake_root = get_flake_root()?;
-        format!("git+file:{}", flake_root.display())
-    } else {
-        flake_path.to_string()
-    };
-
+    let resolved_path = resolve_flake_path(flake_path)?;
     Ok(format!(
         "{}#rigs.{}.{}.{}",
         resolved_path, system, rig, component
