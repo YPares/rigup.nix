@@ -21,7 +21,7 @@ fn pipe_through_less(content: &str, no_pager: bool) -> Result<()> {
         // -F: quit if content fits on one screen
         // -X: don't clear screen on exit
         let mut child = Command::new("less")
-            .args(&["-RFX"])
+            .args(&["-RFX", "--mouse", "--wheel-lines=3"])
             .stdin(Stdio::piped())
             .spawn()
             .into_diagnostic()?;
