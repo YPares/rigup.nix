@@ -9,8 +9,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     blueprint.url = "github:numtide/blueprint";
-    # Pinning ref due to https://github.com/numtide/llm-agents.nix/issues/1574
-    llm-agents.url = "github:numtide/llm-agents.nix/78eafa553ae1b64eec5e8aa54810568c5cc0de3c";
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs =
