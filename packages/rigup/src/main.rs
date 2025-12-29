@@ -40,6 +40,9 @@ enum Commands {
         /// Include flake inputs (by default only shows "self")
         #[arg(short, long)]
         inputs: bool,
+        /// Disable paging through less
+        #[arg(short = 'P', long)]
+        no_pager: bool,
     },
     /// Run a rig's entrypoint
     Run {
@@ -62,8 +65,12 @@ fn main() -> Result<()> {
         Commands::Shell { flake_ref, command } => {
             enter_shell(flake_ref, command)?;
         }
-        Commands::List { flake, inputs } => {
-            list_inputs(flake, inputs)?;
+        Commands::List {
+            flake,
+            inputs,
+            no_pager,
+        } => {
+            list_inputs(flake, inputs, no_pager)?;
         }
         Commands::Run { flake_ref, args } => {
             run_entrypoint(flake_ref, &args)?;

@@ -14,6 +14,13 @@ pkgs.rustPlatform.buildRustPackage {
     lockFile = ./Cargo.lock;
   };
 
+  nativeBuildInputs = [ pkgs.makeWrapper ];
+
+  postInstall = ''
+    wrapProgram $out/bin/rigup \
+      --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.less ]}
+  '';
+
   meta = with pkgs.lib; {
     description = "CLI tool for managing rigup rigs";
     license = licenses.mit;
