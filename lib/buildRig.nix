@@ -189,7 +189,6 @@ let
         printf "  ${blue}Other env vars set:${reset}\n"
         printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n"
         printf "  ${yellow}RIG_DOCS${reset}=\"$RIG_DOCS\"\n"
-        printf "  ${yellow}RIG_TOOLS${reset}=\"$RIG_TOOLS\"\n\n"
         printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤${reset}\n"
         fi
       '';
