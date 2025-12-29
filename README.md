@@ -321,27 +321,29 @@ It is mainly because pure data (that can already cover a large set of use cases)
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
     in
-    rigup { inherit inputs; } // {
-      # Override or extend with custom rigs
-      rigs.${system}.custom = rigup.lib.buildRig {
-        inherit pkgs;
-        modules = [
-          self.riglets.aaa # Will use `$PROJECT_ROOT/riglets/{aaa.nix,aaa/default.nix}`
-          foo.riglets.bbb  # Use external riglets defined by our inputs
-          foo.riglets.ccc
-          # Extra config is given in the form of a simple in-line Nix module,
-          # with or without `{ config, pkgs, riglib, ... }` arguments
-          {
-            config = {
-              # More advanced config, that e.g. requires direct access to some Nix functions,
-              # or even takes the form of Nix functions:
-              aaa-config.i-need-a-derivation = pkgs.someDerivationBuilder "..." "........";
-              bbbModuleOpts.conditions.is-x-y-pair-valid = x: y: x * y <= 42.420000000000001;
+    pkgs.lib.recursiveUpdate  # merge both recursively, second arg taking precedence
+      (rigup { inherit inputs; })
+      {
+        # Override or extend with custom rigs
+        rigs.${system}.custom = rigup.lib.buildRig {
+          inherit pkgs;
+          modules = [
+            self.riglets.aaa # Will use `$PROJECT_ROOT/riglets/{aaa.nix,aaa/default.nix}`
+            foo.riglets.bbb  # Use external riglets defined by our inputs
+            foo.riglets.ccc
+            # Extra config is given in the form of a simple in-line Nix module,
+            # with or without `{ config, pkgs, riglib, ... }` arguments
+            {
+              config = {
+                # More advanced config, that e.g. requires direct access to some Nix functions,
+                # or even takes the form of Nix functions:
+                aaa-config.i-need-a-derivation = pkgs.someDerivationBuilder "..." "........";
+                bbbModuleOpts.conditions.is-x-y-pair-valid = x: y: x * y <= 42.420000000000001;
+              }
             }
-          }
-        ];
+          ];
+        };
       };
-    };
 }
 ```
 

@@ -196,23 +196,24 @@ For config not representable in TOML:
 
   outputs = { self, rigup, nixpkgs, ... }@inputs:
     let
-      resolved = rigup.lib.resolveProject { inherit inputs; };
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
     in
-    resolved // {
-      rigs.${system}.custom = rigup.lib.buildRig {
-        name = "my-custom-rig";
-        inherit pkgs;
-        modules = [
-          rigup.riglets.jj-basics
-          {
-            # Complex Nix expressions
-            agent.complexOption = lib.mkIf condition value;
-          }
-        ];
+    pkgs.lib.recursiveUpdate # merges both recursively, second arg taking precedence
+      (rigup.lib.resolveProject { inherit inputs; })
+      {
+        rigs.${system}.custom = rigup.lib.buildRig {
+          name = "my-custom-rig";
+          inherit pkgs;
+          modules = [
+            rigup.riglets.jj-basics
+            {
+              # Complex Nix expressions
+              agent.complexOption = lib.mkIf condition value;
+            }
+          ];
+        };
       };
-    };
 }
 ```
 
