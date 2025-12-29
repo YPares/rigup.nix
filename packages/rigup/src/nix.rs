@@ -81,9 +81,16 @@ pub fn build_flake_ref(
     system: &str,
     component: &str,
 ) -> Result<String> {
+    let resolved_path = if flake_path == "." {
+        let flake_root = get_flake_root()?;
+        format!("git+file:{}", flake_root.display())
+    } else {
+        flake_path.to_string()
+    };
+
     Ok(format!(
         "{}#rigs.{}.{}.{}",
-        flake_path, system, rig, component
+        resolved_path, system, rig, component
     ))
 }
 

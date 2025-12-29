@@ -123,15 +123,15 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
     // Build the flake expression
     let flake_expr = if flake_path == "." {
         let flake_root = get_flake_root()?;
-        format!("builtins.getFlake \"{}\"", flake_root.display())
+        format!("git+file:{}", flake_root.display())
     } else {
-        format!("builtins.getFlake \"{}\"", flake_path)
+        flake_path
     };
 
     // Use the helper function from rigup.lib to discover all riglets and rigs
     let eval_expr = format!(
         "let \
-           flake = {}; \
+           flake = builtins.getFlake \"{}\"; \
            rigup = if flake ? lib && flake.lib ? listFlake \
                    then flake \
                    else flake.inputs.rigup; \
