@@ -8,5 +8,8 @@ test-rig
 rig-*
 .rigup
 
+# rigup local config
+rigup.local.toml
+
 # harnesses
 .claude/

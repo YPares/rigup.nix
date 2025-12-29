@@ -51,7 +51,56 @@ let
   ) (if pathExists rigletsDir then builtins.readDir rigletsDir else { });
 
   rigupTomlPath = inputs.self + "/rigup.toml";
-  rigupTomlContents = if pathExists rigupTomlPath then fromTOML (readFile rigupTomlPath) else { };
+  rigupLocalTomlPath = inputs.self + "/rigup.local.toml";
+
+  baseTomlContents = if pathExists rigupTomlPath then fromTOML (readFile rigupTomlPath) else { };
+  localTomlContents = if pathExists rigupLocalTomlPath then fromTOML (readFile rigupLocalTomlPath) else { };
+
+  # Deep merge two TOML configurations
+  # Local values override base values; lists are concatenated
+  mergeTomlConfigs = base: local:
+    let
+      # Merge two rig definitions
+      mergeRigDef = baseDef: localDef:
+        let
+          # Merge riglets: concatenate lists for each input
+          mergedRiglets =
+            let
+              baseRiglets = baseDef.riglets or {};
+              localRiglets = localDef.riglets or {};
+              allInputs = unique ((attrNames baseRiglets) ++ (attrNames localRiglets));
+            in
+            optionalAttrs (allInputs != []) {
+              riglets = genAttrs allInputs (input:
+                unique ((baseRiglets.${input} or []) ++ (localRiglets.${input} or []))
+              );
+            };
+
+          # Merge config: recursively merge attrsets, local overrides base
+          mergedConfig =
+            optionalAttrs ((baseDef ? config) || (localDef ? config)) {
+              config = recursiveUpdate (baseDef.config or {}) (localDef.config or {});
+            };
+
+          # Extends: local overrides base
+          mergedExtends =
+            optionalAttrs ((baseDef ? extends) || (localDef ? extends)) {
+              extends = localDef.extends or baseDef.extends;
+            };
+        in
+        mergedRiglets // mergedConfig // mergedExtends;
+
+      # Merge rigs section
+      baseRigs = base.rigs or {};
+      localRigs = local.rigs or {};
+      allRigs = unique ((attrNames baseRigs) ++ (attrNames localRigs));
+      mergedRigs = genAttrs allRigs (rigName:
+        mergeRigDef (baseRigs.${rigName} or {}) (localRigs.${rigName} or {})
+      );
+    in
+    optionalAttrs (allRigs != []) { rigs = mergedRigs; };
+
+  rigupTomlContents = mergeTomlConfigs baseTomlContents localTomlContents;
 
   # Resolve riglets from the TOML structure
   # Takes riglets attrset from TOML: { self = ["riglet1", ...]; input = ["riglet2", ...]; }

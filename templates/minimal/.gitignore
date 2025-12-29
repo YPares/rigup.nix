@@ -8,3 +8,6 @@ result-*
 
 # Rigup build outputs
 .rigup
+
+# Rigup local config
+rigup.local.toml
