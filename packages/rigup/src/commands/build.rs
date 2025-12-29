@@ -1,4 +1,7 @@
-use crate::nix::{build_flake_ref, get_flake_root, get_system, parse_flake_ref, run_nix_command};
+use crate::nix::{
+    build_flake_ref, get_flake_root, get_system, parse_flake_ref, prepare_local_overrides,
+    run_nix_command,
+};
 use miette::{IntoDiagnostic, Result};
 use std::env;
 use std::path::PathBuf;
@@ -28,8 +31,15 @@ pub fn build_rig(flake_ref: Option<String>) -> Result<()> {
     let output_path = output_dir.join(&rig);
     let output_path_str = output_path.to_string_lossy().to_string();
 
+    // Prepare local configuration overrides
+    let local_overrides = prepare_local_overrides()?;
+
+    let mut args = vec!["build"];
+    local_overrides.apply_to_args(&mut args);
+    args.extend(&[&full_ref, "-o", &output_path_str]);
+
     eprintln!("Building rig '{}' for system '{}'...", rig, system);
-    run_nix_command(vec!["build", &full_ref, "-o", &output_path_str])?;
+    run_nix_command(args)?;
 
     eprintln!("Rig built successfully at: {}", output_path.display());
     Ok(())

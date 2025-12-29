@@ -1,5 +1,5 @@
 use crate::error::RigupError;
-use crate::nix::{get_flake_root, get_system, run_nix_eval_json};
+use crate::nix::{get_flake_root, get_system, prepare_local_overrides, run_nix_eval_json};
 use crate::types::{InputData, RigletMeta};
 use itertools::Itertools;
 use miette::Result;
@@ -120,6 +120,9 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
     let system = get_system();
     let flake_path = flake.unwrap_or_else(|| ".".to_string());
 
+    // Prepare local configuration overrides
+    let local_overrides = prepare_local_overrides()?;
+
     // Build the flake expression
     let flake_expr = if flake_path == "." {
         let flake_root = get_flake_root()?;
@@ -146,7 +149,8 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool) -> Result<()> {
     eprintln!("Discovering riglets and rigs...");
 
     // Run nix eval and parse the result
-    let result = run_nix_eval_json(&eval_expr)?;
+    // Always use impure mode since the eval expression uses builtins.getFlake
+    let result = run_nix_eval_json(&eval_expr, &local_overrides, true)?;
 
     // Parse the nested structure: { input-name -> { riglets = {...}, rigs = {...} } }
     let all_data: HashMap<String, InputData> =

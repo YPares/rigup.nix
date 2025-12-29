@@ -48,6 +48,88 @@ pub fn get_flake_root() -> Result<PathBuf> {
     Ok(PathBuf::from(path_str))
 }
 
+/// Find the project root directory by looking for rigup.toml
+/// Walks up from current directory until finding rigup.toml or reaching filesystem root
+pub fn find_project_root() -> Result<PathBuf> {
+    let mut current = std::env::current_dir().into_diagnostic()?;
+
+    loop {
+        let rigup_toml = current.join("rigup.toml");
+        if rigup_toml.exists() {
+            return Ok(current);
+        }
+
+        // Try to go to parent directory
+        if let Some(parent) = current.parent() {
+            current = parent.to_path_buf();
+        } else {
+            // Reached filesystem root without finding rigup.toml
+            return Err(miette::miette!(
+                "Could not find rigup.toml in current directory or any parent directory"
+            ));
+        }
+    }
+}
+
+/// Find rigup.local.toml if it exists
+/// Returns the absolute path to the file if found
+pub fn find_local_config() -> Result<Option<PathBuf>> {
+    // Find project root
+    let project_root = match find_project_root() {
+        Ok(root) => root,
+        Err(_) => {
+            // No project root found, no local overrides
+            return Ok(None);
+        }
+    };
+
+    let local_toml_path = project_root.join("rigup.local.toml");
+
+    if local_toml_path.exists() {
+        Ok(Some(local_toml_path))
+    } else {
+        Ok(None)
+    }
+}
+
+/// Helper struct for managing local configuration overrides
+pub struct LocalOverrides {
+    /// Path to the local config file (for setting env var)
+    local_path: Option<PathBuf>,
+}
+
+impl LocalOverrides {
+    /// Apply local overrides to a vec of args (for run_nix_command)
+    /// Sets env var and adds --impure flag
+    pub fn apply_to_args<'a>(&'a self, args: &mut Vec<&'a str>) {
+        if let Some(ref local_path) = self.local_path {
+            // Set environment variable for Nix to read
+            std::env::set_var("RIGUP_LOCAL_TOML", local_path);
+            // Add --impure flag to enable getFlake
+            args.push("--impure");
+        }
+    }
+
+    /// Apply local overrides to a Command (for direct Command usage)
+    /// Sets env var and adds --impure flag
+    pub fn apply_to_command(&self, cmd: &mut Command) {
+        if let Some(ref local_path) = self.local_path {
+            // Set environment variable for Nix to read
+            cmd.env("RIGUP_LOCAL_TOML", local_path);
+            // Add --impure flag to enable getFlake
+            cmd.arg("--impure");
+        }
+    }
+}
+
+/// Prepare local configuration overrides in a form ready to apply to nix commands
+/// This is the main entry point that commands should use
+pub fn prepare_local_overrides() -> Result<LocalOverrides> {
+    let local_path = find_local_config()?;
+
+    Ok(LocalOverrides { local_path })
+}
+
 /// Parse a flake reference like "<flake>#<rig>"
 /// Returns (flake_path, rig_name)
 ///
@@ -124,13 +206,27 @@ pub fn run_nix_command(args: Vec<&str>) -> Result<()> {
 
 /// Run a nix eval command that returns JSON, capturing stdout but showing stderr
 /// This is useful for commands that output JSON while showing build progress
-pub fn run_nix_eval_json(eval_expr: &str) -> Result<Value> {
-    let mut child = Command::new("nix")
-        .args(&["eval", "--impure", "--expr", eval_expr, "--json"])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()
-        .into_diagnostic()?;
+/// Accepts local overrides to apply --impure and env var
+/// The impure parameter forces --impure mode even without local overrides (needed for builtins.getFlake)
+pub fn run_nix_eval_json(
+    eval_expr: &str,
+    local_overrides: &LocalOverrides,
+    impure: bool,
+) -> Result<Value> {
+    let mut cmd = Command::new("nix");
+    cmd.args(&["eval", "--expr", eval_expr, "--json"]);
+
+    // Apply local overrides
+    local_overrides.apply_to_command(&mut cmd);
+
+    // If impure mode is requested and not already added by local overrides, add --impure flag
+    if impure && local_overrides.local_path.is_none() {
+        cmd.arg("--impure");
+    }
+
+    cmd.stdout(Stdio::piped()).stderr(Stdio::inherit());
+
+    let mut child = cmd.spawn().into_diagnostic()?;
 
     // Read stdout (contains JSON result)
     let mut stdout = Vec::new();

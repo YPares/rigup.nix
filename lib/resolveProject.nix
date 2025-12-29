@@ -19,12 +19,12 @@ let
   # Each riglet takes self as a first argument, and is wrapped by creating a dummy module whose sole purpose is to import the riglet and define a unique `key` for evalModules deduplication.
   # This ensures that if riglet A imports riglet B, and B is also added explicitly,
   # evalModules only processes B once.
-  applyFlakeSelf = name: path: {
+  applyFlakeSelf = rigletName: rigletPath: {
     # Include flake outPath in key to avoid collisions across flakes
-    key = "riglet:${inputs.self}:${name}";
+    key = "riglet:${inputs.self}:${rigletName}";
     # For error messages - shows full path in Nix store
-    _file = path;
-    imports = [ (import path inputs.self) ];
+    _file = rigletPath;
+    imports = [ (import rigletPath inputs.self) ];
   };
 
   riglets = concatMapAttrs (
@@ -51,11 +51,30 @@ let
   ) (if pathExists rigletsDir then builtins.readDir rigletsDir else { });
 
   rigupTomlPath = inputs.self + "/rigup.toml";
-  rigupLocalTomlPath = inputs.self + "/rigup.local.toml";
+
+  # Read rigup.local.toml path from environment variable (set by CLI)
+  # This allows reading gitignored files when --impure is used
+  rigupLocalTomlPath = builtins.getEnv "RIGUP_LOCAL_TOML";
 
   baseTomlContents = if pathExists rigupTomlPath then fromTOML (readFile rigupTomlPath) else { };
   localTomlContents =
-    if pathExists rigupLocalTomlPath then fromTOML (readFile rigupLocalTomlPath) else { };
+    if rigupLocalTomlPath != "" then
+      builtins.warn "rigup.nix: Using local overrides from ${rigupLocalTomlPath}" (
+        fromTOML (readFile rigupLocalTomlPath)
+      )
+    else
+      { };
+
+  # Load extra-inputs using getFlake (only works in --impure mode)
+  # These are dynamically loaded flakes that aren't declared in flake.nix
+  extraInputs =
+    if localTomlContents ? extra-inputs then
+      mapAttrs (name: flakeRef: builtins.getFlake flakeRef) localTomlContents.extra-inputs
+    else
+      { };
+
+  # Merge extra-inputs into inputs attrset
+  allInputs = inputs // extraInputs;
 
   # Deep merge two TOML configurations
   # Local values override base values; lists are concatenated
@@ -109,7 +128,7 @@ let
   rigletsSpecToModules =
     rigletsSpec:
     concatLists (
-      attrValues (mapAttrs (input: names: map (n: inputs.${input}.riglets.${n}) names) rigletsSpec)
+      attrValues (mapAttrs (input: names: map (n: allInputs.${input}.riglets.${n}) names) rigletsSpec)
     );
 
   # Build rigs for all systems
@@ -118,7 +137,7 @@ let
     mapAttrs (
       name: rigDef:
       let
-        pkgs = import inputs.nixpkgs { inherit system; };
+        pkgs = import allInputs.nixpkgs { inherit system; };
         modules = rigletsSpecToModules (rigDef.riglets or [ ]) ++ [ (rigDef.config or { }) ];
       in
       if rigDef ? "extends" then
@@ -131,7 +150,7 @@ let
               builtins.head baseInputs;
           baseRigName = rigDef.extends.${baseInput};
         in
-        inputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
+        allInputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
           newName = name;
           extraModules = modules;
         }

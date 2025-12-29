@@ -1,17 +1,5 @@
 # rigup configuration
 # This file defines which rigs are available and their configuration
-#
-# Local overrides: Create rigup.local.toml (gitignored) to override config
-# without modifying this file. Local values take precedence:
-#   - Riglet lists are concatenated
-#   - Config values are deeply merged (local overrides base)
-#   - Extends values are replaced
-#
-# Workflow:
-#   1. Create rigup.local.toml with your local config
-#   2. Track it once: git add -f rigup.local.toml
-#   3. Modify anytime - Nix automatically sees changes
-#   4. .gitignore prevents accidental commits
 
 # Define rigs
 [rigs.example-rig.riglets]
@@ -40,3 +28,9 @@ typst.template = "simple"
 extends.self = "example-rig"
 riglets.self = ["claude-code-entrypoint"]
 
+# Local overrides:
+# When using the `rigup` CLI tool, you can create a gitignored rigup.local.toml
+# to override rigup.toml without modifying it:
+# - Riglet lists are concatenated
+# - Config values are deeply merged
+# - Extends values are replaced
