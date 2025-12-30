@@ -2,10 +2,14 @@ use crate::nix::{build_flake_ref, get_system, parse_flake_ref};
 use miette::{IntoDiagnostic, Result};
 use std::process::Command;
 
-pub fn run_entrypoint(flake_ref: Option<String>, extra_args: &[String]) -> Result<()> {
+pub fn run_entrypoint(
+    flake_ref: Option<String>,
+    extra_args: &[String],
+    no_stage: bool,
+) -> Result<()> {
     let system = get_system();
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
-    let entrypoint_ref = build_flake_ref(&flake_path, &rig, &system, "entrypoint")?;
+    let entrypoint_ref = build_flake_ref(&flake_path, &rig, &system, "entrypoint", no_stage)?;
 
     eprintln!("Running entrypoint for rig '{}'...", rig);
 

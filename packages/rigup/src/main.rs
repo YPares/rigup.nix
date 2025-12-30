@@ -23,6 +23,9 @@ enum Commands {
         ///
         /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo`, `github:user/repo#myrig`
         flake_ref: Option<String>,
+        /// Disable auto-staging of rigup.local.toml
+        #[arg(long)]
+        no_stage: bool,
     },
     /// Enter a development shell for a rig
     Shell {
@@ -33,6 +36,9 @@ enum Commands {
         /// Command to run in the shell
         #[arg(short, long, num_args = 1.., allow_hyphen_values = true)]
         command: Vec<String>,
+        /// Disable auto-staging of rigup.local.toml
+        #[arg(long)]
+        no_stage: bool,
     },
     /// List all riglets and rigs from a flake and its inputs
     List {
@@ -56,6 +62,9 @@ enum Commands {
         /// Disable paging through less
         #[arg(short = 'P', long)]
         no_pager: bool,
+        /// Disable auto-staging of rigup.local.toml
+        #[arg(long)]
+        no_stage: bool,
     },
     /// Run a rig's entrypoint
     Run {
@@ -66,6 +75,9 @@ enum Commands {
         /// Arguments to forward to the entrypoint
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
+        /// Disable auto-staging of rigup.local.toml
+        #[arg(long)]
+        no_stage: bool,
     },
 }
 
@@ -73,11 +85,18 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Build { flake_ref } => {
-            build_rig(flake_ref)?;
+        Commands::Build {
+            flake_ref,
+            no_stage,
+        } => {
+            build_rig(flake_ref, no_stage)?;
         }
-        Commands::Shell { flake_ref, command } => {
-            enter_shell(flake_ref, command)?;
+        Commands::Shell {
+            flake_ref,
+            command,
+            no_stage,
+        } => {
+            enter_shell(flake_ref, command, no_stage)?;
         }
         Commands::List {
             flake,
@@ -85,11 +104,23 @@ fn main() -> Result<()> {
             no_pager,
             detailed,
             no_descriptions,
+            no_stage,
         } => {
-            list_inputs(flake, with_inputs, no_pager, detailed, no_descriptions)?;
+            list_inputs(
+                flake,
+                with_inputs,
+                no_pager,
+                detailed,
+                no_descriptions,
+                no_stage,
+            )?;
         }
-        Commands::Run { flake_ref, args } => {
-            run_entrypoint(flake_ref, &args)?;
+        Commands::Run {
+            flake_ref,
+            args,
+            no_stage,
+        } => {
+            run_entrypoint(flake_ref, &args, no_stage)?;
         }
     }
 

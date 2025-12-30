@@ -169,12 +169,13 @@ pub fn list_inputs(
     no_pager: bool,
     detailed: bool,
     no_descriptions: bool,
+    no_stage: bool,
 ) -> Result<()> {
     let system = get_system();
     let flake_path = flake.unwrap_or_else(|| ".".to_string());
 
     // Resolve flake path and ensure rigup.local.toml is staged if needed
-    let flake_expr = resolve_flake_path(&flake_path)?;
+    let flake_expr = resolve_flake_path(&flake_path, no_stage)?;
 
     // Use the helper function from rigup.lib to discover all riglets and rigs
     let eval_expr = format!(

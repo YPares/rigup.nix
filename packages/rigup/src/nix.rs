@@ -75,7 +75,11 @@ pub fn parse_flake_ref(flake_ref: Option<&str>) -> Result<(String, String)> {
 }
 
 /// Ensure rigup.local.toml is staged if it exists in the given directory
-fn ensure_local_toml_staged(flake_root: &PathBuf) -> Result<()> {
+fn ensure_local_toml_staged(flake_root: &PathBuf, no_stage: bool) -> Result<()> {
+    if no_stage {
+        return Ok(());
+    }
+
     let local_toml = flake_root.join("rigup.local.toml");
     if local_toml.exists() {
         eprintln!(
@@ -95,10 +99,10 @@ fn ensure_local_toml_staged(flake_root: &PathBuf) -> Result<()> {
 }
 
 /// Resolve a flake path, converting "." to git+file: reference and ensuring rigup.local.toml is staged
-pub fn resolve_flake_path(flake_path: &str) -> Result<String> {
+pub fn resolve_flake_path(flake_path: &str, no_stage: bool) -> Result<String> {
     if flake_path == "." {
         let flake_root = get_flake_root()?;
-        ensure_local_toml_staged(&flake_root)?;
+        ensure_local_toml_staged(&flake_root, no_stage)?;
         Ok(format!("git+file:{}", flake_root.display()))
     } else {
         Ok(flake_path.to_string())
@@ -112,8 +116,9 @@ pub fn build_flake_ref(
     rig: &str,
     system: &str,
     component: &str,
+    no_stage: bool,
 ) -> Result<String> {
-    let resolved_path = resolve_flake_path(flake_path)?;
+    let resolved_path = resolve_flake_path(flake_path, no_stage)?;
     Ok(format!(
         "{}#rigs.{}.{}.{}",
         resolved_path, system, rig, component

@@ -3,10 +3,10 @@ use miette::{IntoDiagnostic, Result};
 use std::env;
 use std::path::PathBuf;
 
-pub fn build_rig(flake_ref: Option<String>) -> Result<()> {
+pub fn build_rig(flake_ref: Option<String>, no_stage: bool) -> Result<()> {
     let system = get_system();
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
-    let full_ref = build_flake_ref(&flake_path, &rig, &system, "home")?;
+    let full_ref = build_flake_ref(&flake_path, &rig, &system, "home", no_stage)?;
 
     let output_dir = if flake_path == "." {
         // Using current repo - output to repo's .rigup
