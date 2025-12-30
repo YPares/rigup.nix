@@ -12,6 +12,8 @@ pub struct RigletMeta {
     #[serde(default)]
     pub status: String,
     #[serde(default)]
+    pub disclosure: String,
+    #[serde(default)]
     pub broken: bool,
     #[serde(default)]
     pub version: String,

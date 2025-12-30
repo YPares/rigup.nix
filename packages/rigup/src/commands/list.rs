@@ -64,24 +64,6 @@ fn display_riglet(
     let branch = if is_last { "└─" } else { "├─" };
     let continuation = if is_last { "   " } else { " │ " };
 
-    writeln!(
-        output,
-        "{} {} {} (v{}){}",
-        prefix,
-        branch,
-        if meta.broken {
-            name.red().to_string()
-        } else {
-            name.green().to_string()
-        },
-        meta.version,
-        (if meta.broken { " BROKEN" } else { "" }).red().bold()
-    )
-    .into_diagnostic()?;
-
-    // Add 2 extra spaces for detail indentation
-    let item_prefix = format!("{}{}  ", prefix, continuation);
-
     // Color-code status
     let status_str = match meta.status.as_str() {
         "stable" => meta.status.green().to_string(),
@@ -93,21 +75,42 @@ fn display_riglet(
 
     writeln!(
         output,
-        "{}Intent: {} {} Status: {}",
-        item_prefix,
-        meta.intent.cyan().bold(),
-        "|".bright_black(),
-        status_str.bold()
+        "{prefix} {branch} {name} ({version}) {status} {intent} {disclosure}{broken}",
+        prefix = prefix,
+        branch = branch,
+        name = name.cyan().to_string(),
+        version = meta.version,
+        intent = meta.intent.blue(),
+        status = status_str,
+        disclosure = if meta.disclosure == "none" {
+            "undisclosed"
+        } else {
+            &meta.disclosure
+        },
+        broken = if meta.broken { " BROKEN" } else { "" }.red().bold()
     )
     .into_diagnostic()?;
+
+    // Add 2 extra spaces for detail indentation
+    let item_prefix = format!("{}{}  ", prefix, continuation);
 
     // Wrap description
     writeln!(
         output,
         "{}",
-        wrap_with_prefix(&meta.description, &item_prefix, terminal_width)
+        wrap_with_prefix(
+            &meta.description.bold().to_string(),
+            &item_prefix,
+            terminal_width
+        )
     )
     .into_diagnostic()?;
+
+    // Skip detailed info for deprecated riglets
+    if meta.status == "deprecated" {
+        writeln!(output, "{}{}", item_prefix, "...".bright_black()).into_diagnostic()?;
+        return Ok(());
+    }
 
     if !meta.keywords.is_empty() {
         let wrapped = wrap_with_prefix(&meta.keywords.join(", "), &item_prefix, terminal_width);
@@ -123,10 +126,10 @@ fn display_riglet(
 
     if !meta.command_names.is_empty() {
         let commands_text = format!(
-            "Tools: {}",
+            "Provides: {}",
             meta.command_names
                 .iter()
-                .map(|c| c.cyan().to_string())
+                .map(|c| c.italic().to_string())
                 .join(", ")
         );
         let wrapped = wrap_with_prefix(&commands_text, &item_prefix, terminal_width);
@@ -273,9 +276,16 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool, no_pager: bool) 
                     "{} {} {}",
                     section_prefix,
                     rig_branch,
-                    rig_name.cyan()
+                    rig_name.green()
                 )
                 .into_diagnostic()?;
+
+                // Display entrypoint if defined
+                if let Some(program) = &rig_meta.entrypoint {
+                    let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
+                    writeln!(output, "{}Entrypoint: {}", item_prefix, program.magenta())
+                        .into_diagnostic()?;
+                }
 
                 // Display riglets in this rig as comma-separated list (like keywords)
                 if !rig_meta.riglets.is_empty() {
@@ -293,19 +303,12 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool, no_pager: bool) 
 
                     for line in wrapped.lines() {
                         if let Some(text) = line.strip_prefix(&item_prefix) {
-                            writeln!(output, "{}{}", item_prefix, text.bright_black().italic())
+                            writeln!(output, "{}{}", item_prefix, text.italic())
                                 .into_diagnostic()?;
                         } else {
                             writeln!(output, "{}", line).into_diagnostic()?;
                         }
                     }
-                }
-
-                // Display entrypoint if defined
-                if let Some(program) = &rig_meta.entrypoint {
-                    let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
-                    writeln!(output, "{}Entrypoint: {}", item_prefix, program.magenta())
-                        .into_diagnostic()?;
                 }
             }
         }
