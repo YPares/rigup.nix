@@ -61,7 +61,7 @@ rigup run github:YPares/agent-skills#all-skills-claude
 
 ### Create a new project
 
-Create it from the template(s) in this repo:
+Create it from one of the templates in this repo:
 
 ```bash
 rigup init new-project [-t minimal]
@@ -70,7 +70,7 @@ rigup init new-project [-t minimal]
 cd new-project
 ```
 
-This initializes a git repo at `./new-project`, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig,adds all the files to git tracking (**important**) and runs `nix flake check` on the result to make sure everything is in order.
+This initializes a git repo at `./new-project`, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig, adds all the files to git tracking (**important**), and finally runs `nix flake check` on the result to make sure everything is in order.
 
 ```bash
 # List available riglets from flake's self and inputs
