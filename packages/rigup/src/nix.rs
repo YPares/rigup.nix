@@ -83,7 +83,7 @@ fn ensure_local_toml_staged(flake_root: &PathBuf, no_stage: bool) -> Result<()> 
     let local_toml = flake_root.join("rigup.local.toml");
     if local_toml.exists() {
         eprintln!(
-            "{} detected. Staging it in git so is included in the flake contents.",
+            "{} detected. Staging it in git so it is included in the flake contents.",
             "rigup.local.toml".yellow()
         );
         // Use git add -f to stage it even though it's gitignored
