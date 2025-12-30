@@ -28,6 +28,7 @@ nix profile add github:YPares/rigup.nix#rigup
 _**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
 
 If already installed, update with:
+
 ```bash
 nix profile upgrade rigup
 ```
@@ -36,7 +37,7 @@ This CLI tool makes it easier to build rigs or open them as subshells, and to ge
 
 You can then create a new project from the templates provided by this repository, or even directly build the example rig defined here.
 
-### Use the example rig from this project
+### Use a rig from this project (or any other project using `rigup`)
 
 This project defines example riglets, and an example rig combining them.
 
@@ -60,16 +61,18 @@ rigup run github:YPares/agent-skills#all-skills-claude
 
 ### Create a new project
 
-```bash
-# Initialize a new project from the template
-mkdir new-project
-cd new-project
-git init
-nix flake init -t github:YPares/rigup.nix
-git add .
-  # IMPORTANT: For now the project has to be tracked by git, and files git-added
-  # for `rigup` CLI and `nix` commands to work properly
+Create it from the template(s) in this repo:
 
+```bash
+rigup init new-project [-t minimal]
+  # Use 'minimal' template for a project which should not define any local riglet 
+
+cd new-project
+```
+
+This initializes a git repo at `./new-project`, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig,adds all the files to git tracking (**important**) and runs `nix flake check` on the result to make sure everything is in order.
+
+```bash
 # List available riglets from flake's self and inputs
 rigup show --detailed --with-inputs
 
@@ -83,9 +86,7 @@ cat .rigup/default/RIG.md
 rigup shell ".#default"
 ```
 
-This creates a basic project structure with an example riglet. Edit `riglets/my-first-riglet.nix` and `rigup.toml` to customize it.
-
-Alternatively, use `nix flake init -t github:YPares/rigup.nix#minimal` for a project which should not define any local riglet
+Edit `riglets/my-first-riglet.nix` (if using default template) and `rigup.toml` to customize them.
 
 ## Deeper dive
 

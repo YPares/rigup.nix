@@ -12,5 +12,8 @@
       rigup,
       ...
     }@inputs:
-    rigup { inherit inputs; };
+    rigup {
+      inherit inputs;
+      checkRigs = true;
+    };
 }
