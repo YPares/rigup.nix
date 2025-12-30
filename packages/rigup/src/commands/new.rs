@@ -27,8 +27,8 @@ fn run_command(program: &str, args: &[&str], cwd: &Path) -> Result<()> {
     }
 }
 
-/// Initialize a new rigup project
-pub fn init_project(directory: Option<String>, template: String) -> Result<()> {
+/// Create a new rigup project
+pub fn new_project(directory: Option<String>, template: String) -> Result<()> {
     // Determine target directory
     let target_dir = if let Some(dir) = directory {
         PathBuf::from(&dir)

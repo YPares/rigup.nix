@@ -64,13 +64,13 @@ rigup run github:YPares/agent-skills#all-skills-claude
 Create it from one of the templates in this repo:
 
 ```bash
-rigup init new-project [-t minimal]
+rigup new foo [-t minimal]
   # Use 'minimal' template for a project which should not define any local riglet 
 
-cd new-project
+cd foo
 ```
 
-This initializes a git repo at `./new-project`, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig, adds all the files to git tracking (**important**), and finally runs `nix flake check` on the result to make sure everything is in order.
+This creates a `./foo` folder and initializes as a git repo, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig, adds all the files to git tracking (**important**), and finally runs `nix flake check` on the result to make sure everything is in order.
 
 ```bash
 # List available riglets from flake's self and inputs

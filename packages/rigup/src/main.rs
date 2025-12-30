@@ -4,7 +4,7 @@ mod nix;
 mod types;
 
 use clap::{Parser, Subcommand};
-use commands::{build_rig, enter_shell, init_project, run_entrypoint, show_flake};
+use commands::{build_rig, enter_shell, new_project, run_entrypoint, show_flake};
 use miette::Result;
 
 #[derive(Parser)]
@@ -17,8 +17,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Initialize a new rigup project
-    Init {
+    /// Create a new rigup project
+    New {
         /// Directory to create (defaults to current directory)
         directory: Option<String>,
         /// Template to use (defaults to "default", can be "minimal")
@@ -93,11 +93,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Init {
+        Commands::New {
             directory,
             template,
         } => {
-            init_project(directory, template)?;
+            new_project(directory, template)?;
         }
         Commands::Build {
             flake_ref,
