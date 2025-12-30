@@ -47,13 +47,14 @@ rigup list github:YPares/agent-skills  # A Skills repo that also packages them v
 
 # Directly build a rig from a remote flake
 rigup build github:YPares/rigup.nix#example-rig # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
-rigup build github:YPares/agent-skills#claude
+rigup build github:YPares/agent-skills#all-skills-claude
 
 # Directly open a rig from a remote flake in a subshell
 rigup shell github:YPares/rigup.nix#example-rig
 
 # Directly run a rig's entrypoint (if it has any)
-rigup run github:YPares/agent-skills#claude
+rigup run github:YPares/agent-skills#all-skills-claude
+  # Then in Claude Code: Ctrl+o to show details, to see the RIG.md manifest that Claude was prompted with via a startup hook
 ```
 
 ### Create a new project
