@@ -120,19 +120,6 @@ pub fn build_flake_ref(
     ))
 }
 
-/// Run a nix command and return an error if it fails
-pub fn run_nix_command_capture(args: Vec<&str>) -> Result<()> {
-    let output = Command::new("nix").args(&args).output().into_diagnostic()?;
-
-    if !output.status.success() {
-        let code = output.status.code().unwrap_or(1);
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        return Err(RigupError::NixCommandFailed { code, stderr }.into());
-    }
-
-    Ok(())
-}
-
 /// Run a nix command interactively, inheriting stdin/stdout/stderr
 pub fn run_nix_command(args: Vec<&str>) -> Result<()> {
     let status = Command::new("nix")
