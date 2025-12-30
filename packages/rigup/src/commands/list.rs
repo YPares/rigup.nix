@@ -61,6 +61,7 @@ fn display_riglet(
     is_last: bool,
     terminal_width: usize,
     detailed: bool,
+    no_descriptions: bool,
 ) -> Result<()> {
     let branch = if is_last { "└─" } else { "├─" };
     let continuation = if is_last { "   " } else { " │ " };
@@ -95,17 +96,19 @@ fn display_riglet(
     // Add 2 extra spaces for detail indentation
     let item_prefix = format!("{}{}  ", prefix, continuation);
 
-    // Wrap description
-    writeln!(
-        output,
-        "{}",
-        wrap_with_prefix(
-            &meta.description.bold().to_string(),
-            &item_prefix,
-            terminal_width
+    // Wrap description (unless no_descriptions is set)
+    if !no_descriptions {
+        writeln!(
+            output,
+            "{}",
+            wrap_with_prefix(
+                &meta.description.bold().to_string(),
+                &item_prefix,
+                terminal_width
+            )
         )
-    )
-    .into_diagnostic()?;
+        .into_diagnostic()?;
+    }
 
     if !detailed {
         return Ok(());
@@ -162,9 +165,10 @@ fn display_riglet(
 
 pub fn list_inputs(
     flake: Option<String>,
-    include_inputs: bool,
+    with_inputs: bool,
     no_pager: bool,
     detailed: bool,
+    no_descriptions: bool,
 ) -> Result<()> {
     let system = get_system();
     let flake_path = flake.unwrap_or_else(|| ".".to_string());
@@ -184,7 +188,7 @@ pub fn list_inputs(
            system = \"{}\"; \
            includeInputs = {}; \
          }}",
-        flake_expr, system, include_inputs
+        flake_expr, system, with_inputs
     );
 
     eprintln!("Discovering riglets and rigs...");
@@ -253,6 +257,7 @@ pub fn list_inputs(
                     is_last,
                     terminal_width,
                     detailed,
+                    no_descriptions,
                 )?;
             }
         }

@@ -65,7 +65,7 @@ rigup run github:YPares/agent-skills#all-skills-claude
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
 
 # List available riglets from flake's self and inputs
-rigup list --detailed --inputs
+rigup list --detailed --with-inputs
 
 # Build your rig
 rigup build ".#default"

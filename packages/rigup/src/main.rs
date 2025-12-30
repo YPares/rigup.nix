@@ -19,14 +19,16 @@ struct Cli {
 enum Commands {
     /// Build a rig's home directory
     Build {
-        /// Flake reference in the form <flake>#<rig> (defaults to ".#default")
-        /// Current repo must use ".#" prefix. Examples: ".#myrig", "github:user/repo", "github:user/repo#myrig"
+        /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
+        ///
+        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo`, `github:user/repo#myrig`
         flake_ref: Option<String>,
     },
     /// Enter a development shell for a rig
     Shell {
-        /// Flake reference in the form <flake>#<rig> (defaults to ".#default")
-        /// Current repo must use ".#" prefix. Examples: ".#myrig", "github:user/repo", "github:user/repo#myrig"
+        /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
+        ///
+        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo`, `github:user/repo#myrig`
         flake_ref: Option<String>,
         /// Command to run in the shell
         #[arg(short, long, num_args = 1.., allow_hyphen_values = true)]
@@ -34,23 +36,32 @@ enum Commands {
     },
     /// List all riglets and rigs from a flake and its inputs
     List {
-        /// Flake to inspect (defaults to ".")
-        /// Examples: ".", "github:user/repo"
+        /// Flake to inspect (defaults to `.`)
+        ///
+        /// Examples: `.`, `github:user/repo[/branch]`, `git+file:/abs/path/to/local/clone`
         flake: Option<String>,
-        /// Include flake inputs (by default only shows "self")
+        /// Include flake inputs
+        ///
+        /// By default only `self`, the given flake, is shown. This will also list the rigs and riglets provided by its own input flakes
+        #[arg(short = 'i', long)]
+        with_inputs: bool,
+        /// Show all details
+        ///
+        /// Adds keywords, tools, when-to-use for riglets and riglet list for rigs
         #[arg(short, long)]
-        inputs: bool,
+        detailed: bool,
+        /// Hide riglet descriptions
+        #[arg(short = 'D', long)]
+        no_descriptions: bool,
         /// Disable paging through less
         #[arg(short = 'P', long)]
         no_pager: bool,
-        /// Show detailed information (keywords, tools, when-to-use for riglets; riglet list for rigs)
-        #[arg(short, long)]
-        detailed: bool,
     },
     /// Run a rig's entrypoint
     Run {
-        /// Flake reference in the form <flake>#<rig> (defaults to ".#default")
-        /// Current repo must use ".#" prefix. Examples: ".#myrig", "github:user/repo", "github:user/repo#myrig"
+        /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
+        ///
+        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo[/branch]`, `github:user/repo#myrig`
         flake_ref: Option<String>,
         /// Arguments to forward to the entrypoint
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
@@ -70,11 +81,12 @@ fn main() -> Result<()> {
         }
         Commands::List {
             flake,
-            inputs,
+            with_inputs,
             no_pager,
             detailed,
+            no_descriptions,
         } => {
-            list_inputs(flake, inputs, no_pager, detailed)?;
+            list_inputs(flake, with_inputs, no_pager, detailed, no_descriptions)?;
         }
         Commands::Run { flake_ref, args } => {
             run_entrypoint(flake_ref, &args)?;
