@@ -380,6 +380,7 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 
 - [`openskills`](https://github.com/numman-ali/openskills): Universal Skill loader, following Claude Skills system and manifest
 - [`llm-agents.nix`](https://github.com/numtide/llm-agents.nix): Numtide's flake packaging AI coding agents and development tools
+- [`agent-skills-nix`](https://github.com/Kyure-A/agent-skills-nix): Nix lib to discover and bundle skills, with home-manager integration
 
 ## License
 
