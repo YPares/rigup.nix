@@ -69,23 +69,23 @@ fn display_riglet(
         "stable" => meta.status.green().to_string(),
         "experimental" => meta.status.yellow().to_string(),
         "deprecated" | "draft" => meta.status.red().to_string(),
-        "example" => meta.status.blue().to_string(),
+        "example" => meta.status.cyan().to_string(),
         _ => meta.status.clone(),
     };
 
     writeln!(
         output,
-        "{prefix} {branch} {name} ({version}) {status} {intent} {disclosure}{broken}",
+        "{prefix} {branch} {name} ({version}) {status} {intent}{disclosure}{broken}",
         prefix = prefix,
         branch = branch,
         name = name.cyan().to_string(),
         version = meta.version,
         intent = meta.intent.blue(),
         status = status_str,
-        disclosure = if meta.disclosure == "none" {
-            "undisclosed"
-        } else {
-            &meta.disclosure
+        disclosure = match meta.disclosure.as_str() {
+            "none" => " [undisclosed]",
+            "lazy" => "",
+            _ => &format!(" [{}]", meta.disclosure),
         },
         broken = if meta.broken { " BROKEN" } else { "" }.red().bold()
     )
@@ -303,8 +303,7 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool, no_pager: bool) 
 
                     for line in wrapped.lines() {
                         if let Some(text) = line.strip_prefix(&item_prefix) {
-                            writeln!(output, "{}{}", item_prefix, text.italic())
-                                .into_diagnostic()?;
+                            writeln!(output, "{}{}", item_prefix, text).into_diagnostic()?;
                         } else {
                             writeln!(output, "{}", line).into_diagnostic()?;
                         }
