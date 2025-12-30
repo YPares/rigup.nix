@@ -73,6 +73,9 @@ pub fn init_project(directory: Option<String>, template: String) -> Result<()> {
         &target_dir,
     )?;
 
+    eprintln!("✨ Staging created flake.lock...");
+    run_command("git", &["add", "flake.lock"], &target_dir)?;
+
     eprintln!("✅ Done");
     Ok(())
 }
