@@ -20,6 +20,7 @@ self:
         "Setting up or modifying a project's rig"
         "Learning about the Agent Rig architecture"
         "Learning what riglets are and what they add compared to Skills"
+        "Learning how to read Markdown docs more efficiently with extract-md-toc"
         "Understanding how riglets interact"
         "Understanding how RIG.md manifest is put together"
       ];
