@@ -17,10 +17,11 @@ self:
       description = "rigup.nix: Understanding and working with riglets and rig system";
       intent = "sourcebook";
       whenToUse = [
-        "Learning about the rig architecture"
-        "Creating new riglets"
+        "Setting up or modifying a project's rig"
+        "Learning about the Agent Rig architecture"
+        "Learning what riglets are and what they add compared to Skills"
         "Understanding how riglets interact"
-        "Setting up a project's rig"
+        "Understanding how RIG.md manifest is put together"
       ];
       keywords = [
         "rigup"

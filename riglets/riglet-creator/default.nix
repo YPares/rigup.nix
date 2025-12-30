@@ -15,9 +15,9 @@ self:
       intent = "playbook";
       whenToUse = [
         "Creating new riglets"
-        "Improving existing riglets"
         "Porting Skills to riglets"
-        "Setting up riglet documentation"
+        "Adding to existing riglets"
+        "Setting up riglet documentation or configuration"
         "Structuring riglet metadata"
         "Bundling tools with riglets"
       ];
