@@ -62,7 +62,8 @@ rigup run github:YPares/agent-skills#all-skills-claude
 
 ```bash
 # Initialize a new project from the template
-mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
+mkdir new-project && cd new-project && git init && nix flake init -t github:YPares/rigup.nix && git add .
+  # For now the project has to be git-tracked, and files git-added for `rigup` CLI and `nix` commands to work properly
 
 # List available riglets from flake's self and inputs
 rigup show --detailed --with-inputs
