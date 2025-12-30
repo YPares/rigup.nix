@@ -60,6 +60,7 @@ fn display_riglet(
     prefix: &str,
     is_last: bool,
     terminal_width: usize,
+    detailed: bool,
 ) -> Result<()> {
     let branch = if is_last { "└─" } else { "├─" };
     let continuation = if is_last { "   " } else { " │ " };
@@ -106,9 +107,7 @@ fn display_riglet(
     )
     .into_diagnostic()?;
 
-    // Skip detailed info for deprecated riglets
-    if meta.status == "deprecated" {
-        writeln!(output, "{}{}", item_prefix, "...".bright_black()).into_diagnostic()?;
+    if !detailed {
         return Ok(());
     }
 
@@ -161,7 +160,12 @@ fn display_riglet(
     Ok(())
 }
 
-pub fn list_inputs(flake: Option<String>, include_inputs: bool, no_pager: bool) -> Result<()> {
+pub fn list_inputs(
+    flake: Option<String>,
+    include_inputs: bool,
+    no_pager: bool,
+    detailed: bool,
+) -> Result<()> {
     let system = get_system();
     let flake_path = flake.unwrap_or_else(|| ".".to_string());
 
@@ -248,6 +252,7 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool, no_pager: bool) 
                     section_prefix,
                     is_last,
                     terminal_width,
+                    detailed,
                 )?;
             }
         }
@@ -271,24 +276,25 @@ pub fn list_inputs(flake: Option<String>, include_inputs: bool, no_pager: bool) 
                 let rig_branch = if is_last_rig { "└─" } else { "├─" };
                 let rig_continuation = if is_last_rig { "   " } else { " │ " };
 
+                // Build entrypoint suffix if defined
+                let entrypoint_suffix = if let Some(program) = &rig_meta.entrypoint {
+                    format!(" (entrypoint: {})", program.magenta())
+                } else {
+                    String::new()
+                };
+
                 writeln!(
                     output,
-                    "{} {} {}",
+                    "{} {} {}{}",
                     section_prefix,
                     rig_branch,
-                    rig_name.green()
+                    rig_name.green(),
+                    entrypoint_suffix
                 )
                 .into_diagnostic()?;
 
-                // Display entrypoint if defined
-                if let Some(program) = &rig_meta.entrypoint {
-                    let item_prefix = format!("{}{}  ", section_prefix, rig_continuation);
-                    writeln!(output, "{}Entrypoint: {}", item_prefix, program.magenta())
-                        .into_diagnostic()?;
-                }
-
                 // Display riglets in this rig as comma-separated list (like keywords)
-                if !rig_meta.riglets.is_empty() {
+                if detailed && !rig_meta.riglets.is_empty() {
                     let mut riglet_list: Vec<String> = rig_meta
                         .riglets
                         .iter()

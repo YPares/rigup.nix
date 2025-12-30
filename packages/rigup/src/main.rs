@@ -43,6 +43,9 @@ enum Commands {
         /// Disable paging through less
         #[arg(short = 'P', long)]
         no_pager: bool,
+        /// Show detailed information (keywords, tools, when-to-use for riglets; riglet list for rigs)
+        #[arg(short, long)]
+        detailed: bool,
     },
     /// Run a rig's entrypoint
     Run {
@@ -69,8 +72,9 @@ fn main() -> Result<()> {
             flake,
             inputs,
             no_pager,
+            detailed,
         } => {
-            list_inputs(flake, inputs, no_pager)?;
+            list_inputs(flake, inputs, no_pager, detailed)?;
         }
         Commands::Run { flake_ref, args } => {
             run_entrypoint(flake_ref, &args)?;

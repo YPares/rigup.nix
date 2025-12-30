@@ -43,7 +43,8 @@ This project defines example riglets, and an example rig combining them.
 ```bash
 # Show the riglets and rigs exposed by a remote flake
 rigup list github:YPares/rigup.nix
-rigup list github:YPares/agent-skills  # A Skills repo that also packages them via rigup
+# Show all metadata about riglets and each rig's contents
+rigup list --detailed github:YPares/agent-skills  # A Skills repo that also packages them via rigup
 
 # Directly build a rig from a remote flake
 rigup build github:YPares/rigup.nix#example-rig # this builds <flake>#rigs.<system>.example-rig.home and outputs a symlink
@@ -64,7 +65,7 @@ rigup run github:YPares/agent-skills#all-skills-claude
 mkdir new-project && cd new-project && nix flake init -t github:YPares/rigup.nix
 
 # List available riglets from flake's self and inputs
-rigup list --inputs
+rigup list --detailed --inputs
 
 # Build your rig
 rigup build ".#default"
