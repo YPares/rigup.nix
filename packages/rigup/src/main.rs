@@ -4,7 +4,7 @@ mod nix;
 mod types;
 
 use clap::{Parser, Subcommand};
-use commands::{build_rig, enter_shell, list_inputs, run_entrypoint};
+use commands::{build_rig, enter_shell, run_entrypoint, show_flake};
 use miette::Result;
 
 #[derive(Parser)]
@@ -40,8 +40,8 @@ enum Commands {
         #[arg(long)]
         no_stage: bool,
     },
-    /// List all riglets and rigs from a flake and its inputs
-    List {
+    /// Show all riglets and rigs from a flake and its inputs
+    Show {
         /// Flake to inspect (defaults to `.`)
         ///
         /// Examples: `.`, `github:user/repo[/branch]`, `git+file:/abs/path/to/local/clone`
@@ -98,7 +98,7 @@ fn main() -> Result<()> {
         } => {
             enter_shell(flake_ref, command, no_stage)?;
         }
-        Commands::List {
+        Commands::Show {
             flake,
             with_inputs,
             no_pager,
@@ -106,7 +106,7 @@ fn main() -> Result<()> {
             no_descriptions,
             no_stage,
         } => {
-            list_inputs(
+            show_flake(
                 flake,
                 with_inputs,
                 no_pager,

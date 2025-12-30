@@ -163,7 +163,7 @@ fn display_riglet(
     Ok(())
 }
 
-pub fn list_inputs(
+pub fn show_flake(
     flake: Option<String>,
     with_inputs: bool,
     no_pager: bool,
