@@ -8,3 +8,4 @@
   rigletSchema = import ./rigletSchema.nix flake;
   listFlake = import ./listFlake.nix flake;
 }
+// import ./resolveClaudeMarketplace.nix flake

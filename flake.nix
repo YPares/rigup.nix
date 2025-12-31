@@ -20,21 +20,28 @@
       ...
     }:
     let
+      # Recursively merge a list of attrsets (Nix "records")
       mergeRec = builtins.foldl' (acc: x: nixpkgs.lib.recursiveUpdate acc x) { };
+
+      # `rigup` function imported directly to avoid circular dependency
+      # In downstream flakes, directly use the `rigup` input as a function instead
+      rigup = (import ./lib { flake = self; }).resolveProject;
     in
     mergeRec [
-      # blueprint's docs: https://github.com/numtide/blueprint/tree/main/docs/content/getting-started
+      # Expose packages/ and lib/ via blueprint ( https://github.com/numtide/blueprint/tree/main/docs/content/getting-started )
       (blueprint { inherit inputs; })
-      # Expose the example riglets & rig
-      # -- lib imported directly to avoid circular dependency
-      ((import ./lib { flake = self; }).resolveProject {
+
+      # Resolve the riglets and rig defined in the project, and expose them
+      (rigup {
         inherit inputs;
         checkRigs = true;
       })
+
       {
-        # Make the flake itself directly usable as a function by user flakes
+        # Make the flake itself directly usable as a function by downstream flakes
         __functor = _: self.lib.resolveProject;
 
+        # Expose the templates
         templates = import ./templates;
       }
     ];

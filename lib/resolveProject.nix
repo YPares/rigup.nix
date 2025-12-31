@@ -13,18 +13,35 @@ flake:
 }:
 with inputs.nixpkgs.lib;
 let
+  # Enhance inputs with claudeMarketplace attributes where marketplace.json exists
+  enhancedInputsBase = builtins.mapAttrs (
+    _name: input:
+    let
+      claudePlugins = flake.lib.resolveClaudeMarketplace input;
+    in
+    input // optionalAttrs (claudePlugins != null) { inherit claudePlugins; }
+  ) inputs;
+
+  # Update self.inputs to point to the enhanced inputs (so riglets see them)
+  enhancedInputs = enhancedInputsBase // {
+    self = enhancedInputsBase.self // {
+      inputs = enhancedInputsBase;
+    };
+  };
+
   # Auto-discover all riglets from riglets/ directory
-  rigletsDir = inputs.self + "/riglets";
+  rigletsDir = enhancedInputs.self + "/riglets";
 
   # Each riglet takes self as a first argument, and is wrapped by creating a dummy module whose sole purpose is to import the riglet and define a unique `key` for evalModules deduplication.
   # This ensures that if riglet A imports riglet B, and B is also added explicitly,
   # evalModules only processes B once.
-  applyFlakeSelf = name: path: {
+  applyFlakeSelf = rigletName: rigletPath: {
     # Include flake outPath in key to avoid collisions across flakes
-    key = "riglet:${inputs.self}:${name}";
+    key = "riglet:${inputs.self}:${rigletName}";
     # For error messages - shows full path in Nix store
-    _file = path;
-    imports = [ (import path inputs.self) ];
+    _file = rigletPath;
+    # Pass enhanced inputs so riglets can access claudeMarketplace
+    imports = [ (import rigletPath enhancedInputs.self) ];
   };
 
   riglets = concatMapAttrs (
@@ -50,8 +67,8 @@ let
       )
   ) (if pathExists rigletsDir then builtins.readDir rigletsDir else { });
 
-  rigupTomlPath = inputs.self + "/rigup.toml";
-  rigupLocalTomlPath = inputs.self + "/rigup.local.toml";
+  rigupTomlPath = enhancedInputs.self + "/rigup.toml";
+  rigupLocalTomlPath = enhancedInputs.self + "/rigup.local.toml";
 
   baseTomlContents = if pathExists rigupTomlPath then fromTOML (readFile rigupTomlPath) else { };
   localTomlContents =
@@ -109,7 +126,9 @@ let
   rigletsSpecToModules =
     rigletsSpec:
     concatLists (
-      attrValues (mapAttrs (input: names: map (n: inputs.${input}.riglets.${n}) names) rigletsSpec)
+      attrValues (
+        mapAttrs (input: names: map (n: enhancedInputs.${input}.riglets.${n}) names) rigletsSpec
+      )
     );
 
   # Build rigs for all systems
@@ -131,7 +150,7 @@ let
               builtins.head baseInputs;
           baseRigName = rigDef.extends.${baseInput};
         in
-        inputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
+        enhancedInputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
           newName = name;
           extraModules = modules;
         }

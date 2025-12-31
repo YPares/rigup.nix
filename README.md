@@ -7,7 +7,7 @@
 A _riglet_ is _executable knowledge_:
 
 - metadata to indicate to your agent what this riglet is for and when it is useful to consult it
-- a set of operations, instructions, processes, a.k.a a new [skill](https://code.claude.com/docs/en/skills) for your agent. These instructions are _lazily_ loaded: your agent reads them when it needs to, or is prompted to
+- a set of operations, instructions, processes, a.k.a a new [Skill](https://code.claude.com/docs/en/skills) for your agent. As with Skills, these instructions are _lazily_ loaded: your agent reads them when it needs to, or is prompted to
 - the tools (nix packages) needed to execute these instructions
 - the configuration for these tools (if any)
 
@@ -15,7 +15,7 @@ By combining the relevant riglets together, you build your agent's _rig_: the to
 
 `rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies. The "main entrance" to the rig will be the `RIG.md` manifest that rigup will generate for your AI agent to read, and through which it will discover all the available tools, knowledge and processes to follow.
 
-In short, `rigup` is **parametrable agent skills + lightweight home management** for your agent.
+In short, `rigup` is **parametrable agent skills + lightweight home management** for your agent, with a high-level of interoperability with Claude Skills and Claude plugin marketplaces, so reusing published Skills as basis for riglets is made as easy as possible.
 
 ## Quick start
 
@@ -77,7 +77,7 @@ rigup new foo [-t minimal]
 cd foo
 ```
 
-This creates a `./foo` folder, initializes it as a git repo, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig, adds all the files to git tracking (_important_), and finally runs `nix flake check` on the result to make sure everything is in order.
+This creates a `./foo` folder, initializes it as a git repo, calls `nix flake init` to create a basic project structure with a `flake.nix` and example riglets and rigs, adds all the files to git tracking (_important_), and finally runs `nix flake check` on the result to make sure everything is in order.
 
 ```bash
 # List available riglets from flake's self and inputs
@@ -93,7 +93,9 @@ cat .rigup/default/RIG.md
 rigup shell ".#default"
 ```
 
-Edit `riglets/my-first-riglet.nix` (if using default template) and `rigup.toml` to customize them.
+Edit `riglets/*.nix` and `rigup.toml` to customize the project.
+
+The default template includes some example riglets and shows how `rigup` supports using a Claude Marketplace as a direct input, to import pre-existing Skills and use them as a basis for riglets.
 
 ## Deeper dive
 
@@ -372,6 +374,9 @@ Although, prefer splitting you rigs' definitions in separate Nix files rather th
 
 - **Data-driven config:** `rigup.toml` for CLI-manageable rigs
 - **Auto-discovery:** Riglets from `riglets/` automatically exposed
+- **Compatibility with Skills and Claude Marketplaces:**
+  - Directly import Claude Marketplace repos as inputs and use provided skills as basis for new riglets
+  - Riglet documentation follows as much as possible the Skills structure and conventions to facilitate reusability
 - **Type-checked metadata:** Nix validates riglet structure
 - **Lazily readable documentation:** Skills-style SKILL.md + references/
 - **Declarative composition:** Module system for riglet interaction
