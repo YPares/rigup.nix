@@ -104,8 +104,8 @@ let
 
   # Generate a RIG.md manifest file from riglet metadata and docs
   # See lib/genManifest.nix for full documentation
-  # Argument already set: pkgs, name, meta, docRoot
-  # Optional extra args: shownDocRoot, shownToolRoot, shownActivationScript
+  # Pre-sets the flake.lib.genManifest args
+  # Optional extra args left unset: shownDocRoot, shownToolRoot, shownActivationScript
   genManifest =
     args:
     flake.lib.genManifest (
@@ -122,17 +122,14 @@ let
       // args
     );
 
+  entrypoint =
+    if evaluated.config.entrypoint != null then evaluated.config.entrypoint baseRig else null;
+
   # Complete agent home directory
   home = pkgs.runCommand "${name}-home" { } ''
     mkdir -p $out
-
-    # Symlink tools
     ln -s ${toolRoot} $out/.local
-
-    # Symlink config
     ln -s ${configRoot} $out/.config
-
-    # Symlink docs
     ln -s ${docRoot} $out/docs
 
     cat > $out/activate.sh <<EOF
@@ -140,9 +137,8 @@ let
     export XDG_CONFIG_HOME="$out/.config"
     EOF
 
-    # Add RIG.md manifest at top level
-    # The manifest will mention tools and docs by relative path for brevity
     ln -s ${
+      # The manifest will mention tools and docs by relative path for brevity
       genManifest {
         shownActivationScript = "./activate.sh";
         shownDocRoot = "./docs";
@@ -150,50 +146,64 @@ let
         shownConfigRoot = "./.config";
       }
     } $out/RIG.md
+
+    ${optionalString (entrypoint != null) ''
+      ln -s "${entrypoint}" $out/entrypoint
+    ''}
   '';
 
   # Development shell with rig environment
-  shell = pkgs.mkShell {
-    name = "${name}-shell";
-
-    # Packages available in the shell. Sets PATH
-    packages = [ toolRoot ];
-
-    # Other environment variables
-    XDG_CONFIG_HOME = configRoot;
-    RIG_DOCS = docRoot;
-    # The manifest will elude docs full paths via env var for brevity
-    RIG_MANIFEST = genManifest {
-      shownDocRoot = "$RIG_DOCS";
+  shell =
+    let
+      env = {
+        XDG_CONFIG_HOME = configRoot;
+        RIG_DOCS = docRoot;
+        # The manifest will elude docs full paths via env var for brevity
+        RIG_MANIFEST = genManifest {
+          shownDocRoot = "$RIG_DOCS";
+        };
+      }
+      // optionalAttrs (entrypoint != null) {
+        RIG_ENTRYPOINT = pkgs.lib.getExe entrypoint;
+      };
+    in
+    pkgs.mkShell {
+      inherit name;
+      # Packages available in the shell. Sets PATH
+      packages = [ toolRoot ];
+      # Other environment variables
+      inherit env;
+      # Runs when entering the shell
+      shellHook =
+        let
+          green = "\\033[0;32m";
+          blue = "\\033[0;34m";
+          yellow = "\\033[0;33m";
+          reset = "\\033[0m";
+        in
+        ''
+          if [ -z "$RIGUP_NO_BANNER" ]; then
+          printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤\n\n"
+          echo "                    ───    ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌┬╮    ───"
+          echo "                    ──     ├┼╯ │ │ ├ ┬ : │││ ├─╯     ──"
+          echo "                    ───    ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵      ───"
+          printf "${reset}\n"
+          printf "  ${blue}Now in environment for rig \"${name}\".${reset}\n"
+          printf "  ${yellow}\$RIG_MANIFEST${reset} contains the path of the ${green}RIG.md${reset} that your agent shoud\n"
+          printf "  read first and foremost.\n"
+          printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n"
+          ${optionalString (entrypoint != null) ''
+            printf "  ${yellow}\$RIG_ENTRYPOINT${reset} exposes the rig entrypoint (${green}${entrypoint.name}${reset}).\n"
+          ''}
+          echo ""
+          printf "  ${blue}Other env vars set:${reset}\n"
+          printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n"
+          printf "  ${yellow}RIG_DOCS${reset}=\"$RIG_DOCS\"\n"
+          echo ""
+          printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤${reset}\n"
+          fi
+        '';
     };
-
-    # Runs when entering the shell
-    shellHook =
-      let
-        green = "\\033[0;32m";
-        blue = "\\033[0;34m";
-        yellow = "\\033[0;33m";
-        reset = "\\033[0m";
-      in
-      ''
-        if [ -z "$RIGUP_NO_BANNER" ]; then
-        printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤\n\n"
-        echo "                    ───    ╭─╮ ╶┬╴ ╭─╮   ╷ ╷ ┌┬╮    ───"
-        echo "                    ──     ├┼╯ │ │ ├ ┬ : │││ ├─╯     ──"
-        echo "                    ───    ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵      ───"
-        printf "${reset}\n"
-        printf "  ${blue}Now in environment for rig \"${name}\".${reset}\n"
-        printf "  ${yellow}\$RIG_MANIFEST${reset} contains the path of the ${green}RIG.md${reset} that your agent shoud\n"
-        printf "  read first and foremost.\n"
-        printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n\n"
-        printf "  ${blue}Other env vars set:${reset}\n"
-        printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n"
-        printf "  ${yellow}RIG_DOCS${reset}=\"$RIG_DOCS\"\n"
-        echo ""
-        printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤${reset}\n"
-        fi
-      '';
-  };
 
   extend =
     {
@@ -222,9 +232,9 @@ let
   };
 in
 baseRig
-// optionalAttrs (evaluated.config.entrypoint != null) {
-  entrypoint = evaluated.config.entrypoint baseRig;
-}
 // {
   inherit extend;
+}
+// optionalAttrs (entrypoint != null) {
+  inherit entrypoint;
 }
