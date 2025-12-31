@@ -15,7 +15,7 @@ By combining the relevant riglets together, you build your agent's _rig_: the to
 
 `rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies. The "main entrance" to the rig will be the `RIG.md` manifest that rigup will generate for your AI agent to read, and through which it will discover all the available tools, knowledge and processes to follow.
 
-In short, `rigup` is **parametrable agent skills + lightweight home management for your agent.
+In short, `rigup` is **parametrable agent skills + lightweight home management** for your agent.
 
 ## Quick start
 
