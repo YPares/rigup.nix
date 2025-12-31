@@ -52,7 +52,7 @@ let
     else
       statusWarnings.${rigletMeta.status} or null;
 
-  # Generate XML TOC from SKILL.md using extract-md-toc tool
+  # Generate table of contents from SKILL.md using extract-md-toc
   # shallow=true: level 1-2 headings only
   # shallow=false: all headings
   generateToc =
@@ -161,12 +161,12 @@ pkgs.writeTextFile {
     ''}
     ${optionalString (shownConfigRoot != null) ''
       **Configuration:**
-      - Config files for tools following the XDG Base Directory Specification is in `${shownConfigRoot}/`. You should NOT have to care about it, ${
+      - Config files for tools following the XDG Base Directory Specification are in `${shownConfigRoot}/`. You should NOT have to care about them, ${
         if (shownActivationScript != null) then
           "activation script should take care of that"
         else
           "needed env vars are already set up"
-      }, it is only mentioned for troubleshooting purposes
+      }, this is only mentioned for troubleshooting purposes
     ''}
     ## Error Cases
 

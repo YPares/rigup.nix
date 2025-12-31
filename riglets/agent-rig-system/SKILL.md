@@ -322,6 +322,8 @@ This riglet (`agent-rig-system`) comes with a few tools to help browsing documen
  It can also be used to extract a similar ToC out of ANY Markdown file: e.g. `extract-md-toc foo.md --max-level 3` will show all headers from `#` to `###` with their line numbers.
  It can also read from stdin: `extract-md-toc - < foo.md`
 
+See `references/extract-md-toc.md` for more info.
+
 #### Usual Browsing/Grepping Commands
 
 Some usual commands come along with this riglet (as they might not exist on every system):

@@ -97,9 +97,7 @@ rec {
         let
           contents = builtins.readDir folderPath;
           # Keep directories and files with allowed extensions
-          filtered = filterAttrs (
-            name: type: type == "directory" || (type == "regular" && hasAllowedExt name)
-          ) contents;
+          filtered = filterAttrs (name: type: type == "directory" || hasAllowedExt name) contents;
         in
         mapAttrs (
           name: type:
