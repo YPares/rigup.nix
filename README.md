@@ -13,9 +13,9 @@ A _riglet_ is _executable knowledge_:
 
 By combining the relevant riglets together, you build your agent's _rig_: the tools it needs to work on your project, and the operational knowledge it needs to use those tools properly and efficiently.
 
-`rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies
+`rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies. The "main entrance" to the rig will be the `RIG.md` manifest that rigup will generate for your AI agent to read, and through which it will discover all the available tools, knowledge and processes to follow.
 
-In short, `rigup` is **parametrable agent skills + lightweight [home management](https://github.com/nix-community/home-manager)** for your agent.
+In short, `rigup` is **parametrable agent skills + lightweight home management for your agent.
 
 ## Quick start
 
@@ -33,11 +33,18 @@ If already installed, update with:
 nix profile upgrade rigup
 ```
 
-This CLI tool makes it easier to build rigs or open them as subshells, and to get information about available riglets.
+This CLI tool makes it easier to:
+
+- get information about riglets and rigs exposed by a flake and its inputs (`rigup show`)
+- build a full rig as a folder of symlinks (`rigup build`)
+- start a rig as a subshell with `$PATH`, `$XDG_CONFIG_HOME` and `$RIG_MANIFEST` (path to the `RIG.md`) set up (`rigup shell`)
+- directly start a coding agent harness (`rigup run`) if your rig contains a riglet that provides an _entrypoint_. Entrypoints act as connectors, wrapping a harness executable to start it with the appropriate config
+
+(Note all these commands are just wrappers, provided for convenience, around the rigup Nix library. So you may still do everything with the usual `nix {build,develop,run}` commands if you prefer)
 
 You can then create a new project from the templates provided by this repository, or even directly build the example rig defined here.
 
-### Use a rig from this project (or any other project using `rigup`)
+### Use a rig from this project (or any other repo using `rigup`)
 
 This project defines example riglets, and an example rig combining them.
 
@@ -70,7 +77,7 @@ rigup new foo [-t minimal]
 cd foo
 ```
 
-This creates a `./foo` folder and initializes as a git repo, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig, adds all the files to git tracking (**important**), and finally runs `nix flake check` on the result to make sure everything is in order.
+This creates a `./foo` folder, initializes it as a git repo, calls `nix flake init` to create a basic project structure with a `flake.nix`, an example riglet and an example rig, adds all the files to git tracking (_important_), and finally runs `nix flake check` on the result to make sure everything is in order.
 
 ```bash
 # List available riglets from flake's self and inputs
@@ -95,7 +102,6 @@ This section covers the general workflow of defining and editing riglets and rig
 ### Creating a riglet
 
 Riglets are a simple use case of [Nix modules](https://nix.dev/tutorials/module-system/a-basic-module/).
-
 Concretely, this means a riglet (in its most general form) is a `(config, dependencies) -> data` Nix function, where:
 
 - `config` is the final config of the rig which the riglet is part of,
@@ -208,7 +214,7 @@ This is useful to break up a riglet into various Nix or raw text files to make i
 
 #### Inter-riglet dependencies
 
-If a riglet depends on another (e.g., builds on its concepts or requires its tools), use `imports` with `self.riglets.*`:
+If a riglet depends on another (for instance because it builds on its concepts or requires its tools or configuration), use `imports` with `self.riglets.*`:
 
 ```nix
 # riglets/advanced-riglet.nix
