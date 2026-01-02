@@ -33,7 +33,7 @@ self:
         "nix"
         "modules"
       ];
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
       disclosure = "deep-toc";
     };

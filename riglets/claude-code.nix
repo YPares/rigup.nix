@@ -60,7 +60,7 @@ in
       description = "Provides entrypoint to launch Claude Code with rig context";
       intent = "base";
       disclosure = "none";
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
     };
   };

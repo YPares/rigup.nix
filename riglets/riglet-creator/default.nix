@@ -31,7 +31,7 @@ self:
         "creation"
         "skills"
       ];
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
     };
 
