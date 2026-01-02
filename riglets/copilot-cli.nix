@@ -32,11 +32,13 @@ in
       export RIG_DOCS="${rig.docRoot}"
       export RIG_MANIFEST="${manifestPath}"
 
-      warn() {
-        printf "\033[0;33m%s\n\033[0m" "$1" >&2
-      }
-
-      warn "NOTE: copilot-cli doesn't support startup hooks, first instruct your agent to read \$RIG_MANIFEST"
+      # copilot-cli automatically loads AGENTS.md from custom instruction directories
+      # COPILOT_CUSTOM_INSTRUCTIONS_DIRS is a comma-separated list of additional dirs
+      export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="${
+        riglib.writeFileTree {
+          "AGENTS.md" = manifestPath;
+        }
+      }"
 
       exec ${pkgs.lib.getExe copilot-cli} \
         ${pkgs.lib.concatStringsSep " " (map (t: "--allow-tool 'shell(${t}:*)'") rig.commandNames)} \
