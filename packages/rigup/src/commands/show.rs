@@ -66,15 +66,6 @@ fn display_riglet(
     let branch = if is_last { "└─" } else { "├─" };
     let continuation = if is_last { "   " } else { " │ " };
 
-    // Color-code status
-    let status_str = match meta.status.as_str() {
-        "stable" => meta.status.green().to_string(),
-        "experimental" => meta.status.yellow().to_string(),
-        "deprecated" | "draft" => meta.status.red().to_string(),
-        "example" => meta.status.cyan().to_string(),
-        _ => meta.status.clone(),
-    };
-
     let entrypoint_flag = if meta.entrypoint.is_some() {
         format!(" {}", "entrypoint".magenta())
     } else {
@@ -83,18 +74,24 @@ fn display_riglet(
 
     writeln!(
         output,
-        "{prefix} {branch} {name} ({version}) {status} {intent}{entrypoint}{disclosure}{broken}",
+        "{prefix} {branch} {name} ({version}) {intent}{entrypoint}{status}{disclosure}{broken}",
         prefix = prefix,
         branch = branch,
         name = name.cyan().to_string(),
         version = meta.version,
         intent = meta.intent.blue(),
-        status = status_str,
         entrypoint = entrypoint_flag,
+        status = match meta.status.as_str() {
+            "experimental" => format!(" {}", meta.status.yellow()),
+            "deprecated" | "draft" => format!(" {}", meta.status.red()),
+            "example" => format!(" {}", meta.status.cyan()),
+            _ => String::new(),
+        },
         disclosure = match meta.disclosure.as_str() {
-            "none" => " [undisclosed]",
-            "lazy" => "",
-            _ => &format!(" [{}]", meta.disclosure),
+            "lazy" => String::new(),
+            "none" if meta.intent == "base" => String::new(), // "base" riglets are always undisclosed
+            "none" => format!(" {}", " undisclosed".green()),
+            _ => format!(" {}", meta.disclosure.green()),
         },
         broken = if meta.broken { " BROKEN" } else { "" }.red().bold()
     )
