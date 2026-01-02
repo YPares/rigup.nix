@@ -75,15 +75,22 @@ fn display_riglet(
         _ => meta.status.clone(),
     };
 
+    let entrypoint_flag = if meta.entrypoint.is_some() {
+        format!(" {}", "entrypoint".magenta())
+    } else {
+        String::new()
+    };
+
     writeln!(
         output,
-        "{prefix} {branch} {name} ({version}) {status} {intent}{disclosure}{broken}",
+        "{prefix} {branch} {name} ({version}) {status} {intent}{entrypoint}{disclosure}{broken}",
         prefix = prefix,
         branch = branch,
         name = name.cyan().to_string(),
         version = meta.version,
         intent = meta.intent.blue(),
         status = status_str,
+        entrypoint = entrypoint_flag,
         disclosure = match meta.disclosure.as_str() {
             "none" => " [undisclosed]",
             "lazy" => "",
@@ -142,6 +149,10 @@ fn display_riglet(
                 writeln!(output, "{}", line).into_diagnostic()?;
             }
         }
+    }
+
+    if let Some(program) = &meta.entrypoint {
+        writeln!(output, "{}Entrypoint: {}", item_prefix, program.italic()).into_diagnostic()?;
     }
 
     if !meta.when_to_use.is_empty() {

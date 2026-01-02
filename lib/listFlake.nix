@@ -17,18 +17,23 @@ let
       # Extract riglets metadata
       rigletsData =
         if input ? riglets && builtins.isAttrs input.riglets then
-          let
-            # Build a temporary rig with all riglets from this input
-            tempRig = rigupFlake.lib.buildRig {
-              name = "temp-discovery-${inputName}";
-              inherit pkgs;
-              modules = builtins.attrValues input.riglets;
-            };
-            # Only include riglets that were directly defined in this input,
-            # not those that were pulled in via imports
-            directRigletNames = builtins.attrNames input.riglets;
-          in
-          pkgs.lib.filterAttrs (name: _meta: builtins.elem name directRigletNames) tempRig.meta
+          # Build one temp rig per riglet to extract its metadata in isolation
+          builtins.mapAttrs (
+            rigletName: rigletModule:
+            let
+              # Build a rig with only this riglet (and its imports if it has any)
+              tempRig = rigupFlake.lib.buildRig {
+                name = "tmp-rig-${inputName}-${rigletName}";
+                inherit pkgs;
+                modules = [ rigletModule ];
+              };
+            in
+            # Extract this riglet's metadata from the rig, and add entrypoint info
+            tempRig.meta.${rigletName}
+            // {
+              entrypoint = if tempRig ? "entrypoint" then tempRig.entrypoint.name else null;
+            }
+          ) input.riglets
         else
           { };
 

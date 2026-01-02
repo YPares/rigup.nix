@@ -21,6 +21,8 @@ pub struct RigletMeta {
     pub when_to_use: Vec<String>,
     #[serde(rename = "commandNames", default)]
     pub command_names: Vec<String>,
+    #[serde(default)]
+    pub entrypoint: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
