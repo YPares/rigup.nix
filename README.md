@@ -396,11 +396,11 @@ But this allows riglets to perform things that Skills just cannot do:
 - explicitly depend on one another (as we previously saw), to make sure critical background knowledge is always accessible _if needed_, and not simply assumed to be part of the LLM's training dataset
 - specify _how_ they should be disclosed to an agent. Not all skills are equal, some contain critical information which you want to be very upfront about, others are more like "just in case" tips and tricks. That's what the `meta.disclosure` field is about
 - document ahead-of-time the quality of the knowledge they contain. Has it been battle tested quite a few times and proven useful? Could it still benefit from some proofreading or clarifications? That's what the `meta.status` field is for. Agents, just like humans, can make much better decisions if they know how much trust they can put in an information source. It's always safer to progress on shaky ground when you _know_ the ground is shaky
-- provide an general framework for _agent configuration_ and not just Markdown docs: riglets are Nix modules, and the main goal of Nix modules is to set up configuration in a modular and reusable fashion.
-  Riglets are no different, it's just that the biggest part of an AI agent's "config" happens to be human-readable documentation, which is why the focus so far has been on documentation.
+- provide a general framework for _agent configuration_ besides just Markdown docs: riglets are Nix modules, and the main goal of Nix modules is to set up configuration in a modular and reusable fashion.
+  Riglets are no different, it's just that the biggest part of an AI agent's "config" happens to be human-readable documentation, which is why the focus so far has been on packaging docs.
   But riglets can have `meta.intent = "base"`: this is for riglets that should remain transparent to the agent while still interacting with the rig, e.g. to provide tools or plain old JSON or TOML config files.
   `rigup` enforces that `base` riglets are NOT disclosed to the agent.
-  This allows the most important tool of the rig, the agent's harness, to be expressed, used and shared _as part of the rig too_.
+  This notably allows the most important tool of the rig, the agent's harness, to be expressed, packaged and used _just like any other part of the rig_.
 
 ## Features
 
