@@ -1,7 +1,7 @@
 self:
 { pkgs, ... }:
 let
-  plugin = self.inputs.anthropic-skills.claudePlugins.example-skills;
+  plugin = self.inputs.anthropics-skills.claudePlugins.example-skills;
   skill = plugin.skills.algorithmic-art;
 in
 {

@@ -9,7 +9,7 @@
     # (i.e. which have a `.claude-plugin/marketplace.json` file),
     # and special-cases them so their skills can be imported to create riglets
     # See `riglets/{algorithmic-art,frontend-design}.nix` in this repo
-    anthropic-skills = {
+    anthropics-skills = {
       url = "github:anthropics/skills";
       flake = false;
     };
