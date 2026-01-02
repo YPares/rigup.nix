@@ -32,7 +32,11 @@ in
       export RIG_DOCS="${rig.docRoot}"
       export RIG_MANIFEST="${manifestPath}"
 
-      printf "\033[0;33m%s\n\033[0m" "NOTE: copilot-cli doesn't support startup hooks, first instruct your agent to read \$RIG_MANIFEST" >&2
+      warn() {
+        printf "\033[0;33m%s\n\033[0m" "$1" >&2
+      }
+
+      warn "NOTE: copilot-cli doesn't support startup hooks, first instruct your agent to read \$RIG_MANIFEST"
 
       exec ${pkgs.lib.getExe copilot-cli} \
         ${pkgs.lib.concatStringsSep " " (map (t: "--allow-tool 'shell(${t}:*)'") rig.commandNames)} \
