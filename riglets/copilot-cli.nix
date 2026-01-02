@@ -13,7 +13,10 @@ in
   config.entrypoint =
     rig:
     let
-      manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
+      instructionsDir = riglib.writeFileTree {
+        "AGENTS.md" = rig.genManifest { shownDocRoot = "./docs"; };
+        docs = rig.docRoot;
+      };
 
       # Wrap all rig tools to inject environment variables
       # This way copilot-cli itself doesn't see XDG_CONFIG_HOME (needs writable config),
@@ -25,27 +28,37 @@ in
           XDG_CONFIG_HOME = rig.configRoot;
         };
       };
+
+      copilotArgs =
+        with pkgs.lib;
+        concatMap (cmd: [
+          "--allow-tool"
+          "shell(${cmd}:*)"
+        ]) rig.commandNames
+        ++
+          concatMap
+            (dir: [
+              "--add-dir"
+              dir
+            ])
+            [
+              instructionsDir
+              rig.toolRoot
+              rig.configRoot
+            ];
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "copilot" ''
       export PATH="${wrappedTools}/bin:$PATH"
-      export RIG_DOCS="${rig.docRoot}"
-      export RIG_MANIFEST="${manifestPath}"
 
       # copilot-cli automatically loads AGENTS.md from custom instruction directories
       # COPILOT_CUSTOM_INSTRUCTIONS_DIRS is a comma-separated list of additional dirs
-      export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="${
-        riglib.writeFileTree {
-          "AGENTS.md" = manifestPath;
-        }
-      }"
+      export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="${instructionsDir}"
 
-      exec ${pkgs.lib.getExe copilot-cli} \
-        ${pkgs.lib.concatStringsSep " " (map (t: "--allow-tool 'shell(${t}:*)'") rig.commandNames)} \
-        --add-dir "${rig.docRoot}" \
-        --add-dir "${rig.toolRoot}" \
-        --add-dir "${rig.configRoot}" \
-        "$@"
+      # For later reference, if needed
+      export RIG_MANIFEST="${instructionsDir}/AGENTS.md"
+
+      exec ${pkgs.lib.getExe copilot-cli} ${pkgs.lib.escapeShellArgs copilotArgs} "$@"
     '';
 
   config.riglets.copilot-cli = {
