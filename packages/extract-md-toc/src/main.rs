@@ -78,15 +78,21 @@ fn main() {
         })
     };
 
-    extract_toc(&content, max_level);
+    let entries = extract_toc(&content, max_level);
+
+    // Output entries
+    for (line_num, text) in entries {
+        println!("Line {}: {}", line_num, text);
+    }
 }
 
-fn extract_toc(content: &str, max_level: Option<u8>) {
+fn extract_toc(content: &str, max_level: Option<u8>) -> Vec<(usize, String)> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_FOOTNOTES);
     options.insert(Options::ENABLE_STRIKETHROUGH);
     options.insert(Options::ENABLE_TASKLISTS);
+    options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
 
     let parser = Parser::new_ext(content, options).into_offset_iter();
     let mut entries = Vec::new();
@@ -134,10 +140,7 @@ fn extract_toc(content: &str, max_level: Option<u8>) {
         }
     }
 
-    // Output entries
-    for (line_num, text) in entries {
-        println!("Line {}: {}", line_num, text);
-    }
+    entries
 }
 
 fn offset_to_line_number(content: &str, offset: usize) -> usize {
@@ -167,14 +170,39 @@ More text
 ### Subsection 1.1
 ## Section 2
 "#;
-        extract_toc(markdown, None);
-        // This will print to stdout, but we can verify it doesn't panic
+        let entries = extract_toc(markdown, None);
+        assert_eq!(entries.len(), 4);
+        assert_eq!(entries[0], (1, "# Title".to_string()));
+        assert_eq!(entries[1], (3, "## Section 1".to_string()));
+        assert_eq!(entries[2], (5, "### Subsection 1.1".to_string()));
+        assert_eq!(entries[3], (6, "## Section 2".to_string()));
     }
 
     #[test]
     fn test_extract_toc_with_max_level() {
         let markdown = "# Title\n## Section\n### Subsection\n";
-        extract_toc(markdown, Some(2));
+        let entries = extract_toc(markdown, Some(2));
         // Should extract "# Title" and "## Section", but not "### Subsection"
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0], (1, "# Title".to_string()));
+        assert_eq!(entries[1], (2, "## Section".to_string()));
+    }
+
+    #[test]
+    fn test_yaml_frontmatter_not_treated_as_heading() {
+        let markdown = r#"---
+title: Test Document
+author: Test Author
+---
+
+# Real Heading 1
+## Real Heading 2
+"#;
+        let entries = extract_toc(markdown, None);
+        // The YAML frontmatter delimiters (---) should not be treated as headings
+        // Should only extract the real headings, not the frontmatter delimiters
+        assert_eq!(entries.len(), 2);
+        assert_eq!(entries[0], (6, "# Real Heading 1".to_string()));
+        assert_eq!(entries[1], (7, "## Real Heading 2".to_string()));
     }
 }
