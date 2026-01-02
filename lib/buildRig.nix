@@ -8,6 +8,7 @@ flake:
 #   - docAttrs: attrset of riglet name -> doc folder derivation
 #   - docRoot: combined riglet docs, one subfolder per riglet (via symlinks)
 #   - meta: attrset of riglet name -> metadata
+#   - configOptions: serializable nested attrset of option name -> option info (description, type, default, value)
 #   - home: complete rig directory (RIG.md + bin/ + docs/ + .config/)
 #   - shell: complete rig, in devShell form (slightly different manifest
 #            to directly read from nix store instead of local symlinks)
@@ -219,6 +220,124 @@ let
   # All command names of all tools through the rig
   commandNames = unique (flatten (map (rigletMeta: rigletMeta.commandNames) (attrValues meta)));
 
+  # Check if a value can be safely serialized
+  # Returns true if the value is not a function, derivation, or path
+  canSerialize =
+    val:
+    !(
+      builtins.isFunction val
+      || (builtins.isAttrs val && val ? type && val.type == "derivation")
+      || builtins.isPath val
+    );
+
+  # Convert an option to a serializable format for inspection
+  serializeOption =
+    opt:
+    let
+      # Get type name, handling nested types
+      getTypeName =
+        t:
+        if t ? name then
+          t.name
+        else if t ? description then
+          t.description
+        else
+          "unknown";
+
+      # Extract enum values if this is an enum type
+      enumValues =
+        if opt ? type && opt.type ? functor && opt.type.functor ? payload then
+          # For enum types, payload is { values = [...]; }
+          if opt.type.functor.payload ? values then
+            opt.type.functor.payload.values
+          else
+            opt.type.functor.payload
+        else
+          null;
+    in
+    {
+      description = opt.description or null;
+      type = getTypeName (opt.type or { });
+      isDefined = opt.isDefined or false;
+      # Only include default if it exists and can be serialized
+      default = if opt ? default && canSerialize opt.default then opt.default else null;
+      # Similarly for value
+      value = if opt.isDefined or false && opt ? value && canSerialize opt.value then opt.value else null;
+      # Include enum values if available
+      enumValues = if enumValues != null && builtins.isList enumValues then enumValues else null;
+    };
+
+  # Check if a type involves functions (recursively)
+  typeInvolvesFunctions =
+    t:
+    if !builtins.isAttrs t then
+      false
+    else if t ? name && t.name == "functionTo" then
+      true
+    else if t ? nestedTypes && builtins.isList t.nestedTypes then
+      # For types like nullOr, oneOf, etc. that have nested types as a list
+      builtins.any typeInvolvesFunctions t.nestedTypes
+    else if t ? elemType then
+      # For types that have a single nested type (like listOf, attrsOf, etc.)
+      typeInvolvesFunctions t.elemType
+    else
+      false;
+
+  # Recursively serialize the options tree, skipping certain internal options
+  serializeOptionsTree =
+    opts:
+    let
+      # Skip internal/system options that aren't user-facing
+      # Also skip known function-typed options and options with non-serializable types
+      shouldSkip =
+        name: opt:
+        # Skip by name
+        builtins.elem name [
+          "_module"
+          "entrypoint" # Always a function
+          "riglets" # Internal riglet definitions (already shown in Riglets section)
+        ]
+        # Skip by type
+        || (
+          opt ? _type
+          && opt._type == "option"
+          && opt ? type
+          && (
+            typeInvolvesFunctions opt.type
+            || (
+              opt.type ? name
+              && builtins.elem opt.type.name [
+                "package"
+                "path"
+              ]
+            )
+          )
+        );
+
+      processAttr =
+        name: opt:
+        if shouldSkip name opt then
+          null
+        else if opt ? _type && opt._type == "option" then
+          # This is a leaf option
+          serializeOption opt
+        else if opt ? options then
+          # This has nested options (like a submodule), recurse into .options
+          serializeOptionsTree opt.options
+        else if builtins.isAttrs opt then
+          # This is just an attribute group (like "agent" containing "identity")
+          # Recurse directly into it
+          serializeOptionsTree opt
+        else
+          null;
+
+      processed = mapAttrs processAttr opts;
+    in
+    filterAttrs (_: v: v != null) processed;
+
+  # Serialize the rig's config options for inspection
+  configOptions = serializeOptionsTree evaluated.options;
+
   # Build the base rig attrset (without entrypoint and extend to avoid circularity)
   baseRig = {
     inherit
@@ -232,6 +351,7 @@ let
       shell
       genManifest
       commandNames
+      configOptions
       ;
   };
 in

@@ -1,10 +1,11 @@
 mod commands;
+mod display;
 mod error;
 mod nix;
 mod types;
 
 use clap::{Parser, Subcommand};
-use commands::{build_rig, enter_shell, new_project, run_entrypoint, show_flake};
+use commands::{build_rig, enter_shell, inspect_rig, new_project, run_entrypoint, show_flake};
 use miette::Result;
 
 #[derive(Parser)]
@@ -74,6 +75,27 @@ enum Commands {
         #[arg(long)]
         no_stage: bool,
     },
+    /// Inspect a specific rig's structure and configuration
+    Inspect {
+        /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
+        ///
+        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo`, `github:user/repo#myrig`
+        flake_ref: Option<String>,
+        /// Show all details
+        ///
+        /// Adds keywords, tools, when-to-use for riglets
+        #[arg(short, long)]
+        detailed: bool,
+        /// Hide riglet descriptions
+        #[arg(short = 'D', long)]
+        no_descriptions: bool,
+        /// Disable paging through less
+        #[arg(short = 'P', long)]
+        no_pager: bool,
+        /// Disable auto-staging of rigup.local.toml
+        #[arg(long)]
+        no_stage: bool,
+    },
     /// Run a rig's entrypoint
     Run {
         /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
@@ -128,6 +150,15 @@ fn main() -> Result<()> {
                 no_descriptions,
                 no_stage,
             )?;
+        }
+        Commands::Inspect {
+            flake_ref,
+            no_pager,
+            detailed,
+            no_descriptions,
+            no_stage,
+        } => {
+            inspect_rig(flake_ref, no_pager, detailed, no_descriptions, no_stage)?;
         }
         Commands::Run {
             flake_ref,
