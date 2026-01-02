@@ -305,7 +305,7 @@ Similar to `home` and `shell`, `entrypoint` packages the whole rig as a Nix deri
 `rigup run <flake>#<rig>` executes a rig's entrypoint.
 Internally it just runs `nix run <flake>#rigs.<system>.<rig>.entrypoint`.
 
-Claude Code integration is currently available via the `claude-code-entrypoint` riglet.
+Claude Code integration is currently available via the `claude-code` riglet.
 See `references/harness-integration.md` for more details.
 
 **Advantages of using `entrypoint`:**

@@ -4,9 +4,9 @@ The rig system integrates with common AI coding agent harnesses via specialized 
 
 ## Implemented Integrations
 
-### Claude Code (`claude-code-entrypoint`)
+### Claude Code (`claude-code`)
 
-The `claude-code-entrypoint` riglet provides integration with Claude Code, the official Anthropic CLI tool. When included in a rig, it:
+The `claude-code` riglet provides integration with Claude Code, the official Anthropic CLI tool. When included in a rig, it:
 
 - Sets up `$PATH`, `$XDG_CONFIG_HOME`, and `$RIG_DOCS` environment variables with the rig's context
 - Generates Claude Code settings that automatically display the RIG manifest on startup
@@ -24,4 +24,4 @@ This is the recommended way to use rigs with Claude Code.
 
 These harnesses and others are already Nix-packaged in numtide's [llm-agents.nix flake](https://github.com/numtide/llm-agents.nix) (previously called "nix-ai-tools").
 
-The `claude-code-entrypoint` riglet serves as a reference for users and agents wishing to integrate with other harnesses.
+The `claude-code` riglet serves as a reference for users and agents wishing to integrate with other harnesses.

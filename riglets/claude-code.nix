@@ -55,9 +55,9 @@ in
       exec ${pkgs.lib.getExe claude-code} --settings "${mkSettings rig manifestPath}" "$@"
     '';
 
-  config.riglets.claude-code-entrypoint = {
+  config.riglets.claude-code = {
     meta = {
-      description = "Claude Code integration: entrypoint to launch Claude Code with rig context";
+      description = "Provides entrypoint to launch Claude Code with rig context";
       intent = "base";
       disclosure = "none";
       status = "experimental";

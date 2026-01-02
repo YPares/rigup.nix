@@ -26,7 +26,7 @@ typst.template = "simple"
 # Rig defined by extending from example-rig to add direct claude-code integration to it
 [rigs.example-rig-claude]
 extends.self = "example-rig"
-riglets.self = ["claude-code-entrypoint"]
+riglets.self = ["claude-code"]
 
 # Local (non-committed) overrides:
 # Create `rigup.local.toml` and add it to .gitignore to override config without modifying this file.
