@@ -391,16 +391,16 @@ This is why, contrary to Skills:
 
 This is notably useful when using agents to write riglets: they are not great at filling general fields like "description". They are better when their thinking is guided by a stricter schema.
 
-But this allows riglets to perform things that Skills just cannot do:
+But this enables riglets to perform things that Skills just cannot do:
 
-- explicitly depend on one another (as we previously saw), to make sure critical background knowledge is always accessible _if needed_, and not simply assumed to be part of the LLM's training dataset
-- specify _how_ they should be disclosed to an agent. Not all skills are equal, some contain critical information which you want to be very upfront about, others are more like "just in case" tips and tricks. That's what the `meta.disclosure` field is about
-- document ahead-of-time the quality of the knowledge they contain. Has it been battle tested quite a few times and proven useful? Could it still benefit from some proofreading or clarifications? That's what the `meta.status` field is for. Agents, just like humans, can make much better decisions if they know how much trust they can put in an information source. It's always safer to progress on shaky ground when you _know_ the ground is shaky
+- explicitly depend on one another (as we previously saw), to make sure critical background knowledge is always accessible _if needed_, and not simply assumed to be part of the LLM's training dataset.
+- specify _how_ they should be disclosed to an agent. Not all skills are equal, some contain critical information which you want to be very upfront about, others are "just in case" tips and tricks that should not overwhelm the agent. This is what the `meta.disclosure` field is about.
+- document ahead-of-time the quality of the knowledge they contain. Has it been battle tested quite a few times and proven useful? Could it still benefit from some proofreading or clarifications? This is what the `meta.status` field is for. Agents, just like humans, can make much better decisions if they know how much trust they can put in an information source. It is always safer to progress on shaky ground when you _know_ the ground is shaky.
 - provide a general framework for _agent configuration_ besides just Markdown docs: riglets are Nix modules, and the main goal of Nix modules is to set up configuration in a modular and reusable fashion.
   Riglets are no different, it's just that the biggest part of an AI agent's "config" happens to be human-readable documentation, which is why the focus so far has been on packaging docs.
   But riglets can have `meta.intent = "base"`: this is for riglets that should remain transparent to the agent while still interacting with the rig, e.g. to provide tools or plain old JSON or TOML config files.
-  `rigup` enforces that `base` riglets are NOT disclosed to the agent.
-  This notably allows the most important tool of the rig, the agent's harness, to be expressed, packaged and used _just like any other part of the rig_.
+  `rigup` enforces that these `base` riglets are NOT disclosed to the agent.
+  This notably enables the most important tool of the rig, the agent's harness, to be expressed, packaged and used _just like any other part of the rig_.
 
 ## Features
 
@@ -418,13 +418,13 @@ But this allows riglets to perform things that Skills just cannot do:
 
 ## TODO
 
+- Enable riglets to add MCP servers to the rig, either via auto-generated harness config via `entrypoint` riglets, and/or via [MCPLI](https://github.com/cameroncooke/mcpli)
 - Add `checks` to riglets: automated and/or through-agent testing that a riglet is working as intended
+- [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
 - More commands for the `rigup` CLI tool to conveniently view and set config values:
   - `rigup config list <flake>#<rig>`
   - `rigup config set <rig> foo.bar.qux <value>`
   - etc.
-- [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
-- More example riglets
 
 ## Related projects
 
