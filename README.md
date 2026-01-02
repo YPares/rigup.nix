@@ -142,13 +142,17 @@ _:
     # The metadata that will enable your agent to know what this riglet
     # provides and when it should be consulted
     meta = {
-      name = "My Riglet";
       intent = "cookbook";
         # 'base', 'sourcebook', 'toolbox', 'cookbook', or 'playbook':
         # what should the agent expect from this riglet: general knowledge
         # that may come useful vs. highly specific procedure(s) to follow
       description = "What this provides";
-      whenToUse = [ "When you need X" ];
+      whenToUse = [
+        "Need to know about X"
+        "Want to achieve Y"
+        "Have problems with Z"
+        ...
+      ];
       keywords = [ "search" "terms" ];
       status = "draft";
       version = "0.1.0";
@@ -370,16 +374,44 @@ This is so `rigup` can discover which riglets are defined in your `$PROJECT_ROOT
 As the above suggests, you can totally mix both options: define some simple rigs in the `rigup.toml` and some advanced ones in Nix code.
 Although, prefer splitting you rigs' definitions in separate Nix files rather than declaring everything in your `flake.nix`, the example above is just for the sake of concision.
 
+## Riglet metadata
+
+You may have noticed that riglets are a bit richer but also stricter in terms of metadata than Skills.
+This is to enforce a bit more rigidly some good documentation-writing practices, and to make critical information more upfront, both for agents reading a manifest and for humans browsing riglets provided by some source with `rigup show`.
+This contributes to the final documentation's quality without being too constraining.
+
+This is why, contrary to Skills:
+
+- a riglet must always have an **`intent`**: why it was written, what type of information it was meant to provide, what should one expect to gain when reading it.
+  This notably guides the writing process, and limits the risk of riglets becoming a mash-up of contextual info, general guidelines and specific processes.
+  Don't forget riglets can depend on one another: if some background knowledge is needed to specify some processes that an agent should follow, then rather than trying to conflate everything into one big mess, make a first `sourcebook` or `toolbox` riglet which can then be used as a dependency of subsequent `playbook` riglets.
+  This way, the background information is shared, and will always come along with the more critical knowledge.
+  Smaller, more focused riglets means more reusability.
+- a riglet has a dedicated list of use cases (`whenToUse`), which is **not** conflated with its `description`. When a riglet should "activate", i.e. when an agent should consult and follow it, is probably the most critical piece of information about it, and thus warrants a dedicated field
+
+This is notably useful when using agents to write riglets: they are not great at filling general fields like "description". They are better when their thinking is guided by a stricter schema.
+
+But this allows riglets to perform things that Skills just cannot do:
+
+- explicitly depend on one another (as we previously saw), to make sure critical background knowledge is always accessible _if needed_, and not simply assumed to be part of the LLM's training dataset
+- specify _how_ they should be disclosed to an agent. Not all skills are equal, some contain critical information which you want to be very upfront about, others are more like "just in case" tips and tricks. That's what the `meta.disclosure` field is about
+- document ahead-of-time the quality of the knowledge they contain. Has it been battle tested quite a few times and proven useful? Could it still benefit from some proofreading or clarifications? That's what the `meta.status` field is for. Agents, just like humans, can make much better decisions if they know how much trust they can put in an information source. It's always safer to progress on shaky ground when you _know_ the ground is shaky
+- provide an general framework for _agent configuration_ and not just Markdown docs: riglets are Nix modules, and the main goal of Nix modules is to set up configuration in a modular and reusable fashion.
+  Riglets are no different, it's just that the biggest part of an AI agent's "config" happens to be human-readable documentation, which is why the focus so far has been on documentation.
+  But riglets can have `meta.intent = "base"`: this is for riglets that should remain transparent to the agent while still interacting with the rig, e.g. to provide tools or plain old JSON or TOML config files.
+  `rigup` enforces that `base` riglets are NOT disclosed to the agent.
+  This allows the most important tool of the rig, the agent's harness, to be expressed, used and shared _as part of the rig too_.
+
 ## Features
 
+- **Declarative composition:** Module system for riglet interaction
 - **Data-driven config:** `rigup.toml` for CLI-manageable rigs
-- **Auto-discovery:** Riglets from `riglets/` automatically exposed
+- **Auto-discovery:** Riglets from `riglets/` automatically exposed, as well as rigs from `rigup.toml`
 - **Compatibility with Skills and Claude Marketplaces:**
   - Directly import Claude Marketplace repos as inputs and use provided skills as basis for new riglets
   - Riglet documentation follows as much as possible the Skills structure and conventions to facilitate reusability
+- **Plug-and-play integration with common agent harnesses:** via riglets defining an `entrypoint` derivation
 - **Type-checked metadata:** Nix validates riglet structure
-- **Lazily readable documentation:** Skills-style SKILL.md + references/
-- **Declarative composition:** Module system for riglet interaction
 - **Auto-generated manifests:** RIG.md lists all capabilities
 - **Reproducible:** Nix ensures consistent tool versions
 - **Self-documenting:** Riglets like `agent-rig-system`, `riglet-creator`, and `nix-module-system` teach agents how the system works — so they can help you write Nix and extend your rig. Learn Nix as a side effect, with AI assistance.
