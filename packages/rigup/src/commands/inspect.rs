@@ -149,7 +149,7 @@ fn display_config_values(
             ConfigValue::Nested(nested) => {
                 let branch = if is_last { "└─" } else { "├─" };
 
-                writeln!(output, "{} {}┓ {}", prefix, branch, key.cyan().bold())
+                writeln!(output, "{} {}┓ {}", prefix, branch, key.italic())
                     .into_diagnostic()?;
 
                 let continuation = if is_last { "  " } else { " │" };
