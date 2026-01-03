@@ -4,7 +4,6 @@ _:
   ...
 }:
 {
-  # Define shared options at top level
   options.agent.identity = {
     name = lib.mkOption {
       type = lib.types.str;
