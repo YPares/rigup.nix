@@ -13,6 +13,12 @@ rec {
     tree:
     with pkgs.lib;
     let
+      # Check if a value should be symlinked (derivation, path, or string with path context)
+      isPathLike = value:
+        isDerivation value
+        || builtins.isPath value
+        || (builtins.isString value && builtins.hasContext value);
+
       # Recursively build file creation commands
       mkFileCommands =
         prefix: attrs:
@@ -25,8 +31,8 @@ rec {
             in
             if isAttrs value && !isDerivation value then
               mkFileCommands filepath value # Recurse into nested attrs
-            else if isDerivation value || builtins.isPath value then
-              # Symlink derivation or path to output path
+            else if isPathLike value then
+              # Symlink derivation, path, or string with path context to output path
               ''
                 mkdir -p "$out/$(dirname "${filepath}")"
                 ln -sL ${value} "$out/${filepath}"
