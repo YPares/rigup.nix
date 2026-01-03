@@ -47,8 +47,6 @@ pub struct ConfigOption {
     pub description: Option<String>,
     #[serde(rename = "type", default)]
     pub option_type: String,
-    #[serde(rename = "isDefined", default)]
-    pub is_defined: bool,
     #[serde(default)]
     pub default: Option<Value>,
     #[serde(default)]

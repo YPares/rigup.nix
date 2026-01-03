@@ -17,19 +17,22 @@ fn format_value(value: &Value) -> String {
         Value::Bool(b) => b.to_string(),
         Value::Null => "null".to_string(),
         Value::Array(arr) => {
-            if arr.is_empty() {
-                "[]".to_string()
-            } else if arr.len() <= 3 {
-                format!("[{}]", arr.iter().map(format_value).join(", "))
+            if arr.len() <= 3 {
+                format!("[{}]", arr.iter().map(format_value).join(" "))
             } else {
-                format!("[{} items]", arr.len())
+                format!("[...{} items...])", arr.len())
             }
         }
         Value::Object(obj) => {
-            if obj.is_empty() {
-                "{}".to_string()
+            if obj.len() <= 3 {
+                format!(
+                    "{{ {}}}",
+                    obj.iter()
+                        .map(|(k, v)| format!("{} = {}; ", k, format_value(v)))
+                        .join("")
+                )
             } else {
-                format!("{{...}} ({} keys)", obj.len())
+                format!("{{...{} items...}}", obj.len())
             }
         }
     }
@@ -50,23 +53,40 @@ fn display_config_option(
     let continuation = if is_last { "   " } else { " │ " };
 
     // Option name, type, and value on one line
-    let value_display = if option.is_defined {
-        if let Some(value) = &option.value {
-            format!(" = {}", format_value(value).green())
-        } else {
-            format!(" = {}", "(not set)".bright_black())
-        }
-    } else {
-        format!(" = {}", "(not set)".bright_black())
+    let value_display = match (&option.value, &option.default) {
+        (Some(value), Some(default)) if value == default => format!(
+            "{} {}",
+            format_value(value).blue(),
+            format!("({})", option.option_type).bright_black()
+        ),
+        (Some(value), Some(default)) => format!(
+            "{} {}",
+            format_value(value).yellow(),
+            format!("({}, def. {})", option.option_type, default).bright_black()
+        ),
+        (Some(value), None) => format!(
+            "{} {}",
+            format_value(value).yellow(),
+            format!("({})", option.option_type).bright_black()
+        ),
+        (None, None) => format!(
+            "{} {}",
+            "null".blue().italic(),
+            format!("({})", option.option_type).bright_black()
+        ),
+        _ => format!(
+            "{} {}",
+            "null".yellow().italic(),
+            format!("({})", option.option_type).bright_black()
+        ),
     };
 
     writeln!(
         output,
-        "{} {} {} {}{}",
+        "{} {} {} = {}",
         prefix,
         branch,
         name.cyan(),
-        format!("({})", option.option_type).bright_black(),
         value_display
     )
     .into_diagnostic()?;
@@ -91,25 +111,18 @@ fn display_config_option(
         if let Some(enum_vals) = &option.enum_values {
             if !enum_vals.is_empty() {
                 let values_str = enum_vals.iter().map(format_value).join(", ");
-                writeln!(
-                    output,
-                    "{}Possible values: {}",
-                    item_prefix,
-                    values_str.bright_black()
-                )
-                .into_diagnostic()?;
+                let wrapped = wrap_with_prefix(&values_str, &item_prefix, terminal_width);
+                for line in wrapped.lines() {
+                    match line.strip_prefix(&item_prefix) {
+                        Some(text) => {
+                            writeln!(output, "{}{}", item_prefix, text).into_diagnostic()?;
+                        }
+                        None => {
+                            writeln!(output, "{}", line).into_diagnostic()?;
+                        }
+                    }
+                }
             }
-        }
-
-        // Default value
-        if let Some(default) = &option.default {
-            writeln!(
-                output,
-                "{}Default: {}",
-                item_prefix,
-                format_value(default).bright_black()
-            )
-            .into_diagnostic()?;
         }
     }
 
