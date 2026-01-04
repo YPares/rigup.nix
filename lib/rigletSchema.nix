@@ -47,6 +47,12 @@ with pkgs.lib;
               description = "Metadata describing when and how to use this riglet";
               type = types.submodule {
                 options = {
+                  mainDocFile = mkOption {
+                    description = "Path to the docs' main file (e.g. \"SKILL.md\", \"./files/index.md\"...), relative to 'docs' root";
+                    type = types.str;
+                    default = "SKILL.md";
+                  };
+
                   description = mkOption {
                     description = "Brief description of what this riglet provides";
                     type = types.str;

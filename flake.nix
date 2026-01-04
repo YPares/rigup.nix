@@ -34,6 +34,7 @@
       # Resolve the riglets and rig defined in the project, and expose them
       (rigup {
         inherit inputs;
+        checkRiglets = true;
         checkRigs = true;
       })
 

@@ -55,6 +55,7 @@ rec {
     pkgs.writeShellScriptBin scriptName (builtins.readFile scriptPath);
 
   # Convert all files in a folder to a list of wrapped script packages
+  #
   # Usage: tools = [ x y z ] ++ riglib.useScriptFolder ./scripts
   # Returns a list where each file is wrapped via wrapScriptPath
   useScriptFolder =
@@ -72,9 +73,12 @@ rec {
     map wrapScriptPath scriptPaths;
 
   # Recursively filter a directory to keep only files with specified extensions
+  #
   # Usage: riglib.filterFileTree ["md" "txt"] ./some/dir
   # Creates: derivation containing only .md and .txt files (preserving directory structure)
-  # Extensions can be specified with or without leading dots: "md" or ".md" both work
+  # Extensions can be specified with or without leading dots, and are treated in a case-insentitive manner
+  #
+  # For more complicating filtering, use nixpkgs.lib.fileset
   filterFileTree =
     extensions: rootPath:
     with pkgs.lib;

@@ -1,20 +1,22 @@
 # rigup flake's self
 flake:
-# Generate RIG.md manifest file from rig metadata and docs
+# Generate rig manifest file from rig metadata and docs
 # Arguments:
 #   - pkgs: nixpkgs
 #   - mode: shell or home
-#   - name: the name of the rig
-#   - meta: attrset of all riglet metadata
+#   - rigName: name of the rig
+#   - rigMeta: attrset of all riglet metadata
 #   - docRoot: absolute Nix store path to the folder containing all docs of the rig
 #   - shownDocRoot: path or env var to use as the folder containing all docs, to use in the manifest. Defaults to docRoot
 #   - shownToolRoot: (Optional) path or env var to use as the folder containing bin/, lib/, share/ etc. for all tools of the rig, to indicate the agent they can if needed look for additional info under share/ and lib/
 #   - shownActivationScript: (Optional) path or env var to use as a script path that should be sourced before every command (to set env vars)
-# Returns: derivation containing RIG.md
+#   - missingDepsIsCriticalError: Bool (true by default). Whether to tell the agent to consider any missing dependency (tool or filepath mentioned) as a critical error
+#   - manifestName: (Optional) How should the manifest file refer to itself ("RIG.md" by default)
+# Returns: file derivation
 {
   pkgs,
-  name,
-  meta,
+  rigName,
+  rigMeta,
   toolRoot,
   docRoot,
   configRoot,
@@ -22,6 +24,8 @@ flake:
   shownDocRoot ? docRoot,
   shownConfigRoot ? configRoot,
   shownActivationScript ? null,
+  missingDepsIsCriticalError ? true,
+  manifestFileName ? "RIG.md",
 }:
 with builtins;
 with pkgs.lib;
@@ -41,7 +45,7 @@ let
   statusWarnings = {
     experimental = "⚠️ EXPERIMENTAL: This riglet may change or contain bugs. If you encounter issues, consult the user before proceeding.";
     draft = "⚠️ DRAFT: Incomplete riglet. Expect missing features and bugs. Always confirm with user before relying on this.";
-    deprecated = "⚠️ DEPRECATED: No longer maintained. Check RIG.md for recommended alternatives, or ask user.";
+    deprecated = "⚠️ DEPRECATED: No longer maintained. Check ${manifestFileName} for recommended alternatives, or ask user.";
     example = "ℹ️ EXAMPLE: Pedagogical riglet for demonstrating patterns. Not meant for production usage.";
   };
 
@@ -52,7 +56,7 @@ let
     else
       statusWarnings.${rigletMeta.status} or null;
 
-  # Generate table of contents from SKILL.md using extract-md-toc
+  # Generate table of contents from riglet's meta.mainDocFile using extract-md-toc
   # shallow=true: level 1-2 headings only
   # shallow=false: all headings
   generateToc =
@@ -63,53 +67,50 @@ let
 
   rigletToXml =
     rigletName: rigletMeta:
-    {
-      "@name" = rigletName;
-      "@docRoot" = "${shownDocRoot}/${rigletName}/";
-      inherit (rigletMeta) description;
-      intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
-      keywords = concatStringsSep ", " rigletMeta.keywords;
-      inherit (rigletMeta) version;
-    }
-    // (
-      let
-        warning = warningFromMeta rigletMeta;
-      in
-      optionalAttrs (warning != null) { inherit warning; }
-    )
-    // optionalAttrs (rigletMeta.whenToUse != [ ]) {
-      whenToUse.useCase = rigletMeta.whenToUse;
-    }
-    // (
-      let
-        skillMdPath = "${docRoot}/${rigletName}/SKILL.md";
-        shownSkillMdPath = "${shownDocRoot}/${rigletName}/SKILL.md";
-      in
-      if
-        elem rigletMeta.disclosure [
-          "shallow-toc"
-          "deep-toc"
-        ]
-      then
-        {
-          inlinedInfo = {
-            "@source" = shownSkillMdPath;
+    let
+      mainDocFile = "${docRoot}/${rigletName}/${rigletMeta.mainDocFile}";
+      shownMainDocFile = "${shownDocRoot}/${rigletName}/${rigletMeta.mainDocFile}";
+      mainDocFileInfo =
+        if rigletMeta.disclosure == "eager" then
+          { fullContent = "\n${readFile mainDocFile}"; }
+        else if
+          elem rigletMeta.disclosure [
+            "shallow-toc"
+            "deep-toc"
+          ]
+        then
+          {
             tableOfContents = "\n${
-              readFile (generateToc rigletName skillMdPath (rigletMeta.disclosure == "shallow-toc"))
+              readFile (generateToc rigletName mainDocFile (rigletMeta.disclosure == "shallow-toc"))
             }";
-          };
+          }
+        else
+          # lazy
+          { };
+    in
+    if !builtins.pathExists mainDocFile then
+      throw "genManifest: ${rigletName}.meta.mainDocFile (\"${rigletMeta.mainDocFile}\") not found in riglet's docs"
+    else
+      {
+        "@name" = rigletName;
+        inherit (rigletMeta) description;
+        intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
+        keywords = concatStringsSep ", " rigletMeta.keywords;
+        inherit (rigletMeta) version;
+        mainDocFile = {
+          "@source" = shownMainDocFile;
         }
-      else if rigletMeta.disclosure == "eager" then
-        {
-          inlinedInfo = {
-            "@source" = shownSkillMdPath;
-            fullContent = "\n${readFile skillMdPath}";
-          };
-        }
-      else
-        # lazy
-        { }
-    );
+        // mainDocFileInfo;
+      }
+      // (
+        let
+          warning = warningFromMeta rigletMeta;
+        in
+        optionalAttrs (warning != null) { inherit warning; }
+      )
+      // optionalAttrs (rigletMeta.whenToUse != [ ]) {
+        whenToUse.useCase = rigletMeta.whenToUse;
+      };
 
   rigToXml = rigName: {
     rigSystem = {
@@ -119,17 +120,17 @@ let
         mapAttrsToList (
           rigletName: rigletMeta:
           if rigletMeta.disclosure == "none" then null else rigletToXml rigletName rigletMeta
-        ) meta
+        ) rigMeta
       );
     };
   };
 in
 pkgs.writeTextFile {
-  name = "RIG.md";
+  name = manifestFileName;
   text = ''
-    # `RIG.md`
+    # `${manifestFileName}`
 
-    Hello. The **rig** you will be using today is called "${name}".
+    Hello. The **rig** you will be using today is called "${rigName}".
     Your rig is made up of **riglets**—each provides specialized capabilities, domain knowledge, and all tools needed to execute that knowledge, packaged with configuration and metadata.
     Riglets generalize the Agent Skills pattern: a Skill bundled with executable tools, configuration, and metadata.
     Riglets are **hermetic** (all dependencies are explicitly included): any tool, documentation, or configuration missing from a riglet's specification is an IMMEDIATE ERROR.
@@ -140,49 +141,52 @@ pkgs.writeTextFile {
 
     ### Workflow for Each Task
 
-    1. **Check RIG.md's `whenToUse` sections** - Find riglets matching your task
-    2. **Read SKILL.md for each matching riglet** - This is where executable knowledge lives
+    1. **Check ${manifestFileName}'s `whenToUse` sections** - Find riglets matching your task
+    2. **Read `mainDocFile` for each matching riglet** - This is where executable knowledge lives
     3. ${
       if shownActivationScript != null then
-        "**Activate the environment and use tools mentioned in SKILL.md or reference files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
+        "**Activate the environment and use tools mentioned in riglet doc files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
       else
-        "**Use tools mentioned in SKILL.md or references files**"
+        "**Use tools mentioned in riglet doc files**"
     }
 
     ### Access Resources
 
     **Documentation:**
-    - Main doc: `${shownDocRoot}/<riglet-name>/SKILL.md`
-    - Reference files: `${shownDocRoot}/<riglet-name>/references/<topic>.md` (mentioned within SKILL.md when relevant—don't hunt proactively)
+    - Each riglet listed below will mention its `mainDocFile`: it is the one you should always read **first**
+    - If there is more to read, the rest of a riglet's doc files will always be mentioned **explicitly** in its `mainDocFile`. DO NOT hunt for them proactively
     - Relative paths in docs are ALWAYS relative **to the file mentioning them**
     - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you
+
     ${optionalString (shownToolRoot != null) ''
-      - For unexplained tool behavior or troubleshooting purposes, consult `${shownToolRoot}/` subfolders such as `share/` and `lib/` if they exist, but SKILL.md is your **primary reference**
+      **Tools:**
+      For unexplained tool behavior or troubleshooting purposes, you may consult `${shownToolRoot}/` subfolders such as `share/` and `lib/` if they exist, but the riglets' docs are your **primary reference**
     ''}
     ${optionalString (shownConfigRoot != null) ''
       **Configuration:**
-      - Config files for tools following the XDG Base Directory Specification are in `${shownConfigRoot}/`. You should NOT have to care about them, ${
+      Config files for tools following the XDG Base Directory Specification are in `${shownConfigRoot}/`. You should NOT have to care about them, ${
         if (shownActivationScript != null) then
           "activation script should take care of that"
         else
           "needed env vars are already set up"
       }, this is only mentioned for troubleshooting purposes
     ''}
-    ## Error Cases
+    ${optionalString missingDepsIsCriticalError ''
+      ## Error Cases
 
-    If ANY of the following cases happens, IMMEDIATELY STOP EVERYTHING and NOTIFY THE USER:
+      If ANY of the following cases happens, IMMEDIATELY STOP EVERYTHING and NOTIFY THE USER:
 
-    - A tool which a riglet's doc tells you to use is NOT available ${
-      optionalString (shownActivationScript != null) "after sourcing ${shownActivationScript}"
-    }
-    - A doc file mentions by RELATIVE path some file that does not seem to exist
-    - A doc file mentions by ABSOLUTE path some file OUTSIDE of /nix/store/
+      - A tool which a riglet's doc tells you to use is NOT available ${
+        optionalString (shownActivationScript != null) "after sourcing ${shownActivationScript}"
+      }
+      - A doc file mentions by RELATIVE path some file that does not seem to exist
+      - A doc file mentions by ABSOLUTE path some file OUTSIDE of /nix/store/
 
-    ANY occurence of ANY of these events is considered a **missing dependency**—the riglet's specification **has** to be fixed and the rig rebuilt before continuing.
-
+      ANY occurence of ANY of these events is considered a **missing dependency**—the riglet's specification **has** to be fixed and the rig rebuilt before continuing.
+    ''}
     ## Contents of the Rig
 
     ${readFile (
-      (pkgs.formats.xml { withHeader = false; }).generate "${name}-manifest.xml" (rigToXml name)
+      (pkgs.formats.xml { withHeader = false; }).generate "${rigName}-manifest.xml" (rigToXml rigName)
     )}'';
 }

@@ -22,6 +22,8 @@ flake:
 }:
 with pkgs.lib;
 let
+  rigName = name;
+
   # Create the riglib attrset of helper functions, so it can be used by riglets
   riglib = flake.lib.mkRiglib {
     inherit pkgs;
@@ -65,7 +67,7 @@ let
 
   # Combined tools from all riglets
   toolRoot = pkgs.buildEnv {
-    name = "${name}-tools";
+    name = "${rigName}-tools";
     paths = concatMap (riglet: map normalizeTool riglet.tools) (attrValues evaluated.config.riglets);
   };
 
@@ -73,7 +75,7 @@ let
   docAttrs = mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
 
   # Metadata per riglet, enriched with computed command names
-  meta = mapAttrs (
+  rigMeta = mapAttrs (
     rigletName: riglet:
     riglet.meta
     // {
@@ -84,12 +86,12 @@ let
 
   # XDG_CONFIG_HOME folder
   configRoot = pkgs.symlinkJoin {
-    name = "${name}-config";
+    name = "${rigName}-config";
     paths = map (riglet: riglet.config-files) (attrValues evaluated.config.riglets);
   };
 
   # Docs folder (with symlinks to docs for all riglets)
-  docRoot = pkgs.runCommand "${name}-docs" { } ''
+  docRoot = pkgs.runCommand "${rigName}-docs" { } ''
     mkdir -p $out
     ${concatStringsSep "\n" (
       mapAttrsToList (
@@ -102,17 +104,17 @@ let
   '';
 
   # Generate a RIG.md manifest file from riglet metadata and docs
+  # Pre-sets most of flake.lib.genManifest args
+  #
   # See lib/genManifest.nix for full documentation
-  # Pre-sets the flake.lib.genManifest args
-  # Optional extra args left unset: shownDocRoot, shownToolRoot, shownActivationScript
   genManifest =
     args:
     flake.lib.genManifest (
       {
         inherit
           pkgs
-          name
-          meta
+          rigName
+          rigMeta
           toolRoot
           docRoot
           configRoot
@@ -125,7 +127,7 @@ let
     if evaluated.config.entrypoint != null then evaluated.config.entrypoint baseRig else null;
 
   # Complete agent home directory
-  home = pkgs.runCommand "${name}-home" { } ''
+  home = pkgs.runCommand "${rigName}-home" { } ''
     mkdir -p $out
     ln -s ${toolRoot} $out/.local
     ln -s ${configRoot} $out/.config
@@ -167,7 +169,7 @@ let
       };
     in
     pkgs.mkShell {
-      inherit name;
+      name = rigName;
       # Packages available in the shell. Sets PATH
       packages = [ toolRoot ];
       # Other environment variables
@@ -187,7 +189,7 @@ let
           echo "                    ──     ├┼╯ │ │ ├ ┬ : │││ ├─╯     ──"
           echo "                    ───    ╵╰─ ╶┴╴ ╰─╯   ╰─╯ ╵      ───"
           printf "${reset}\n"
-          printf "  ${blue}Now in environment for rig \"${name}\".${reset}\n"
+          printf "  ${blue}Now in environment for rig \"${rigName}\".${reset}\n"
           printf "  ${yellow}\$RIG_MANIFEST${reset} contains the path of the ${green}RIG.md${reset} that your agent shoud\n"
           printf "  read first and foremost.\n"
           printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n"
@@ -206,7 +208,7 @@ let
 
   extend =
     {
-      newName ? name,
+      newName ? rigName,
       extraModules ? [ ],
     }:
     flake.lib.buildRig {
@@ -216,7 +218,7 @@ let
     };
 
   # All command names of all tools through the rig
-  commandNames = unique (flatten (map (rigletMeta: rigletMeta.commandNames) (attrValues meta)));
+  commandNames = unique (flatten (map (rigletMeta: rigletMeta.commandNames) (attrValues rigMeta)));
 
   # Convert an option to a serializable format for inspection
   serializeOption =
@@ -308,18 +310,18 @@ let
   # Build the base rig attrset (without entrypoint and extend to avoid circularity)
   baseRig = {
     inherit
-      name
       toolRoot
       configRoot
       docAttrs
       docRoot
-      meta
       home
       shell
       genManifest
       commandNames
       configOptions
       ;
+    name = rigName;
+    meta = rigMeta;
   };
 in
 baseRig

@@ -4,11 +4,13 @@ flake:
 # Arguments:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
 #   - systems: list of systems to generate rigs for (e.g., ["x86_64-linux"])
-#   - checkRigs: if true, all rigs' home & shell derivations will be included into checks.${system}
+#   - checkRiglets: if true, a singleton rig for each riglet will be built as part of checks.${system}
+#   - checkRigs: if true, all rigs' derivations will be included into checks.${system}
 # Returns: { riglets = {...}; rigs.<system>.<rig> = {...}; [ checks.<system>."<rig>-{home,shell}" = <derivation> ] }
 {
   inputs,
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
+  checkRiglets ? false,
   checkRigs ? false,
 }:
 with inputs.nixpkgs.lib;
@@ -161,15 +163,41 @@ let
     ) (rigupTomlContents.rigs or { })
   );
 
-  checks = genAttrs systems (
-    system:
-    concatMapAttrs (name: rig: {
-      "rigup-${name}-home" = rig.home;
-      "rigup-${name}-shell" = rig.shell;
-    }) rigs.${system}
+  rigChecks =
+    prefix: rig:
+    {
+      "${prefix}${rig.name}-docs" = rig.docRoot;
+      "${prefix}${rig.name}-tools" = rig.toolRoot;
+      "${prefix}${rig.name}-config" = rig.configRoot;
+      "${prefix}${rig.name}-manifest" = rig.genManifest { };
+    }
+    // optionalAttrs (rig ? entrypoint) {
+      "${prefix}${rig.name}-entrypoint" = rig.entrypoint;
+    };
+
+  checkedRiglets = optionalAttrs checkRiglets (
+    genAttrs systems (
+      system:
+      concatMapAttrs (
+        name: riglet:
+        rigChecks "riglets-" (
+          flake.lib.buildRig {
+            inherit name;
+            modules = [ riglet ];
+            pkgs = import inputs.nixpkgs { inherit system; };
+          }
+        )
+      ) riglets
+    )
+  );
+
+  checkedRigs = optionalAttrs checkRigs (
+    genAttrs systems (system: concatMapAttrs (_name: rigChecks "rigs-") rigs.${system})
   );
 in
 {
   inherit riglets rigs;
 }
-// (if checkRigs then { inherit checks; } else { })
+// optionalAttrs (checkRiglets || checkRigs) {
+  checks = inputs.nixpkgs.lib.recursiveUpdate checkedRiglets checkedRigs;
+}

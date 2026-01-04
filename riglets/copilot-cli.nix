@@ -14,7 +14,10 @@ in
     rig:
     let
       instructionsDir = riglib.writeFileTree {
-        "AGENTS.md" = rig.genManifest { shownDocRoot = "./docs"; };
+        "AGENTS.md" = rig.genManifest {
+          manifestFileName = "AGENTS.md";
+          shownDocRoot = "./docs";
+        };
         docs = rig.docRoot;
       };
 
