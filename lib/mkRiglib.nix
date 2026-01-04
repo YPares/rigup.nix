@@ -82,16 +82,12 @@ rec {
       normalizedExts = map (ext: toLower (removePrefix "." ext)) extensions;
 
       # Check if a filename has one of the allowed extensions
-      hasAllowedExt =
-        filename:
-        any (ext: hasSuffix ext (toLower filename)) normalizedExts;
+      hasAllowedExt = filename: any (ext: hasSuffix ext (toLower filename)) normalizedExts;
     in
-      cleanSourceWith {
-        src = rootPath;
-        filter = filepath: type:
-          type == "directory" || hasAllowedExt filepath
-        ;
-      };
+    cleanSourceWith {
+      src = rootPath;
+      filter = filepath: type: type == "directory" || hasAllowedExt filepath;
+    };
 
   # Wrap a set of tools to fix a specific set of environment variables for them
   wrapWithEnv =
