@@ -25,8 +25,9 @@ rec {
             in
             if isAttrs value && !isDerivation value then
               mkFileCommands filepath value # Recurse into nested attrs
-            else if isDerivation value || builtins.isPath value then
-              # Symlink derivation or path to output path
+            else if strings.hasPrefix builtins.storeDir value then
+              # If 'value' is some string-convertible path into the Nix store,
+              # symlink to output path
               ''
                 mkdir -p "$out/$(dirname "${filepath}")"
                 ln -sL ${value} "$out/${filepath}"
