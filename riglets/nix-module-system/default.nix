@@ -1,10 +1,12 @@
 # Dark corners of the Nix module system (lib.evalModules)
-_:
+self:
 {
   riglib,
   ...
 }:
 {
+  imports = [ self.riglets.nixpkgs-manual ];
+
   config.riglets.nix-module-system = {
     meta = {
       description = "Practical knowledge about lib.evalModules that's hard to find in official docs — deduplication, priority, debugging";
