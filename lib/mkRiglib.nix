@@ -84,33 +84,14 @@ rec {
       # Check if a filename has one of the allowed extensions
       hasAllowedExt =
         filename:
-        let
-          # Extract extension from filename
-          parts = splitString "." filename;
-          ext = toLower (concatStringsSep "." (tail parts));
-        in
-        elem ext normalizedExts;
-
-      # Recursively build filtered directory structure as nested attrset
-      buildTree =
-        folderPath:
-        let
-          contents = builtins.readDir folderPath;
-          # Keep directories and files with allowed extensions
-          filtered = filterAttrs (name: type: type == "directory" || hasAllowedExt name) contents;
-        in
-        mapAttrs (
-          name: type:
-          let
-            fullPath = folderPath + "/${name}";
-          in
-          if type == "directory" then
-            buildTree fullPath # Recurse into directory
-          else
-            fullPath # Include file path
-        ) filtered;
+        any (ext: hasSuffix ext (toLower filename)) normalizedExts;
     in
-    writeFileTree (buildTree rootPath);
+      cleanSourceWith {
+        src = rootPath;
+        filter = filepath: type:
+          type == "directory" || hasAllowedExt filepath
+        ;
+      };
 
   # Wrap a set of tools to fix a specific set of environment variables for them
   wrapWithEnv =
