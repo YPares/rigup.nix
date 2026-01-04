@@ -87,7 +87,7 @@ rec {
         let
           # Extract extension from filename
           parts = splitString "." filename;
-          ext = if length parts > 1 then toLower (last parts) else "";
+          ext = toLower (concatStringsSep "." (tail parts));
         in
         elem ext normalizedExts;
 

@@ -66,9 +66,7 @@ let
   # Combined tools from all riglets
   toolRoot = pkgs.buildEnv {
     name = "${name}-tools";
-    paths = flatten (
-      mapAttrsToList (_: riglet: map normalizeTool riglet.tools) evaluated.config.riglets
-    );
+    paths = concatMap (riglet: map normalizeTool riglet.tools) (attrValues evaluated.config.riglets);
   };
 
   # Docs per riglet
