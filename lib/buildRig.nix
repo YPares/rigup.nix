@@ -147,10 +147,6 @@ let
         shownConfigRoot = "./.config";
       }
     } $out/RIG.md
-
-    ${optionalString (entrypoint != null) ''
-      ln -s "${entrypoint}" $out/entrypoint
-    ''}
   '';
 
   # Development shell with rig environment
@@ -163,9 +159,6 @@ let
         RIG_MANIFEST = genManifest {
           shownDocRoot = "$RIG_DOCS";
         };
-      }
-      // optionalAttrs (entrypoint != null) {
-        RIG_ENTRYPOINT = pkgs.lib.getExe entrypoint;
       };
     in
     pkgs.mkShell {
@@ -193,9 +186,6 @@ let
           printf "  ${yellow}\$RIG_MANIFEST${reset} contains the path of the ${green}RIG.md${reset} that your agent shoud\n"
           printf "  read first and foremost.\n"
           printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n"
-          ${optionalString (entrypoint != null) ''
-            printf "  ${yellow}\$RIG_ENTRYPOINT${reset} exposes the rig entrypoint (${green}${entrypoint.name}${reset}).\n"
-          ''}
           echo ""
           printf "  ${blue}Other env vars set:${reset}\n"
           printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n"
@@ -309,6 +299,8 @@ let
 
   # Build the base rig attrset (without entrypoint and extend to avoid circularity)
   baseRig = {
+    name = rigName;
+    meta = rigMeta;
     inherit
       toolRoot
       configRoot
@@ -320,8 +312,6 @@ let
       commandNames
       configOptions
       ;
-    name = rigName;
-    meta = rigMeta;
   };
 in
 baseRig
