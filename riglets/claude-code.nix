@@ -22,18 +22,32 @@ in
   # Define the entrypoint for this rig - launches Claude Code with rig context
   config.entrypoint =
     rig:
+    with pkgs.lib;
     let
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
+      closure = strings.splitString "\n" (
+        builtins.readFile (
+          pkgs.writeClosure [
+            manifestPath
+            rig.docRoot
+            rig.configRoot
+            rig.toolRoot
+          ]
+        )
+      );
+
       settingsJson = riglib.toJSON {
-        # Grant read access to specific Nix store paths that Claude Code needs
         permissions.allow = [
           "Read(${manifestPath})" # The RIG.md manifest file
           "Read(${rig.docRoot}/**)" # All documentation files
           "Read(${rig.configRoot}/**)" # All config files
           "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
         ]
-        ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
+        ++ map (p: "Read(${p}${optionalString (pathIsDirectory p) "/**"})") (
+          builtins.filter (s: s != "") closure
+        )
+        ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames;
 
         # Add deny rules for specific tool subcommands
         # Format: Bash(tool subcommand:*) - the colon is BEFORE the asterisk, after the full command
@@ -97,7 +111,7 @@ in
       # For later reference, if needed
       export RIG_MANIFEST="${manifestPath}"
 
-      exec ${pkgs.lib.getExe claude-code} \
+      exec ${getExe claude-code} \
         --append-system-prompt "$(cat ${manifestPath})" \
         --settings "${settingsJson}" \
         --mcp-config ${mcpConfig} \
