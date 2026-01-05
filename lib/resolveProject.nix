@@ -140,7 +140,7 @@ let
       name: rigDef:
       let
         pkgs = import inputs.nixpkgs { inherit system; };
-        modules = rigletsSpecToModules (rigDef.riglets or [ ]) ++ [ (rigDef.config or { }) ];
+        modules = rigletsSpecToModules (rigDef.riglets or { }) ++ [ (rigDef.config or { }) ];
       in
       if rigDef ? "extends" then
         let
