@@ -11,18 +11,32 @@ in
   # Define the entrypoint for this rig - launches Claude Code with rig context
   config.entrypoint =
     rig:
+    with pkgs.lib;
     let
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
+      closure = strings.splitString "\n" (
+        builtins.readFile (
+          pkgs.writeClosure [
+            manifestPath
+            rig.docRoot
+            rig.configRoot
+            rig.toolRoot
+          ]
+        )
+      );
+
       settingsJson = (pkgs.formats.json { }).generate "${rig.name}-settings.json" {
-        # Grant read access to specific Nix store paths that Claude Code needs
         permissions.allow = [
           "Read(${manifestPath})" # The RIG.md manifest file
           "Read(${rig.docRoot}/**)" # All documentation files
           "Read(${rig.configRoot}/**)" # All config files (XDG_CONFIG_HOME)
           "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
         ]
-        ++ map (cmd: "Bash(${cmd}:*)") rig.commandNames; # Allow executing all rig tools
+        ++ map (p: "Read(${p}${optionalString (pathIsDirectory p) "/**"})") (
+          builtins.filter (s: s != "") closure
+        )
+        ++ map (cmd: "Bash(${cmd}:*)") rig.commandNames;
 
         hooks.SessionStart = [
           {
@@ -47,7 +61,7 @@ in
       export RIG_DOCS="${rig.docRoot}"
       export RIG_MANIFEST="${manifestPath}"
 
-      exec ${pkgs.lib.getExe claude-code} --settings "${settingsJson}" "$@"
+      exec ${getExe claude-code} --settings "${settingsJson}" "$@"
     '';
 
   config.riglets.claude-code = {
