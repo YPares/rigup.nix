@@ -65,12 +65,19 @@ pub fn get_flake_root() -> Result<PathBuf> {
 pub fn parse_flake_ref(flake_ref: Option<&str>) -> Result<(String, String)> {
     let ref_str = flake_ref.unwrap_or(".#default");
 
-    if let Some((flake, rig)) = ref_str.split_once('#') {
-        // Explicit flake#rig format
-        Ok((flake.to_string(), rig.to_string()))
-    } else {
-        // No # means it's a flake reference, default to #default
-        Ok((ref_str.to_string(), "default".to_string()))
+    match ref_str.split_once('#') {
+        Some((flake, "")) => {
+            // Explicit flake#rig format
+            Ok((flake.to_string(), "default".to_string()))
+        }
+        Some((flake, rig)) => {
+            // Explicit flake#rig format
+            Ok((flake.to_string(), rig.to_string()))
+        }
+        None => {
+            // No # means it's a flake reference, default to #default
+            Ok((ref_str.to_string(), "default".to_string()))
+        }
     }
 }
 
