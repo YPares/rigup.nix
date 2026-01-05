@@ -5,7 +5,9 @@ mod nix;
 mod types;
 
 use clap::{Parser, Subcommand};
-use commands::{build_rig, enter_shell, inspect_rig, new_project, run_entrypoint, show_flake};
+use commands::{
+    browse_rig_docs, build_rig, enter_shell, inspect_rig, new_project, run_entrypoint, show_flake,
+};
 use miette::Result;
 
 #[derive(Parser)]
@@ -25,6 +27,19 @@ enum Commands {
         /// Template to use (defaults to "default", can be "minimal")
         #[arg(short, long, default_value = "default")]
         template: String,
+    },
+    /// Run a rig's entrypoint
+    Run {
+        /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
+        ///
+        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo[/branch]`, `github:user/repo#myrig`
+        flake_ref: Option<String>,
+        /// Arguments to forward to the entrypoint
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+        /// Disable auto-staging of rigup.local.toml
+        #[arg(long)]
+        no_stage: bool,
     },
     /// Build a rig's home directory
     Build {
@@ -96,15 +111,15 @@ enum Commands {
         #[arg(long)]
         no_stage: bool,
     },
-    /// Run a rig's entrypoint
-    Run {
+    /// Browse a rig's documentation with $EDITOR (or specified program)
+    Browse {
         /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
         ///
-        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo[/branch]`, `github:user/repo#myrig`
+        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo`, `github:user/repo#myrig`
         flake_ref: Option<String>,
-        /// Arguments to forward to the entrypoint
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-        args: Vec<String>,
+        /// Program to open documentation with (defaults to $EDITOR)
+        #[arg(short, long)]
+        with_: Option<String>,
         /// Disable auto-staging of rigup.local.toml
         #[arg(long)]
         no_stage: bool,
@@ -115,6 +130,13 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Browse {
+            flake_ref,
+            with_,
+            no_stage,
+        } => {
+            browse_rig_docs(with_, flake_ref, no_stage)?;
+        }
         Commands::New {
             directory,
             template,

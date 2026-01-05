@@ -1,3 +1,4 @@
+pub mod browse;
 pub mod build;
 
 pub mod inspect;
@@ -6,6 +7,7 @@ pub mod run;
 pub mod shell;
 pub mod show;
 
+pub use browse::browse_rig_docs;
 pub use build::build_rig;
 pub use inspect::inspect_rig;
 pub use new::new_project;

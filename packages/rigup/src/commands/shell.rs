@@ -1,4 +1,4 @@
-use crate::nix::{build_flake_ref, get_system, parse_flake_ref, run_nix_command};
+use crate::nix::{build_flake_ref, get_system, parse_flake_ref, run_command_inherit};
 use miette::Result;
 
 pub fn enter_shell(flake_ref: Option<String>, command: Vec<String>, no_stage: bool) -> Result<()> {
@@ -13,6 +13,6 @@ pub fn enter_shell(flake_ref: Option<String>, command: Vec<String>, no_stage: bo
         args.extend(command.iter().map(|s| s.as_str()));
     }
 
-    run_nix_command(args)?;
+    run_command_inherit("nix", args)?;
     Ok(())
 }

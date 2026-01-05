@@ -125,9 +125,9 @@ pub fn build_flake_ref(
     ))
 }
 
-/// Run a nix command interactively, inheriting stdin/stdout/stderr
-pub fn run_nix_command(args: Vec<&str>) -> Result<()> {
-    let status = Command::new("nix")
+/// Run a command interactively, inheriting stdin/stdout/stderr
+pub fn run_command_inherit(cmd: &str, args: Vec<&str>) -> Result<()> {
+    let status = Command::new(cmd)
         .args(&args)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
@@ -139,7 +139,7 @@ pub fn run_nix_command(args: Vec<&str>) -> Result<()> {
         let code = status.code().unwrap_or(1);
         return Err(RigupError::NixCommandFailed {
             code,
-            stderr: "Nix command failed".to_string(),
+            stderr: format!("{} command failed", cmd),
         }
         .into());
     }
