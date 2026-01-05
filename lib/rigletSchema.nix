@@ -3,6 +3,13 @@ _flake:
 # Base module that defines common riglet structure
 { pkgs, ... }:
 with pkgs.lib;
+let
+  packageLike = types.oneOf [
+    types.package
+    types.path
+  ];
+  packageList = types.listOf packageLike;
+in
 {
   options = {
     riglets = mkOption {
@@ -12,34 +19,35 @@ with pkgs.lib;
           options = {
             tools = mkOption {
               description = "List of tools this riglet provides";
-              type = types.listOf (
-                types.oneOf [
-                  types.package
-                  types.path
-                ]
-              );
+              type = types.oneOf [
+                packageList # If a single list is given, these tools are considered _wrapped_
+                (types.submodule {
+                  options = {
+                    wrapped = mkOption {
+                      description = "Tools that should be wrapped to use the rig's isolated XDG_CONFIG_HOME";
+                      type = packageList;
+                      default = [ ];
+                    };
+                    unwrapped = mkOption {
+                      description = "Tools that must directly use the user's XDG_CONFIG_HOME";
+                      type = packageList;
+                      default = [ ];
+                    };
+                  };
+                })
+              ];
               default = [ ];
             };
 
             docs = mkOption {
               description = "Documentation derivation or path (folder)";
-              type = types.nullOr (
-                types.oneOf [
-                  types.package
-                  types.path
-                ]
-              );
+              type = types.nullOr packageLike;
               default = null;
             };
 
             config-files = mkOption {
-              description = "Configuration files folder derivation to place under $XDG_CONFIG_HOME";
-              type = types.nullOr (
-                types.oneOf [
-                  types.package
-                  types.path
-                ]
-              );
+              description = "Configuration files folder. All rig's config-files will be joined together to form the rig's XDG_CONFIG_HOME which _wrapped_ tools will then use";
+              type = types.nullOr packageLike;
               default = null;
             };
 
@@ -49,7 +57,9 @@ with pkgs.lib;
                 options = {
                   mainDocFile = mkOption {
                     description = "Path to the docs' main file (e.g. \"SKILL.md\", \"./files/index.md\"...), relative to 'docs' root";
-                    type = types.str;
+                    type = types.pathWith {
+                      absolute = false;
+                    };
                     default = "SKILL.md";
                   };
 
@@ -83,13 +93,13 @@ with pkgs.lib;
 
                   whenToUse = mkOption {
                     description = "Situations when this riglet should be (at least partially) consulted. Empty list means IMMEDIATELY at startup";
-                    type = types.listOf types.str;
+                    type = types.listOf types.singleLineStr;
                     default = [ ];
                   };
 
                   keywords = mkOption {
                     description = "Keywords for searching/filtering riglets";
-                    type = types.listOf types.str;
+                    type = types.listOf types.singleLineStr;
                     default = [ ];
                   };
 
@@ -130,14 +140,7 @@ with pkgs.lib;
         Optional entrypoint for the rig. Only ONE riglet in a rig should define this.
         Takes the rig attrset and should return a folder derivation with a SINGLE bin/xxx executable (e.g. via pkgs.writeShellScriptBin).
       '';
-      type = types.nullOr (
-        types.functionTo (
-          types.oneOf [
-            types.package
-            types.path
-          ]
-        )
-      );
+      type = types.nullOr (types.functionTo packageLike);
       default = null;
     };
   };

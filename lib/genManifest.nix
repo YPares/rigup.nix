@@ -143,7 +143,7 @@ pkgs.writeTextFile {
     2. **Read the `mainDocFile` for each matching riglet** - This is where executable knowledge lives
     3. ${
       if shownActivationScript != null then
-        "**Activate the environment and use tools mentioned in riglet doc files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
+        "**Activate the environment and use tools mentioned in riglet doc files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will set PATH so you can use the tools"
       else
         "**Use tools mentioned in riglet doc files**"
     }
@@ -159,16 +159,11 @@ pkgs.writeTextFile {
 
     ${optionalString (shownToolRoot != null) ''
       **Tools:**
-      For unexplained tool behavior or troubleshooting purposes, you may consult `${shownToolRoot}/` subfolders such as `share/` and `lib/` if they exist, but the riglets' docs are your **primary reference**
+      For unexplained tool behavior or troubleshooting purposes, you may consult `${shownToolRoot}/` subfolders such as `share/` and `lib/` if they exist, but the riglets' docs are your **primary reference**.
     ''}
     ${optionalString (shownConfigRoot != null) ''
       **Configuration:**
-      Config files for tools following the XDG Base Directory Specification are in `${shownConfigRoot}/`. You should NOT have to care about them, ${
-        if (shownActivationScript != null) then
-          "activation script should take care of that"
-        else
-          "needed env vars are already set up"
-      }, this is only mentioned for troubleshooting purposes
+      Config files for tools following the XDG Base Directory Specification are in `${shownConfigRoot}/`. You should NOT have to care about them: the tools which need this are **already wrapped** to use this config folder. This is ONLY mentioned for troubleshooting purposes.
     ''}
     ${optionalString missingDepsIsCriticalError ''
       ## Error Cases

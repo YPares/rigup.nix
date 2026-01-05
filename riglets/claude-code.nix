@@ -19,7 +19,7 @@ in
         permissions.allow = [
           "Read(${manifestPath})" # The RIG.md manifest file
           "Read(${rig.docRoot}/**)" # All documentation files
-          "Read(${rig.configRoot}/**)" # All config files (XDG_CONFIG_HOME)
+          "Read(${rig.configRoot}/**)" # All config files
           "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
         ]
         ++ map (cmd: "Bash(${cmd}:*)") rig.commandNames; # Allow executing all rig tools
@@ -39,11 +39,7 @@ in
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "claude" ''
-      # Unlike e.g. copilot-cli, claude-code doesn't use the XDG_CONFIG_HOME env var,
-      # so we don't need to wrap the tools and can directly set PATH to toolRoot and XDG_CONFIG_HOME
-      # to configRoot
       export PATH="${rig.toolRoot}/bin:$PATH"
-      export XDG_CONFIG_HOME="${rig.configRoot}"
       export RIG_DOCS="${rig.docRoot}"
       export RIG_MANIFEST="${manifestPath}"
 

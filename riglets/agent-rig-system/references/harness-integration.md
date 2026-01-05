@@ -8,7 +8,7 @@ The rig system integrates with common AI coding agent harnesses via specialized 
 
 The `claude-code` riglet provides integration with Claude Code, the official Anthropic CLI tool. When included in a rig, it:
 
-- Sets up `$PATH`, `$XDG_CONFIG_HOME`, and `$RIG_DOCS` environment variables with the rig's context
+- Sets up `$PATH` and `$RIG_DOCS` environment variables with the rig's context
 - Generates Claude Code settings that automatically display the RIG manifest on startup
 - Allows launching Claude Code with full access to rig tools and documentation
 
@@ -18,8 +18,8 @@ This is the recommended way to use rigs with Claude Code.
 
 `rigup` is planned to provide similar integrations for common coding agent harnesses such as:
 
-- `cursor-agent`
-- `copilot-cli`
+- `cursor-agent` (in progress, unstable)
+- `copilot-cli` (in progress, unstable)
 - Mistral's `vibe`
 
 These harnesses and others are already Nix-packaged in numtide's [llm-agents.nix flake](https://github.com/numtide/llm-agents.nix) (previously called "nix-ai-tools").

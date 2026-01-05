@@ -3,10 +3,10 @@ flake:
 # Evaluate a rig from a set of riglet modules
 # Returns an attrset with:
 #   - name: the rig name
-#   - toolRoot: combined tools' bin/, lib/, share/, etc. folders (via symlinks)
-#   - configRoot: combined tools' XDG_CONFIG_HOME (via symlinks)
+#   - toolRoot: tools' bin/, lib/, share/, etc. folders combined via symlinks
+#   - configRoot: config-files for _wrapped_ tools combined via symlinks
 #   - docAttrs: attrset of riglet name -> doc folder derivation
-#   - docRoot: combined riglet docs, one subfolder per riglet (via symlinks)
+#   - docRoot: riglet docs, one subfolder per riglet, combined via symlinks
 #   - meta: attrset of riglet name -> metadata
 #   - configOptions: serializable nested attrset of option name -> option info (description, type, default, value)
 #   - home: complete rig directory (RIG.md + bin/ + docs/ + .config/)
@@ -46,9 +46,6 @@ let
     ++ modules;
   };
 
-  # Normalize a tool item: if it's a path, wrap it; otherwise return as-is
-  normalizeTool = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
-
   # Extract the executable name from a tool (without IFD, using eval-time metadata)
   getToolExecutableName =
     tool:
@@ -66,12 +63,6 @@ let
       # Fallback: parse the name attribute
       (parseDrvName tool.name).name;
 
-  # Combined tools from all riglets
-  toolRoot = pkgs.buildEnv {
-    name = "${rigName}-tools";
-    paths = concatMap (riglet: map normalizeTool riglet.tools) (attrValues evaluated.config.riglets);
-  };
-
   # Docs per riglet
   docAttrs = mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
 
@@ -81,15 +72,67 @@ let
     riglet.meta
     // {
       # Add computed command names to each riglet's metadata
-      commandNames = map getToolExecutableName riglet.tools;
+      commandNames =
+        let
+          normalized = normalizeTools riglet.tools;
+        in
+        map getToolExecutableName (normalized.wrapped ++ normalized.unwrapped);
     }
   ) evaluated.config.riglets;
 
-  # XDG_CONFIG_HOME folder
+  # XDG_CONFIG_HOME folder to set for all _wrapped_ tools
   configRoot = pkgs.symlinkJoin {
     name = "${rigName}-config";
     paths = map (riglet: riglet.config-files) (attrValues evaluated.config.riglets);
   };
+
+  normalizeTools =
+    tools:
+    let
+      # Normalize a tool item: if it's a path, wrap it with wrapScriptPath; otherwise return as-is
+      normalizeOne = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
+    in
+    if builtins.isList tools then
+      {
+        wrapped = map normalizeOne tools;
+        unwrapped = [ ];
+      }
+    else
+      {
+        wrapped = map normalizeOne tools.wrapped;
+        unwrapped = map normalizeOne tools.unwrapped;
+      };
+
+  accumRigletTools =
+    acc: riglet:
+    let
+      normalized = normalizeTools riglet.tools;
+    in
+    {
+      wrapped = acc.wrapped ++ normalized.wrapped;
+      unwrapped = acc.unwrapped ++ normalized.unwrapped;
+    };
+
+  wrapWithConfigHome =
+    tools:
+    riglib.wrapWithEnv {
+      name = "${rigName}-wrapped-tools";
+      inherit tools;
+      env.XDG_CONFIG_HOME = configRoot;
+    };
+
+  # Combined tools from all riglets
+  toolRoot =
+    let
+      allTools = foldl' accumRigletTools {
+        wrapped = [ ];
+        unwrapped = [ ];
+      } (attrValues evaluated.config.riglets);
+    in
+    pkgs.buildEnv {
+      name = "${rigName}-all-tools";
+      paths = [ (wrapWithConfigHome allTools.wrapped) ] ++ allTools.unwrapped;
+    };
 
   # Docs folder (with symlinks to docs for all riglets)
   docRoot = pkgs.runCommand "${rigName}-docs" { } ''
@@ -130,7 +173,6 @@ let
 
     cat > $out/activate.sh <<EOF
     export PATH="$out/.local/bin:\$PATH"
-    export XDG_CONFIG_HOME="$out/.config"
     EOF
 
     ln -s ${
@@ -148,7 +190,6 @@ let
   shell =
     let
       env = {
-        XDG_CONFIG_HOME = configRoot;
         RIG_DOCS = docRoot;
         # The manifest will elude docs full paths via env var for brevity
         RIG_MANIFEST = manifest.override {
@@ -183,7 +224,6 @@ let
           printf "  ${yellow}\$PATH${reset} exposes the rig tools.\n"
           echo ""
           printf "  ${blue}Other env vars set:${reset}\n"
-          printf "  ${yellow}XDG_CONFIG_HOME${reset}=\"$XDG_CONFIG_HOME\"\n"
           printf "  ${yellow}RIG_DOCS${reset}=\"$RIG_DOCS\"\n"
           echo ""
           printf "${green}⬤━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⬤${reset}\n"

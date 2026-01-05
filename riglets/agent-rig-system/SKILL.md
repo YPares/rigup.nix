@@ -135,7 +135,7 @@ When defining a riglet, the `meta` section specifies its purpose, maturity, and 
 - **meta.version** - Semantic versioning of the riglet's interface
 - **meta.broken** - Temporary non-functional state flag
 - **meta.disclosure** - Visibility control (none, lazy, shallow-toc, deep-toc, eager)
-- **Tool configuration files** - Using XDG Base Directory specification
+- **Tool configuration files** - Using [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
 
 ### Implementation Utilities
 
@@ -221,13 +221,13 @@ For config not representable in TOML:
 
 - `riglets.<riglet>` - Auto-discovered riglet modules
 - `rigs.<system>.<rig>` - Output of `buildRig` for each discovered rig:
-  - `toolRoot` - Folder derivation. Tools combined via nixpkgs `buildEnv` function (bin/, lib/, share/, etc.)
-  - `configRoot` - Folder derivation. The combined XDG_CONFIG_HOME for the whole rig, with config files for all rig tools that follow the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
+  - `toolRoot` - Folder derivation. Tools combined via nixpkgs `buildEnv` function (bin/, lib/, share/, etc.) and wrapped (when needed) to fix their XDG_CONFIG_HOME
+  - `configRoot` - Folder derivation. The combined config files for the whole rig, with config files for all rig's _wrapped_ tools.
   - `meta.<riglet>` - Attrset. Per-riglet metadata, as defined by the riglet's module
   - `docAttrs.<riglet>` - Folder derivation. Per-riglet documentation folder derivations
   - `docRoot` - Folder derivation. Combined derivation with docs for all riglets (one subfolder for each)
   - `home` - Folder derivation. All-in-one directory for the rig: RIG.md manifest + .local/ + docs/ + .config/ folders
-  - `shell` - Shell derivation (via `pkgs.mkShell`) exposing ready-to-use RIG_MANIFEST, XDG_CONFIG_HOME and PATH env vars
+  - `shell` - Shell derivation (via `pkgs.mkShell`) exposing ready-to-use RIG_MANIFEST and PATH env vars
   - `extend` - Nix function. Adds riglets to a pre-existing rig: takes `{newName, extraModules}` and returns a new rig
   - `manifest` - A manifest for this rig, overridable with options to shorten included paths to avoid repeatedly including long explicit paths into the Nix store
 
@@ -253,7 +253,7 @@ This section lists how and when to use each.
 #### `shell` output
 
 The AI agent runs in a subshell: a `$RIG_MANIFEST` env var is set that contains the path to the RIG.md manifest the agent should read.
-Also, `$PATH` and `$XDG_CONFIG_HOME` are already properly set up by the subshell.
+Also, `$PATH` is already properly set up by the subshell so all tools are readily usable.
 
 ```bash
 # Start a rig as a sub-shell (the user should do that)
@@ -273,7 +273,7 @@ cat $RIG_MANIFEST
 
 The AI agent reads from a complete locally-symlinked "home-like" folder.
 The RIG.md manifest and an activate.sh script will be added _at the root_ of this folder.
-The `activate.sh`, once sourced, provides the needed env vars (PATH and XDG_CONFIG_HOME).
+The `activate.sh`, once sourced, provides the needed PATH.
 
 ```bash
 # Build complete home directory with tools + docs + config as a `.rigup/<rig>` folder at the top-level of the project (the user should do that)

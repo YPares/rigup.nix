@@ -37,7 +37,7 @@ This CLI tool makes it easier to:
 
 - get information about riglets and rigs exposed by a flake and its inputs (`rigup show`)
 - build a full rig as a folder of symlinks (`rigup build`)
-- start a rig as a subshell with `$PATH`, `$XDG_CONFIG_HOME` and `$RIG_MANIFEST` (path to the `RIG.md`) set up (`rigup shell`)
+- start a rig as a subshell with `$PATH` and `$RIG_MANIFEST` (path to the `RIG.md`) set up (`rigup shell`)
 - directly start a coding agent harness (`rigup run`) if your rig contains a riglet that provides an _entrypoint_. Entrypoints act as connectors, wrapping a harness executable to start it with the appropriate config
 
 (Note all these commands are just wrappers, provided for convenience, around the rigup Nix library. So you may still do everything with the usual `nix {build,develop,run}` commands if you prefer)
@@ -185,10 +185,13 @@ _:
     # (SKILL.md at the top and references/*.md files), you can directly reuse it:
     #docs = ./path/to/skill/folder;
 
-    # (Optional) The configuration that the tools should use
-    # These will go under `.config` in the final "home directory" of the rig
+    # (Optional) The configuration that the tools should use.
+    # This will go under `.config` in the final "home directory" of the rig, but only
+    # for consultation purposes: tools are by default *wrapped* to see a XDG_CONFIG_HOME that
+    # always points to this joint config folder. This way we can separate tools between those
+    # that need custom config and those that will just "inherit" the pre-existing user config
     config-files = riglib.writeFileTree {
-      # .config/mytool/config.toml
+      # Will generate `.config/mytool/config.toml`
       mytool."config.toml" = ''
         setting = "value"
       '';

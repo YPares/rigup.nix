@@ -38,21 +38,10 @@ in
           ++ map (cmd: "Shell(${cmd})") rig.commandNames; # Allow executing all rig tools
         permissions.deny = [ ];
       };
-
-      # Wrap all rig tools to inject environment variables
-      # This way cursor-agent itself doesn't see XDG_CONFIG_HOME (needs writable config),
-      # but when it invokes rig tools, they get the read-only rig config
-      wrappedTools = riglib.wrapWithEnv {
-        name = "${rig.name}-wrapped-tools";
-        tools = [ rig.toolRoot ];
-        env = {
-          XDG_CONFIG_HOME = rig.configRoot;
-        };
-      };
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "cursor-agent" ''
-      export PATH="${wrappedTools}/bin:$PATH"
+      export PATH="${rig.toolRoot}/bin:$PATH"
       export RIG_DOCS="${rig.docRoot}"
       export RIG_MANIFEST="${manifestPath}"
 
