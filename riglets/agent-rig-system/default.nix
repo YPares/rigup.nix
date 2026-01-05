@@ -2,16 +2,11 @@ self:
 {
   riglib,
   system,
-  pkgs,
   ...
 }:
 {
   config.riglets.agent-rig-system = {
-    tools = with pkgs; [
-      self.packages.${system}.extract-md-toc
-      tree
-      ripgrep
-    ];
+    tools = [ self.packages.${system}.extract-md-toc ];
 
     meta = {
       description = "rigup.nix: Understanding and working with riglets and rig system";

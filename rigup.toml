@@ -5,6 +5,7 @@
 [rigs.example-rig.riglets]
 # Riglets from this repository
 self = [
+  "coreutils",
   "agent-personality",
   "agent-identity",
   "agent-rig-system",
@@ -20,6 +21,16 @@ self = [
 
 # Configuration for this rig (inline Nix module)
 [rigs.example-rig.config]
+coreutils.commands = [
+  "ls",
+  "cat",
+  "wc",
+  "sort",
+  "uniq",
+  "date",
+  "echo",
+  "printf"
+]
 agent.identity.name = "Test Agent"
 agent.identity.email = "test@example.com"
 typst.template = "simple"
@@ -57,7 +68,7 @@ riglets.self = ["cursor-agent"]
 inspiration = "Sauron"
 tone = "ruthless"
 playfulness = "inexistent"
-alignment = { lawfulness = "chaotic", goodness = "evil" } # Yes all the examples are chaotic. Else where is the fun?
+alignment = { lawfulness = "chaotic", goodness = "evil" }  # Yes all the examples are chaotic. Else where is the fun?
 obedience = "adamant"
 
 # Local (non-committed) overrides:

@@ -20,7 +20,7 @@ fn format_value(value: &Value) -> String {
             if arr.len() <= 3 {
                 format!("[{}]", arr.iter().map(format_value).join(" "))
             } else {
-                format!("[...{} items...])", arr.len())
+                format!("[...{} items...]", arr.len())
             }
         }
         Value::Object(obj) => {
@@ -57,27 +57,27 @@ fn display_config_option(
         (Some(value), Some(default)) if value == default => format!(
             "{} {}",
             format_value(value).blue(),
-            format!("({})", option.option_type).bright_black()
+            format!(": {}", option.option_type).bright_black()
         ),
         (Some(value), Some(default)) => format!(
             "{} {}",
             format_value(value).yellow(),
-            format!("({}, def. {})", option.option_type, default).bright_black()
+            format!(": {}, def. {}", option.option_type, default).bright_black()
         ),
         (Some(value), None) => format!(
             "{} {}",
             format_value(value).yellow(),
-            format!("({})", option.option_type).bright_black()
+            format!(": {}", option.option_type).bright_black()
         ),
         (None, None) => format!(
             "{} {}",
             "null".blue().italic(),
-            format!("({})", option.option_type).bright_black()
+            format!(": {}", option.option_type).bright_black()
         ),
         _ => format!(
             "{} {}",
             "null".yellow().italic(),
-            format!("({})", option.option_type).bright_black()
+            format!(": {}", option.option_type).bright_black()
         ),
     };
 

@@ -35,7 +35,7 @@ in
             "Read(${rig.configRoot}/**)" # All config files
             "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
           ]
-          ++ map (cmd: "Shell(${cmd})") rig.commandNames; # Allow executing all rig tools
+          ++ map (cmd: "Shell(${cmd})") rig.allExeNames; # Allow executing all rig tools
         permissions.deny = [ ];
       };
     in

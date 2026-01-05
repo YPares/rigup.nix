@@ -26,7 +26,7 @@ in
         concatMap (cmd: [
           "--allow-tool"
           "shell(${cmd}:*)"
-        ]) rig.commandNames
+        ]) rig.allExeNames
         ++
           concatMap
             (dir: [

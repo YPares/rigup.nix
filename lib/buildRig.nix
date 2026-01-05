@@ -14,7 +14,7 @@ flake:
 #   - extend: function that takes a list of extra riglet modules and combines them with those of the rig
 #   - entrypoint: null, or folder derivation with `bin/<entrypoint_executable>`
 #   - manifest: default manifest with full Nix store paths, overridable to show shorter paths (see flake.lib.genManifest for available args)
-#   - commandNames: the list of commands exposed by the rig which can be known without building (to avoid IFD)
+#   - allExeNames: the list of all executable commands exposed by the rig
 #   - configOptions: nested attrset of options exposed by the rig, in serializable form, for discovery purposes
 {
   modules,
@@ -46,8 +46,10 @@ let
     ++ modules;
   };
 
-  # Extract the executable name from a tool (without IFD, using eval-time metadata)
-  getToolExecutableName =
+  # Extract the executable or package name from a tool (using eval-time metadata).
+  # For indicative purposes, as for some packages, this name might not match an actual
+  # exe name once the package is built, and some package may expose several exes
+  getToolName =
     tool:
     with builtins;
     if isPath tool then
@@ -76,7 +78,7 @@ let
         let
           normalized = normalizeTools riglet.tools;
         in
-        map getToolExecutableName (normalized.wrapped ++ normalized.unwrapped);
+        map getToolName (normalized.wrapped ++ normalized.unwrapped);
     }
   ) evaluated.config.riglets;
 
@@ -242,8 +244,17 @@ let
       modules = modules ++ extraModules;
     };
 
-  # All command names of all tools through the rig
-  commandNames = unique (flatten (map (rigletMeta: rigletMeta.commandNames) (attrValues rigMeta)));
+  allExesDeriv = pkgs.runCommand "${rigName}-commands" { } ''
+    dir="${toolRoot}/bin"
+    if [ -d "$dir" ]; then
+      ls ${toolRoot}/bin > $out
+    else
+      echo "" > $out
+    fi
+  '';
+
+  # All commands available through the rig
+  allExeNames = builtins.filter (s: s != "") (splitString "\n" (builtins.readFile allExesDeriv));
 
   # Convert an option to a serializable format for inspection
   serializeOption =
@@ -344,7 +355,7 @@ let
       home
       shell
       manifest
-      commandNames
+      allExeNames
       configOptions
       ;
   };

@@ -312,24 +312,11 @@ See `references/harness-integration.md` for more details.
 
 - More direct integration with the harness when such integration exists
 
-### Reading a Rig's Documentation
+### More efficient Markdown reading: `extract-md-toc`
 
-This riglet (`agent-rig-system`) comes with a few tools to help browsing documentation in general:
-
-#### `extract-md-toc`
-
-`extract-md-toc` is the tool that renders the inline table of contents of the RIG.md manifests (for riglets with `disclosure = "{shallow,deep}-toc";`).
- It can also be used to extract a similar ToC out of ANY Markdown file: e.g. `extract-md-toc foo.md --max-level 3` will show all headers from `#` to `###` with their line numbers.
- It can also read from stdin: `extract-md-toc - < foo.md`
-
-See `references/extract-md-toc.md` for more info.
-
-#### Usual Browsing/Grepping Commands
-
-Some usual commands come along with this riglet (as they might not exist on every system):
-
-- `tree` to view file trees. **Always use it with the `-l` flag** as rigup makes heavy use of symlinks to build docs.
-- `rg` (ripgrep) for some amped up grepping
+This riglet (`agent-rig-system`) comes with `extract-md-toc`. This is the tool that renders the inline table of contents of the rig manifests (for riglets with `disclosure = "{shallow,deep}-toc";`).
+It can also be used to extract a similar ToC out of ANY Markdown file: e.g. `extract-md-toc foo.md --max-level 3` will show all headers from `#` to `###` with their line numbers.
+It can also read from stdin: `extract-md-toc - < foo.md`
 
 ## Adding Riglets to a Rig
 

@@ -19,7 +19,6 @@ rec {
     let
       skillMdPath = skillPath + "/SKILL.md";
 
-      # Read the file content directly (no IFD - reading source file)
       content = builtins.readFile skillMdPath;
       lines = lib.splitString "\n" content;
 
