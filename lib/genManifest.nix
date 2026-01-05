@@ -133,8 +133,6 @@ pkgs.writeTextFile {
     Hello. The **rig** you will be using today is called "${rigName}".
     Your rig is made up of **riglets**—each provides specialized capabilities, domain knowledge, and all tools needed to execute that knowledge, packaged with configuration and metadata.
     Riglets generalize the Agent Skills pattern: a Skill bundled with executable tools, configuration, and metadata.
-    Riglets are **hermetic** (all dependencies are explicitly included): any tool, documentation, or configuration missing from a riglet's specification is an IMMEDIATE ERROR.
-
     Each riglet below has `intent` and `whenToUse` sections—**these are is the MOST important sections**. They tell you exactly what to expect from the riglet's doc and when to consult it.
 
     ## How to Use
@@ -142,7 +140,7 @@ pkgs.writeTextFile {
     ### Workflow for Each Task
 
     1. **Check ${manifestFileName}'s `whenToUse` sections** - Find riglets matching your task
-    2. **Read `mainDocFile` for each matching riglet** - This is where executable knowledge lives
+    2. **Read the `mainDocFile` for each matching riglet** - This is where executable knowledge lives
     3. ${
       if shownActivationScript != null then
         "**Activate the environment and use tools mentioned in riglet doc files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will properly set PATH and XDG_CONFIG_HOME so you can properly use the tools"
