@@ -12,7 +12,7 @@ in
   config.entrypoint =
     rig:
     let
-      manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
+      manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
       settingsJson = (pkgs.formats.json { }).generate "${rig.name}-settings.json" {
         # Grant read access to specific Nix store paths that Claude Code needs

@@ -103,25 +103,19 @@ let
     )}
   '';
 
-  # Generate a RIG.md manifest file from riglet metadata and docs
-  # Pre-sets most of flake.lib.genManifest args
+  # The rig manifest file from riglet metadata and docs, overridable
   #
   # See lib/genManifest.nix for full documentation
-  genManifest =
-    args:
-    flake.lib.genManifest (
-      {
-        inherit
-          pkgs
-          rigName
-          rigMeta
-          toolRoot
-          docRoot
-          configRoot
-          ;
-      }
-      // args
-    );
+  manifest = pkgs.lib.makeOverridable flake.lib.genManifest {
+    inherit
+      pkgs
+      rigName
+      rigMeta
+      toolRoot
+      docRoot
+      configRoot
+      ;
+  };
 
   entrypoint =
     if evaluated.config.entrypoint != null then evaluated.config.entrypoint baseRig else null;
@@ -140,7 +134,7 @@ let
 
     ln -s ${
       # The manifest will mention tools and docs by relative path for brevity
-      genManifest {
+      manifest.override {
         shownActivationScript = "./activate.sh";
         shownDocRoot = "./docs";
         shownToolRoot = "./.local";
@@ -156,7 +150,7 @@ let
         XDG_CONFIG_HOME = configRoot;
         RIG_DOCS = docRoot;
         # The manifest will elude docs full paths via env var for brevity
-        RIG_MANIFEST = genManifest {
+        RIG_MANIFEST = manifest.override {
           shownDocRoot = "$RIG_DOCS";
         };
       };
@@ -308,7 +302,7 @@ let
       docRoot
       home
       shell
-      genManifest
+      manifest
       commandNames
       configOptions
       ;

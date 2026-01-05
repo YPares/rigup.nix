@@ -21,7 +21,7 @@ in
   config.entrypoint =
     rig:
     let
-      manifestPath = rig.genManifest { shownDocRoot = "$RIG_DOCS"; };
+      manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
       cliConfigJson = (pkgs.formats.json { }).generate "${rig.name}-cli-config.json" {
         # https://cursor.com/docs/cli/reference/configuration#required-fields

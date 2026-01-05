@@ -169,7 +169,7 @@ let
       "${prefix}${rig.name}-docs" = rig.docRoot;
       "${prefix}${rig.name}-tools" = rig.toolRoot;
       "${prefix}${rig.name}-config" = rig.configRoot;
-      "${prefix}${rig.name}-manifest" = rig.genManifest { };
+      "${prefix}${rig.name}-manifest" = rig.manifest;
     }
     // optionalAttrs (rig ? entrypoint) {
       "${prefix}${rig.name}-entrypoint" = rig.entrypoint;

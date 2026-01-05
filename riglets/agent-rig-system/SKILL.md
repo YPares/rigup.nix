@@ -33,8 +33,8 @@ Main functions:
 
 - `buildRig`: evaluates riglet modules and ensures they comply with the riglet schema used by rigup. Returns the rig as an attrset: `{ toolRoot = <derivation>; meta = { <riglet> = {...}; }; docAttrs = { <riglet> = <derivation>; }; docRoot = <derivation>; home = <derivation>; shell = <derivation>; }`
 - `resolveProject`: inspects the `riglets/` folder of a project and its `rigup.toml` to find out which riglets and rigs it defines. It calls `buildRig` for each rig in the `rigup.toml`
-- `mkRiglib`: creates a set of utility functions to be used to define riglet Nix modules
 - `genManifest`: generates a markdown+XML manifest file describing the contents of a rig, primarily for AI agent's consumption
+- `mkRiglib`: creates a set of utility functions to be used to define riglet Nix modules
 
 #### rigup CLI tool
 
@@ -229,7 +229,7 @@ For config not representable in TOML:
   - `home` - Folder derivation. All-in-one directory for the rig: RIG.md manifest + .local/ + docs/ + .config/ folders
   - `shell` - Shell derivation (via `pkgs.mkShell`) exposing ready-to-use RIG_MANIFEST, XDG_CONFIG_HOME and PATH env vars
   - `extend` - Nix function. Adds riglets to a pre-existing rig: takes `{newName, extraModules}` and returns a new rig
-  - `genManifest` - Nix function. Creates a manifest for this rig, with options to shorten included paths to avoid repeatedly including long explicit paths into the Nix store
+  - `manifest` - A manifest for this rig, overridable with options to shorten included paths to avoid repeatedly including long explicit paths into the Nix store
 
 ## Using a Rig
 

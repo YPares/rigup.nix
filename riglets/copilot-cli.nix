@@ -14,7 +14,7 @@ in
     rig:
     let
       instructionsDir = riglib.writeFileTree {
-        "AGENTS.md" = rig.genManifest {
+        "AGENTS.md" = rig.manifest.override {
           manifestFileName = "AGENTS.md";
           shownDocRoot = "./docs";
         };
