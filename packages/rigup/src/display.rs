@@ -15,10 +15,11 @@ pub fn pipe_through_less(content: &str, no_pager: bool) -> Result<()> {
     if stdout.is_terminal() && !no_pager {
         // Spawn less with flags:
         // -R: preserve ANSI color codes
+        // -S: don't wrap lines (scroll horizontally)
         // -F: quit if content fits on one screen
         // -X: don't clear screen on exit
         let mut child = Command::new("less")
-            .args(&["-RFX", "--mouse", "--wheel-lines=3"])
+            .args(&["-RSFX", "--mouse", "--wheel-lines=3"])
             .stdin(Stdio::piped())
             .spawn()
             .into_diagnostic()?;
