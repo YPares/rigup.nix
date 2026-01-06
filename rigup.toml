@@ -64,6 +64,9 @@ obedience = "liberal"
 extends.self = "example-rig"
 riglets.self = ["cursor-agent"]
 
+[rigs.example-rig-cursor.config]
+cursor-agent.persistentConfigDir = ".cursor"
+
 [rigs.example-rig-cursor.config.agent.personality]
 inspiration = "Sauron"
 tone = "ruthless"

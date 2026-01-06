@@ -13,3 +13,4 @@ rigup.local.toml
 
 # harnesses
 .claude/
+.cursor/

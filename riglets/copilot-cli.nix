@@ -42,11 +42,9 @@ in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "copilot" ''
       export PATH="${rig.toolRoot}/bin:$PATH"
-
-      # copilot-cli automatically loads AGENTS.md from custom instruction directories
-      # COPILOT_CUSTOM_INSTRUCTIONS_DIRS is a comma-separated list of additional dirs
+      # COPILOT_CUSTOM_INSTRUCTIONS_DIRS is a comma-separated list of additional dirs to search for AGENTS.md files.
+      # We directly use the rig's manifest as such.
       export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="${instructionsDir}"
-
       # For later reference, if needed
       export RIG_MANIFEST="${instructionsDir}/AGENTS.md"
 

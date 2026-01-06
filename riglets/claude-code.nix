@@ -41,6 +41,7 @@ in
     pkgs.writeShellScriptBin "claude" ''
       export PATH="${rig.toolRoot}/bin:$PATH"
       export RIG_DOCS="${rig.docRoot}"
+      # For later reference, if needed
       export RIG_MANIFEST="${manifestPath}"
 
       exec ${pkgs.lib.getExe claude-code} --settings "${settingsJson}" "$@"

@@ -2,27 +2,37 @@ self:
 {
   pkgs,
   system,
-  riglib,
   config,
   ...
 }:
 let
   inherit (self.inputs.llm-agents.packages.${system}) cursor-agent;
+  inherit (pkgs.lib) mkOption types;
 in
 {
   # Exposed because this is a mandatory option for cursor's cli-config.json
-  options.cursor-agent.editor.vimMode = pkgs.lib.mkOption {
-    type = pkgs.lib.types.bool;
-    description = "Activate vim mode for cursor-agent";
-    default = false;
+  options.cursor-agent = {
+    # cursor-agent wants its config to be writeable.
+    # This folder will also hold conversation history, etc., so the only safe place is a user-provided path
+    persistentConfigDir = mkOption {
+      type = types.pathWith { inStore = false; };
+      description = "Persistent folder in which to store the generated config for cursor-agent";
+      # A fake default to allow this riglet to be checked in isolation
+      default = "/home/fake-user-sdf45llk431/.cursor";
+    };
+
+    # Exposed because it _needs_ to be present so cursor-agent considers the config to be valid
+    editor.vimMode = mkOption {
+      type = types.bool;
+      description = "Activate vim mode for cursor-agent";
+      default = false;
+    };
   };
 
   # Define the entrypoint for this rig - launches Cursor Agent with rig context
   config.entrypoint =
     rig:
     let
-      manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
-
       cliConfigJson = (pkgs.formats.json { }).generate "${rig.name}-cli-config.json" {
         # https://cursor.com/docs/cli/reference/configuration#required-fields
         inherit (config.cursor-agent) editor;
@@ -30,7 +40,6 @@ in
         permissions.allow =
           # Grant read access to rig documentation and config
           [
-            "Read(${manifestPath})" # The RIG.md manifest file
             "Read(${rig.docRoot}/**)" # All documentation files
             "Read(${rig.configRoot}/**)" # All config files
             "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
@@ -41,23 +50,43 @@ in
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "cursor-agent" ''
-      export PATH="${rig.toolRoot}/bin:$PATH"
-      export RIG_DOCS="${rig.docRoot}"
-      export RIG_MANIFEST="${manifestPath}"
-
-      # cursor-agent will try to overwrite the config, so we need to copy it in a writeable temp directory
-      export CURSOR_CONFIG_DIR="$(mktemp -t "${rig.name}-cursor-config-XXXXXXXXXXX" -d)"
-      cp "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
+      set -euo pipefail
 
       warn() {
         printf "\033[0;33m%s\n\033[0m" "$1" >&2
       }
 
-      warn "NOTE: cursor-agent doesn't support startup hooks, first instruct your agent to read \$RIG_MANIFEST"
+      # cursor-agent will try to overwrite the config, so we need to copy it in a writeable temp directory
+      export CURSOR_CONFIG_DIR="${config.cursor-agent.persistentConfigDir}"
+      mkdir -p "$CURSOR_CONFIG_DIR/rules"
+
+      export PATH="${rig.toolRoot}/bin:$PATH"
+      export RIG_DOCS="${rig.docRoot}"
+      export RIG_MANIFEST="$CURSOR_CONFIG_DIR/rules/rig-manifest.mdc"
+
+      cp "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
+      chmod +w "$CURSOR_CONFIG_DIR/cli-config.json"
+      warn "Overwrote $CURSOR_CONFIG_DIR/cli-config.json"
+
+      cp "${pkgs.writeText "rig-manifest.mdc" ''
+        ---
+        alwaysApply: true
+        ---
+
+        ${
+          builtins.readFile (
+            rig.manifest.override {
+              manifestFileName = "rig-manifest.mdc";
+              shownDocRoot = "$RIG_DOCS";
+            }
+          )
+        }        
+      ''}" "$RIG_MANIFEST"
+      chmod +w "$RIG_MANIFEST"
+      warn "Overwrote $RIG_MANIFEST"
+      warn "IMPORTANT: Unless $CURSOR_CONFIG_DIR is your project's top-level .cursor/ folder, instruct first your agent to read $RIG_MANIFEST"
 
       ${pkgs.lib.getExe cursor-agent} "$@"
-
-      rm -rf "$CURSOR_CONFIG_DIR"
     '';
 
   config.riglets.cursor-agent = {
