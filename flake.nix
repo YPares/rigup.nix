@@ -33,6 +33,7 @@
 
       # Resolve the riglets and rig defined in the project, and expose them
       (rigup {
+        projectUri = "YPares/rigup.nix";
         inherit inputs;
         checkRiglets = true;
         checkRigs = true;
