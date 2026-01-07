@@ -51,6 +51,36 @@ in
               default = null;
             };
 
+            mcpServers = mkOption {
+              description = "MCP (Model Context Protocol) servers this riglet provides";
+              type = types.attrsOf (
+                types.submodule {
+                  options = {
+                    command = mkOption {
+                      description = "Package that starts the MCP server (stdio transport only). Nullable for remote servers (sse/http).";
+                      type = types.nullOr types.package;
+                      default = null;
+                    };
+                    transport = mkOption {
+                      description = "Transport type for MCP communication";
+                      type = types.enum [
+                        "stdio"
+                        "sse"
+                        "http"
+                      ];
+                      default = "stdio";
+                    };
+                    url = mkOption {
+                      description = "URL for remote MCP servers (sse/http transport)";
+                      type = types.nullOr types.str;
+                      default = null;
+                    };
+                  };
+                }
+              );
+              default = { };
+            };
+
             meta = mkOption {
               description = "Metadata describing when and how to use this riglet";
               type = types.submodule {
