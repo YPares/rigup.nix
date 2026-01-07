@@ -49,7 +49,7 @@ in
 
   config.riglets.claude-code = {
     meta = {
-      description = "Provides entrypoint to launch Claude Code with rig context";
+      description = "Launch Claude Code with rig context";
       intent = "base";
       disclosure = "none";
       status = "stable";

@@ -53,7 +53,7 @@ in
 
   config.riglets.copilot-cli = {
     meta = {
-      description = "Provides entrypoint to launch Copilot CLI with rig context";
+      description = "Launch Copilot CLI with rig context";
       intent = "base";
       disclosure = "none";
       status = "experimental";

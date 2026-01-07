@@ -88,7 +88,7 @@ in
 
   config.riglets.cursor-agent = {
     meta = {
-      description = "Provides entrypoint to launch Cursor Agent with rig context";
+      description = "Launch Cursor Agent with rig context";
       intent = "base";
       disclosure = "none";
       status = "experimental";
