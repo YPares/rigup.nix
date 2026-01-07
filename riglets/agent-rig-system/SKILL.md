@@ -36,9 +36,13 @@ Main functions:
 - `genManifest`: generates a markdown+XML manifest file describing the contents of a rig, primarily for AI agent's consumption
 - `mkRiglib`: creates a set of utility functions to be used to define riglet Nix modules
 
+Defined in `{{repoRoot}}/lib/default.nix`.
+
 #### rigup CLI tool
 
-It provides convenient access to rig outputs, via commands like `rigup build` and `rigup shell`. This tool is meant for **the user** primarily. Agents should not have to call it directly.
+A Rust app. It provides convenient access to rig outputs, via commands like `rigup build` and `rigup shell`. This tool is meant for **the user** primarily. Agents should not have to call it directly.
+
+Defined in `{{repoRoot}}/packages/rigup`
 
 ## Riglet Structure
 
@@ -124,7 +128,7 @@ _:
 }
 ```
 
-The full **Nix module schema** of a riglet is defined in `lib/rigletSchema.nix`.
+The full **Nix module schema** of a riglet is defined in `{{repoRoot}}/lib/rigletSchema.nix`.
 
 ### Metadata
 
@@ -143,6 +147,8 @@ See `references/riglib-utilities.md` for details on helper functions available v
 
 - **riglib.writeFileTree** - Convert nested attrsets to directory trees
 - **riglib.useScriptFolder** - Convert folder of scripts into wrapped tool packages
+
+`riglib` is defined in `{{repoRoot}}/lib/mkRiglib.nix`
 
 ## Cross-Riglet/Flake Interaction
 
@@ -231,6 +237,8 @@ For config not representable in TOML:
   - `extend` - Nix function. Adds riglets to a pre-existing rig: takes `{newName, extraModules}` and returns a new rig
   - `manifest` - A manifest for this rig, overridable with options to shorten included paths to avoid repeatedly including long explicit paths into the Nix store
 
+`resolveProject` is defined in `{{repoRoot}}/lib/resolveProject.nix`.
+
 ## Using a Rig
 
 The user decides how they and their agent should use the rig: either via its _shell_, _home_ or _entrypoint_ output derivations.
@@ -249,6 +257,8 @@ Agents should read this file first to understand available capabilities.
 `buildRig` outputs a Nix attrset ("object") that notably contains several "all-in-one" derivations which all allow an AI agent to access the rig's tools and documentation.
 Which derivation to use depends on what is the most convenient given the user's setup.
 This section lists how and when to use each.
+
+`buildRig` is defined in `{{repoRoot}}/lib/buildRig.nix`
 
 #### `shell` output
 
@@ -317,6 +327,8 @@ See `references/harness-integration.md` for more details.
 This riglet (`agent-rig-system`) comes with `extract-md-toc`. This is the tool that renders the inline table of contents of the rig manifests (for riglets with `disclosure = "{shallow,deep}-toc";`).
 It can also be used to extract a similar ToC out of ANY Markdown file: e.g. `extract-md-toc foo.md --max-level 3` will show all headers from `#` to `###` with their line numbers.
 It can also read from stdin: `extract-md-toc - < foo.md`
+
+Defined in `{{repoRoot}}/packages/extract-md-toc`
 
 ## Adding Riglets to a Rig
 

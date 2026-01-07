@@ -36,9 +36,12 @@ self:
     };
 
     docs = riglib.writeFileTree {
-      "SKILL.md" =
-        with builtins;
-        replaceStrings [ "lib/rigletSchema.nix" ] [ "${../../lib/rigletSchema.nix}" ] (readFile ./SKILL.md);
+      "SKILL.md" = riglib.renderMinijinja {
+        template = ./SKILL.md;
+        data = {
+          repoRoot = self;
+        };
+      };
       references = ./references;
     };
   };
