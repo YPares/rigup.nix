@@ -11,7 +11,7 @@ A **rig** is a project-scoped collection of _riglets_ that provide knowledge and
 A riglet is executable knowledge packaged with its dependencies, as a Nix module:
 
 - **Metadata**: When should this riglet be used, is it production-ready or experimental, etc.
-- **Knowledge**: SKILL.md + detailed references/\*.md files documenting processes and recipes
+- **Knowledge**: SKILL.md + detailed `references/*.md` files documenting processes and recipes
 - **Tools**: Nix packages needed to execute those recipes
 - **Configuration**: Settings to adapt tools' behaviour to project context
 
@@ -83,6 +83,7 @@ _:
     # Metadata for discovery and context
     meta = {
       description = "What this riglet provides";
+      mainDocFile = "SKILL.md"; # Where to start reading the docs (SKILL.md by default)
       intent = "cookbook"; # What the agent should expect from this riglet
       whenToUse = [
         # When the AI Agent should read/use this riglet's knowledge, recipes and tools
@@ -93,26 +94,28 @@ _:
       keywords = [ "keyword1" "keyword2" ];
       status = "experimental"; # Maturity level
       version = "x.y.z"; # Semantic version of riglet's interface (configuration + provided methods, procedures, docs...)
-      disclosure = "lazy" # How much to show about riglet in manifest
-      broken = false;
+      disclosure = lib.mkDefault "lazy" # How much to show about riglet in manifest
+        # mkDefault makes it possible for end users to override this in their rigup.toml
     };
 
     # Documentation file(s) (Skills pattern: SKILL.md + references/*.md)
     docs = riglib.writeFileTree {
-      "SKILL.md" = ...;  # SKILL.md MUST BE PRESENT
+      "SKILL.md" = ...;  # A main documentation file
       references = {       # Optional. To add deeper knowledge about more specific topics, less common recipes, etc.
                            # SKILL.md MUST mention when each reference becomes relevant
         "advanced.md" = ...;
         "troubleshooting.md" = ...;
       };
     };
-
-    # Alternatively, if you already have a folder that follows this same Agent Skill layout, you can directly reuse it:
+    # Files can be defined either as inlined strings or nix file derivations/paths.
+    # Folders can be defined either as nested attrsets or nix folder derivations/paths,
+    # so if you have a ready to use folder you can do:
     #docs = ./path/to/skill/folder;
 
-    # Configuration files (optional)
+    # Configuration files (optional) for tools following the 
+    # [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
     config-files = riglib.writeFileTree {
-      # Built via Nix
+      # Built from a Nix attrset
       myapp."config.toml" = (pkgs.formats.toml {}).generate "myapp-config" {
         setting = "value";
       };
@@ -130,6 +133,8 @@ _:
 
 The full **Nix module schema** of a riglet is defined in `{{repoRoot}}/lib/rigletSchema.nix`.
 
+Examples of actual riglets: `{{repoRoot}}/riglets`.
+
 ### Metadata
 
 When defining a riglet, the `meta` section specifies its purpose, maturity, and visibility. See `references/metadata-guide.md` for comprehensive details on:
@@ -139,7 +144,6 @@ When defining a riglet, the `meta` section specifies its purpose, maturity, and 
 - **meta.version** - Semantic versioning of the riglet's interface
 - **meta.broken** - Temporary non-functional state flag
 - **meta.disclosure** - Visibility control (none, lazy, shallow-toc, deep-toc, eager)
-- **Tool configuration files** - Using [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
 
 ### Implementation Utilities
 
