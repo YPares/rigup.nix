@@ -75,6 +75,11 @@ in
                       type = types.nullOr types.str;
                       default = null;
                     };
+                    headers = mkOption {
+                      description = "HTTP headers for remote MCP servers (e.g., for authentication)";
+                      type = types.attrsOf types.str;
+                      default = { };
+                    };
                   };
                 }
               );
