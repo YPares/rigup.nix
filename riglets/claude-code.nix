@@ -24,15 +24,28 @@ in
         ]
         ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
       };
+
+      mcpConfig = (pkgs.formats.json { }).generate "mcp-config.json" {
+        mcpServers = pkgs.lib.mapAttrs (
+          name: s:
+          {
+            type = s.transport;
+          }
+          // pkgs.lib.optionalAttrs (s.resolvedCommand != null) { command = s.resolvedCommand; }
+          // pkgs.lib.optionalAttrs (s.url != null) { inherit (s) url; }
+        ) rig.mcpServers;
+      };
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "claude" ''
+      set -euo pipefail
+
       export PATH="${rig.toolRoot}/bin:$PATH"
       export RIG_DOCS="${rig.docRoot}"
       # For later reference, if needed
       export RIG_MANIFEST="${manifestPath}"
 
-      exec ${pkgs.lib.getExe claude-code} --append-system-prompt "$(cat ${manifestPath})" --settings "${settingsJson}" "$@"
+      exec ${pkgs.lib.getExe claude-code} --append-system-prompt "$(cat ${manifestPath})" --settings "${settingsJson}" --mcp-config ${mcpConfig} "$@"
     '';
 
   config.riglets.claude-code = {
