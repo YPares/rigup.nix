@@ -89,6 +89,11 @@ in
                       "eager"
                     ];
                     default = "lazy";
+                    # IMPORTANT: Most riglets should stick to this default, and leave it to
+                    # end users to override it when building their rig.
+                    # IF you choose to change this when defining a riglet,
+                    # better wrap the value with `nixpkgs.lib.mkDefault` so end users
+                    # may still easily override it.
                   };
 
                   whenToUse = mkOption {

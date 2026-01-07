@@ -93,7 +93,7 @@ self:
         "guidelines"
       ];
       intent = "playbook";
-      disclosure = "eager";
+      disclosure = lib.mkDefault "eager";
       status = "experimental";
       version = "0.1.0";
     };

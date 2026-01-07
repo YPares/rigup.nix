@@ -2,6 +2,7 @@ self:
 {
   riglib,
   system,
+  lib,
   ...
 }:
 {
@@ -30,7 +31,8 @@ self:
       ];
       status = "stable";
       version = "0.1.0";
-      disclosure = "deep-toc";
+      # Using lib.mkDefault so user config can override it if needed
+      disclosure = lib.mkDefault "deep-toc";
     };
 
     docs = riglib.writeFileTree {

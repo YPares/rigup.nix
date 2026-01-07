@@ -2,6 +2,8 @@
 
 When defining a riglet's `meta` section, you can specify several fields to describe its purpose, maturity, and visibility.
 
+Most of these metadata elements are NOT meant to be overriden by end users when building their rig, EXCEPT for `meta.disclosure`.
+
 ## meta.intent
 
 Primary focus/intent of the riglet:
@@ -56,6 +58,8 @@ This controls the information/token-count ratio:
 - foundational riglets use `shallow-toc` to enable efficient pinpointing of major sections
 - complex riglets use `deep-toc` when agents need to navigate deeply nested documentation
 - `eager` should only be used for very short SKILL.md
+
+Riglets overriding this default SHOULD use `nixpkgs.lib.mkDefault`, so end users may still easily change it when building their rig.
 
 ## Tool Configuration Files
 
