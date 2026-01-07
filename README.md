@@ -427,11 +427,7 @@ But this enables riglets to perform things that Skills just cannot do:
 
 - Enable riglets to add MCP servers to the rig, either via auto-generated harness config via `entrypoint` riglets, and/or via [MCPLI](https://github.com/cameroncooke/mcpli)
 - Add `checks` to riglets: automated and/or through-agent testing that a riglet is working as intended
-- [`minijinja`](https://github.com/mitsuhiko/minijinja)-based templating for easy modular docs that adapt based on the rig's config
-- More commands for the `rigup` CLI tool to conveniently view and set config values:
-  - `rigup config list <flake>#<rig>`
-  - `rigup config set <rig> foo.bar.qux <value>`
-  - etc.
+- `rigup` CLI commands to conveniently view and set config values, like `rigup config set <rig> foo.bar.qux <value>`
 
 ## Related projects
 

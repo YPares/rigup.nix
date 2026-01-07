@@ -3,8 +3,19 @@ flake:
 {
   pkgs, # From nixpkgs
 }:
-# Helper functions to use for riglet declarations
-rec {
+let
+  options = {
+    # Make a boolean option, false by default
+    flag =
+      description:
+      with pkgs.lib;
+      mkOption {
+        inherit description;
+        type = types.bool;
+        default = false;
+      };
+  };
+
   # Convert nested attribute set to directory tree of files
   # Usage: writeFileTree pkgs { "SKILL.md" = "..."; references."foo.md" = "..."; }
   # Creates: derivation with SKILL.md and references/foo.md
@@ -123,4 +134,30 @@ rec {
           done
         '';
     };
+
+  # Render a minijinja template
+  renderMinijinja =
+    {
+      template, # Path. File to use as template
+      data, # (Nested) attrset. Data to fill in the template
+      strict ? true, # Fail if the template mentions variables which aren't present in 'data'
+    }:
+    with pkgs.lib;
+    pkgs.runCommand (baseNameOf template) { } ''
+      ${getExe pkgs.minijinja} ${optionalString strict "--strict"} ${template} ${
+        (pkgs.formats.json { }).generate "minijinja-data.json" data
+      } --format json --output $out
+    '';
+in
+# Helper functions to use for riglet declarations
+{
+  inherit
+    options
+    writeFileTree
+    wrapScriptPath
+    useScriptFolder
+    filterFileTree
+    wrapWithEnv
+    renderMinijinja
+    ;
 }

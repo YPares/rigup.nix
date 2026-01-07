@@ -3,6 +3,7 @@ self:
   pkgs,
   system,
   config,
+  riglib,
   ...
 }:
 let
@@ -22,11 +23,7 @@ in
     };
 
     # Exposed because it _needs_ to be present so cursor-agent considers the config to be valid
-    editor.vimMode = mkOption {
-      type = types.bool;
-      description = "Activate vim mode for cursor-agent";
-      default = false;
-    };
+    editor.vimMode = riglib.options.flag "Activate vim mode for cursor-agent";
   };
 
   # Define the entrypoint for this rig - launches Cursor Agent with rig context
