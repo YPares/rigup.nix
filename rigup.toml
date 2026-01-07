@@ -6,6 +6,7 @@
 # Riglets from this repository
 self = [
   "coreutils",
+  "code-search",
   "agent-personality",
   "agent-identity",
   "agent-rig-system",
@@ -29,7 +30,7 @@ coreutils.commands = [
   "uniq",
   "date",
   "echo",
-  "printf"
+  "printf",
 ]
 agent.identity.name = "Test Agent"
 agent.identity.email = "test@example.com"
