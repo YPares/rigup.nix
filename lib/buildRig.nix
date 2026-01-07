@@ -16,6 +16,7 @@ flake:
 #   - entrypoint: null, or folder derivation with `bin/<entrypoint_executable>`
 #   - manifest: default manifest with full Nix store paths, overridable to show shorter paths (see flake.lib.genManifest for available args)
 #   - allExeNames: the list of all executable commands exposed by the rig
+#   - mcpServers: attrset of MCP server name -> { rigletName, transport, url, resolvedCommand }
 #   - configOptions: nested attrset of options exposed by the rig, in serializable form, for discovery purposes
 {
   modules,
@@ -257,6 +258,25 @@ let
   # All commands available through the rig
   allExeNames = builtins.filter (s: s != "") (splitString "\n" (builtins.readFile allExesDeriv));
 
+  # Collect MCP servers from all riglets
+  mcpServers =
+    let
+      collectFromRiglet =
+        rigletName: riglet:
+        mapAttrs (
+          serverName: def:
+          def
+          // {
+            inherit rigletName;
+            # Handle nullable command (remote servers have no local command)
+            resolvedCommand = if def.command != null then getExe def.command else null;
+          }
+        ) riglet.mcpServers;
+    in
+    foldl' (acc: r: acc // collectFromRiglet r.name r) { } (
+      mapAttrsToList (n: r: r // { name = n; }) evaluated.config.riglets
+    );
+
   # Convert an option to a serializable format for inspection
   serializeOption =
     opt:
@@ -358,6 +378,7 @@ let
       manifest
       allExeNames
       modules
+      mcpServers
       configOptions
       ;
   };

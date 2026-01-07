@@ -40,13 +40,27 @@ in
             ];
     in
     # Return a folder derivation with bin/ subfolder
+    #
+    # TODO: Not great. We overwrite the project's .vscode/mcp.json
+    # To be improved
     pkgs.writeShellScriptBin "copilot" ''
+      set -euo pipefail
+
+      warn() {
+        printf "\\033[0;33m%s\\n\\033[0m" "$1" >&2
+      }
+
       export PATH="${rig.toolRoot}/bin:$PATH"
       # COPILOT_CUSTOM_INSTRUCTIONS_DIRS is a comma-separated list of additional dirs to search for AGENTS.md files.
       # We directly use the rig's manifest as such.
       export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="${instructionsDir}"
       # For later reference, if needed
       export RIG_MANIFEST="${instructionsDir}/AGENTS.md"
+
+      ${pkgs.lib.optionalString (rig.mcpServers != { }) ''
+        warn "github-cli doesn't support setting MCP servers outside of XDG_CONFIG_HOME for now"
+        warn "The rig's MCP config is ignored"
+      ''}
 
       exec ${pkgs.lib.getExe copilot-cli} ${pkgs.lib.escapeShellArgs copilotArgs} "$@"
     '';

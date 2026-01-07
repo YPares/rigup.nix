@@ -44,6 +44,18 @@ in
           ++ map (cmd: "Shell(${cmd})") rig.allExeNames; # Allow executing all rig tools
         permissions.deny = [ ];
       };
+
+      # MCP servers configuration
+      mcpConfigJson = (pkgs.formats.json { }).generate "${rig.name}-mcp.json" {
+        mcpServers = pkgs.lib.mapAttrs (
+          name: s:
+          {
+            type = s.transport;
+          }
+          // pkgs.lib.optionalAttrs (s.resolvedCommand != null) { command = s.resolvedCommand; }
+          // pkgs.lib.optionalAttrs (s.url != null) { inherit (s) url; }
+        ) rig.mcpServers;
+      };
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "cursor-agent" ''
@@ -64,6 +76,10 @@ in
       cp "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
       chmod +w "$CURSOR_CONFIG_DIR/cli-config.json"
       warn "Overwrote $CURSOR_CONFIG_DIR/cli-config.json"
+
+      cp "${mcpConfigJson}" "$CURSOR_CONFIG_DIR/mcp.json"
+      chmod +w "$CURSOR_CONFIG_DIR/mcp.json"
+      warn "Overwrote $CURSOR_CONFIG_DIR/mcp.json"
 
       cp "${pkgs.writeText "rig-manifest.mdc" ''
         ---
