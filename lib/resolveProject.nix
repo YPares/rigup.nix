@@ -76,52 +76,6 @@ let
   localTomlContents =
     if pathExists rigupLocalTomlPath then fromTOML (readFile rigupLocalTomlPath) else { };
 
-  # Deep merge two TOML configurations
-  # Local values override base values; lists are concatenated
-  mergeTomlConfigs =
-    base: local:
-    let
-      # Merge two rig definitions
-      mergeRigDef =
-        baseDef: localDef:
-        let
-          # Merge riglets: concatenate lists for each input
-          mergedRiglets =
-            let
-              baseRiglets = baseDef.riglets or { };
-              localRiglets = localDef.riglets or { };
-              allInputs = unique ((attrNames baseRiglets) ++ (attrNames localRiglets));
-            in
-            optionalAttrs (allInputs != [ ]) {
-              riglets = genAttrs allInputs (
-                input: unique ((baseRiglets.${input} or [ ]) ++ (localRiglets.${input} or [ ]))
-              );
-            };
-
-          # Merge config: recursively merge attrsets, local overrides base
-          mergedConfig = optionalAttrs ((baseDef ? config) || (localDef ? config)) {
-            config = recursiveUpdate (baseDef.config or { }) (localDef.config or { });
-          };
-
-          # Extends: local overrides base
-          mergedExtends = optionalAttrs ((baseDef ? extends) || (localDef ? extends)) {
-            extends = localDef.extends or baseDef.extends;
-          };
-        in
-        mergedRiglets // mergedConfig // mergedExtends;
-
-      # Merge rigs section
-      baseRigs = base.rigs or { };
-      localRigs = local.rigs or { };
-      allRigs = unique ((attrNames baseRigs) ++ (attrNames localRigs));
-      mergedRigs = genAttrs allRigs (
-        rigName: mergeRigDef (baseRigs.${rigName} or { }) (localRigs.${rigName} or { })
-      );
-    in
-    optionalAttrs (allRigs != [ ]) { rigs = mergedRigs; };
-
-  rigupTomlContents = mergeTomlConfigs baseTomlContents localTomlContents;
-
   # Resolve riglets from the TOML structure
   # Takes riglets attrset from TOML: { self = ["riglet1", ...]; input = ["riglet2", ...]; }
   # Returns list of resolved modules
@@ -133,34 +87,40 @@ let
       )
     );
 
+  tomlContentsToRigs =
+    system: tomlFileName: rigName: rigDef:
+    let
+      pkgs = import inputs.nixpkgs { inherit system; };
+      modules = rigletsSpecToModules (rigDef.riglets or { }) ++ [
+        (rigDef.config or { } // { _file = tomlFileName; })
+        # _file added for error messages
+      ];
+    in
+    if rigDef ? "extends" then
+      let
+        baseInputs = attrNames rigDef.extends;
+        baseInput =
+          if builtins.length baseInputs != 1 then
+            throw "In rigup.toml - rigs.${rigName}.extends: Can only extend from ONE base rig"
+          else
+            builtins.head baseInputs;
+        baseRigName = rigDef.extends.${baseInput};
+      in
+      enhancedInputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
+        newName = rigName;
+        extraModules = modules;
+      }
+    else
+      flake.lib.buildRig {
+        inherit pkgs modules;
+        name = rigName;
+      };
+
   # Build rigs for all systems
   rigs = genAttrs systems (
     system:
-    mapAttrs (
-      name: rigDef:
-      let
-        pkgs = import inputs.nixpkgs { inherit system; };
-        modules = rigletsSpecToModules (rigDef.riglets or { }) ++ [ (rigDef.config or { }) ];
-      in
-      if rigDef ? "extends" then
-        let
-          baseInputs = attrNames rigDef.extends;
-          baseInput =
-            if builtins.length baseInputs != 1 then
-              throw "In rigup.toml - rigs.${name}.extends: Can only extend from ONE base rig"
-            else
-              builtins.head baseInputs;
-          baseRigName = rigDef.extends.${baseInput};
-        in
-        enhancedInputs.${baseInput}.rigs.${system}.${baseRigName}.extend {
-          newName = name;
-          extraModules = modules;
-        }
-      else
-        flake.lib.buildRig {
-          inherit pkgs modules name;
-        }
-    ) (rigupTomlContents.rigs or { })
+    mapAttrs (tomlContentsToRigs system "rigup.toml") (baseTomlContents.rigs or { })
+    // mapAttrs (tomlContentsToRigs system "rigup.local.toml") (localTomlContents.rigs or { })
   );
 
   rigChecks =
