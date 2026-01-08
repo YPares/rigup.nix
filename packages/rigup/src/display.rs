@@ -23,11 +23,15 @@ where
             .stdin(Stdio::piped())
             .spawn()
             .into_diagnostic()?;
-        let mut stdin = child
-            .stdin
-            .take()
-            .ok_or_else(|| miette::miette!("Failed to capture stdin pipe from less process"))?;
-        write_fn(&mut stdin)?;
+        // IMPORTANT: Not keeping a ref to child.stdin.take() so the handle is close
+        // as soon as possible, else -F above is rendered useless as 'less' cannot
+        // know that no extra data will come
+        write_fn(
+            &mut child
+                .stdin
+                .take()
+                .ok_or_else(|| miette::miette!("Failed to capture stdin pipe from less process"))?,
+        )?;
         child.wait().into_diagnostic()?;
     } else {
         // Not a TTY or pager disabled, write directly to stdout
