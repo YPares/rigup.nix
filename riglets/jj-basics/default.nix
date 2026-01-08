@@ -35,7 +35,7 @@ self:
       version = "0.1.0";
     };
 
-    config-files = riglib.writeFileTree {
+    configFiles = riglib.writeFileTree {
       jj."config.toml" = (pkgs.formats.toml { }).generate "jj-config" {
         user = {
           name = config.agent.identity.name;

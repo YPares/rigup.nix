@@ -32,7 +32,7 @@ _:
     ];
 
     # Tool configuration (optional)
-    # config-files = riglib.writeFileTree {
+    # configFiles = riglib.writeFileTree {
     #   mytool."config.toml" = ''
     #     setting = "value"
     #   '';
@@ -58,14 +58,14 @@ _:
 
         - Edit this riglet to add your own tools and documentation
         - Use riglib.writeFileTree to organize docs
-        - Configure tools via config-files
+        - Configure tools via configFiles
 
         ## Next Steps
 
         1. Add tools to the `tools` list
         2. Update the metadata
         3. Write your documentation
-        4. Add config-files if needed
+        4. Add configFiles if needed
       '';
     };
   };

@@ -4,7 +4,7 @@ flake:
 # Returns an attrset with:
 #   - name: the rig name
 #   - toolRoot: tools' bin/, lib/, share/, etc. folders combined via symlinks
-#   - configRoot: config-files for _wrapped_ tools combined via symlinks
+#   - configRoot: configFiles for _wrapped_ tools combined via symlinks
 #   - docAttrs: attrset of riglet name -> doc folder derivation
 #   - docRoot: riglet docs, one subfolder per riglet, combined via symlinks
 #   - meta: attrset of riglet name -> metadata
@@ -85,7 +85,7 @@ let
   # XDG_CONFIG_HOME folder to set for all _wrapped_ tools
   configRoot = pkgs.symlinkJoin {
     name = "${rigName}-config";
-    paths = map (riglet: riglet.config-files) (attrValues evaluated.config.riglets);
+    paths = map (riglet: riglet.configFiles) (attrValues evaluated.config.riglets);
   };
 
   normalizeTools =

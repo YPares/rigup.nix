@@ -45,8 +45,8 @@ in
               default = null;
             };
 
-            config-files = mkOption {
-              description = "Configuration files folder. All rig's config-files will be joined together to form the rig's XDG_CONFIG_HOME which _wrapped_ tools will then use";
+            configFiles = mkOption {
+              description = "Configuration files folder. All rig's configFiles will be joined together to form the rig's XDG_CONFIG_HOME which _wrapped_ tools will then use";
               type = types.nullOr packageLike;
               default = null;
             };

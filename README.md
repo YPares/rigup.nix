@@ -190,7 +190,7 @@ _:
     # for consultation purposes: tools are by default *wrapped* to see a XDG_CONFIG_HOME that
     # always points to this joint config folder. This way we can separate tools between those
     # that need custom config and those that will just "inherit" the pre-existing user config
-    config-files = riglib.writeFileTree {
+    configFiles = riglib.writeFileTree {
       # Will generate `.config/mytool/config.toml`
       mytool."config.toml" = ''
         setting = "value"

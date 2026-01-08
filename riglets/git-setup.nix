@@ -25,7 +25,7 @@ self:
       disclosure = "none";
     };
 
-    config-files = riglib.writeFileTree {
+    configFiles = riglib.writeFileTree {
       git."config" = pkgs.writeText "gitconfig" ''
         [user]
         	name = ${config.agent.identity.name}

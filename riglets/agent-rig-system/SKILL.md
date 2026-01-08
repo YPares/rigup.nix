@@ -114,7 +114,7 @@ _:
 
     # Configuration files (optional) for tools following the 
     # [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
-    config-files = riglib.writeFileTree {
+    configFiles = riglib.writeFileTree {
       # Built from a Nix attrset
       myapp."config.toml" = (pkgs.formats.toml {}).generate "myapp-config" {
         setting = "value";

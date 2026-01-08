@@ -63,11 +63,11 @@ Riglets overriding this default SHOULD use `nixpkgs.lib.mkDefault`, so end users
 
 ## Tool Configuration Files
 
-**config-files** provides configuration for tools:
+**configFiles** provides configuration for tools:
 
 - Uses `riglib.writeFileTree` to create `.config/` directory structure
 - Follows XDG Base Directory specification
-- All riglets' config-files are merged into `.config/`
+- All riglets' configFiles are merged into `.config/`
 - Example: `jj."config.toml"` → `.config/jj/config.toml`
 - Can use `pkgs.formats.toml`, `.json`, `.yaml` to generate config files from Nix data
 - Can use plain strings for shell scripts or plain text configs

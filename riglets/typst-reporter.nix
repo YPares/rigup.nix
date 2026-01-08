@@ -48,7 +48,7 @@ self:
       version = "0.1.0";
     };
 
-    config-files = riglib.writeFileTree {
+    configFiles = riglib.writeFileTree {
       typst."template.typ" = ''
         // Default ${config.typst.template} template for ${config.agent.identity.name}
         #set document(author: "${config.agent.identity.name}")
