@@ -1,7 +1,7 @@
 use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 use std::env;
 use std::fs;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::process;
 
 fn main() {
@@ -78,15 +78,17 @@ fn main() {
         })
     };
 
-    let entries = extract_toc(&content, max_level);
-
-    // Output entries
-    for (line_num, text) in entries {
-        println!("Line {}: {}", line_num, text);
-    }
+    let stdout = io::stdout();
+    let mut writer = stdout.lock();
+    extract_toc_stream(&content, max_level, &mut writer).expect("Failed to write output");
 }
 
-fn extract_toc(content: &str, max_level: Option<u8>) -> Vec<(usize, String)> {
+/// Stream TOC entries directly to a writer as they're discovered
+fn extract_toc_stream<W: Write>(
+    content: &str,
+    max_level: Option<u8>,
+    writer: &mut W,
+) -> io::Result<()> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_FOOTNOTES);
@@ -95,7 +97,6 @@ fn extract_toc(content: &str, max_level: Option<u8>) -> Vec<(usize, String)> {
     options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
 
     let parser = Parser::new_ext(content, options).into_offset_iter();
-    let mut entries = Vec::new();
     let mut in_heading = false;
     let mut heading_start_offset: usize = 0;
     let mut heading_text = String::new();
@@ -122,7 +123,7 @@ fn extract_toc(content: &str, max_level: Option<u8>) -> Vec<(usize, String)> {
             Event::End(TagEnd::Heading(_)) => {
                 if in_heading {
                     let line_num = offset_to_line_number(content, heading_start_offset);
-                    entries.push((line_num, heading_text.clone()));
+                    writeln!(writer, "Line {}: {}", line_num, heading_text)?;
                     in_heading = false;
                 }
             }
@@ -140,7 +141,7 @@ fn extract_toc(content: &str, max_level: Option<u8>) -> Vec<(usize, String)> {
         }
     }
 
-    entries
+    Ok(())
 }
 
 fn offset_to_line_number(content: &str, offset: usize) -> usize {
@@ -152,6 +153,13 @@ fn offset_to_line_number(content: &str, offset: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Helper to capture output of extract_toc_stream as a string
+    fn extract_to_string(content: &str, max_level: Option<u8>) -> String {
+        let mut buffer = Vec::new();
+        extract_toc_stream(content, max_level, &mut buffer).expect("Writing should not fail");
+        String::from_utf8(buffer).expect("Output should be valid UTF-8")
+    }
 
     #[test]
     fn test_offset_to_line_number() {
@@ -170,22 +178,24 @@ More text
 ### Subsection 1.1
 ## Section 2
 "#;
-        let entries = extract_toc(markdown, None);
-        assert_eq!(entries.len(), 4);
-        assert_eq!(entries[0], (1, "# Title".to_string()));
-        assert_eq!(entries[1], (3, "## Section 1".to_string()));
-        assert_eq!(entries[2], (5, "### Subsection 1.1".to_string()));
-        assert_eq!(entries[3], (6, "## Section 2".to_string()));
+        let output = extract_to_string(markdown, None);
+        insta::assert_snapshot!(output, @r###"
+        Line 1: # Title
+        Line 3: ## Section 1
+        Line 5: ### Subsection 1.1
+        Line 6: ## Section 2
+        "###);
     }
 
     #[test]
     fn test_extract_toc_with_max_level() {
         let markdown = "# Title\n## Section\n### Subsection\n";
-        let entries = extract_toc(markdown, Some(2));
+        let output = extract_to_string(markdown, Some(2));
         // Should extract "# Title" and "## Section", but not "### Subsection"
-        assert_eq!(entries.len(), 2);
-        assert_eq!(entries[0], (1, "# Title".to_string()));
-        assert_eq!(entries[1], (2, "## Section".to_string()));
+        insta::assert_snapshot!(output, @r###"
+        Line 1: # Title
+        Line 2: ## Section
+        "###);
     }
 
     #[test]
@@ -198,11 +208,12 @@ author: Test Author
 # Real Heading 1
 ## Real Heading 2
 "#;
-        let entries = extract_toc(markdown, None);
+        let output = extract_to_string(markdown, None);
         // The YAML frontmatter delimiters (---) should not be treated as headings
         // Should only extract the real headings, not the frontmatter delimiters
-        assert_eq!(entries.len(), 2);
-        assert_eq!(entries[0], (6, "# Real Heading 1".to_string()));
-        assert_eq!(entries[1], (7, "## Real Heading 2".to_string()));
+        insta::assert_snapshot!(output, @r###"
+        Line 6: # Real Heading 1
+        Line 7: ## Real Heading 2
+        "###);
     }
 }

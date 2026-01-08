@@ -8,6 +8,9 @@ license = "MIT"
 [dependencies]
 pulldown-cmark = "^0.13"
 
+[dev-dependencies]
+insta = "1.41"
+
 [[bin]]
 name = "extract-md-toc"
 path = "src/main.rs"

@@ -94,9 +94,8 @@ pub fn show_flake(
                     let is_last = idx == riglets_count - 1;
                     // display_riglet still uses String internally for wrapping,
                     // but we write it out immediately
-                    let mut riglet_output = String::new();
                     display_riglet(
-                        &mut riglet_output,
+                        output,
                         &riglet_name,
                         &meta,
                         section_prefix,
@@ -105,7 +104,6 @@ pub fn show_flake(
                         detailed,
                         no_descriptions,
                     )?;
-                    write!(output, "{}", riglet_output).into_diagnostic()?;
                 }
             }
 

@@ -7,7 +7,7 @@ use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fmt::Write as FmtWrite;
+use std::io::Write;
 
 /// Format a JSON value for display
 fn format_value(value: &Value) -> String {
@@ -40,7 +40,7 @@ fn format_value(value: &Value) -> String {
 
 /// Display a config option with tree formatting
 fn display_config_option(
-    output: &mut String,
+    output: &mut dyn Write,
     name: &str,
     option: &ConfigOption,
     prefix: &str,
@@ -131,7 +131,7 @@ fn display_config_option(
 
 /// Display config values recursively
 fn display_config_values(
-    output: &mut String,
+    output: &mut dyn Write,
     values: &HashMap<String, ConfigValue>,
     prefix: &str,
     terminal_width: usize,
@@ -254,9 +254,8 @@ pub fn inspect_rig(
                 let is_last = idx == riglets_count - 1;
                 // display_riglet still uses String internally for wrapping,
                 // but we write it out immediately
-                let mut riglet_output = String::new();
                 display_riglet(
-                    &mut riglet_output,
+                    output,
                     riglet_name,
                     meta,
                     " │ ",
@@ -265,7 +264,6 @@ pub fn inspect_rig(
                     detailed,
                     no_descriptions,
                 )?;
-                write!(output, "{}", riglet_output).into_diagnostic()?;
             }
         }
 
@@ -281,16 +279,14 @@ pub fn inspect_rig(
             writeln!(output, " {}⚙️  {}", section_branch, "Configuration".bold())
                 .into_diagnostic()?;
 
-            let mut config_output = String::new();
             display_config_values(
-                &mut config_output,
+                output,
                 &inspection.options,
                 section_prefix,
                 terminal_width,
                 detailed,
                 no_descriptions,
             )?;
-            write!(output, "{}", config_output).into_diagnostic()?;
         }
 
         Ok(())

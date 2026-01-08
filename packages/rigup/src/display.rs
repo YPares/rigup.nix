@@ -2,7 +2,6 @@ use crate::types::RigletMeta;
 use itertools::Itertools;
 use miette::{IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
-use std::fmt::Write as FmtWrite;
 use std::io::{self, IsTerminal, Write};
 use std::process::{Command, Stdio};
 use textwrap::{wrap, Options};
@@ -52,7 +51,7 @@ pub fn wrap_with_prefix(text: &str, prefix: &str, terminal_width: usize) -> Stri
 
 /// Display a riglet's metadata with tree formatting
 pub fn display_riglet(
-    output: &mut String,
+    output: &mut dyn Write,
     name: &str,
     meta: &RigletMeta,
     prefix: &str,
