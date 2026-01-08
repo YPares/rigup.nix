@@ -2,12 +2,22 @@ self:
 {
   pkgs,
   system,
+  lib,
+  config,
   ...
 }:
 let
   inherit (self.inputs.llm-agents.packages.${system}) claude-code;
 in
 {
+  options.claude-code = with lib; {
+    strictMcpConfig = mkOption {
+      description = "Deactivate all MCP servers besides those configured in the rig";
+      type = types.bool;
+      default = false;
+    };
+  };
+
   # Define the entrypoint for this rig - launches Claude Code with rig context
   config.entrypoint =
     rig:
@@ -46,7 +56,12 @@ in
       # For later reference, if needed
       export RIG_MANIFEST="${manifestPath}"
 
-      exec ${pkgs.lib.getExe claude-code} --append-system-prompt "$(cat ${manifestPath})" --settings "${settingsJson}" --mcp-config ${mcpConfig} "$@"
+      exec ${pkgs.lib.getExe claude-code} \
+        --append-system-prompt "$(cat ${manifestPath})" \
+        --settings "${settingsJson}" \
+        --mcp-config ${mcpConfig} \
+        ${lib.optionalString config.claude-code.strictMcpConfig "--strict-mcp-config"} \
+        "$@"
     '';
 
   config.riglets.claude-code = {
