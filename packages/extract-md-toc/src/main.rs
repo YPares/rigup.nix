@@ -1,86 +1,39 @@
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
-use std::env;
+use clap::Parser;
+use pulldown_cmark::{Event, Options, Parser as MarkdownParser, Tag, TagEnd};
 use std::fs;
 use std::io::{self, Read, Write};
-use std::process;
+
+#[derive(Parser)]
+#[command(name = "extract-md-toc")]
+#[command(about = "Extract table of contents from markdown files with line numbers", long_about = None)]
+struct Cli {
+    /// Path to markdown file to parse, or '-' to read from stdin
+    file: String,
+
+    /// Only extract headers up to level N (>=1). Default: extract all levels
+    #[arg(long, value_name = "N", value_parser = clap::value_parser!(u8).range(1..))]
+    max_level: Option<u8>,
+}
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let cli = Cli::parse();
 
-    if args.len() < 2 {
-        eprintln!("Usage: {} [OPTIONS] <file|-|--help>", args[0]);
-        eprintln!("  file: Path to markdown file");
-        eprintln!("  -: Read from stdin");
-        eprintln!("  --help: Show this help");
-        eprintln!("\nOptions:");
-        eprintln!("  --max-level N: Only extract headers up to level N (1-6)");
-        process::exit(1);
-    }
-
-    if args[1] == "--help" {
-        println!("extract-md-toc - Extract table of contents from markdown files");
-        println!("\nUsage: {} [OPTIONS] <file|->", args[0]);
-        println!("\nOptions:");
-        println!("  --max-level N  Only extract headers up to level N (1-6). Default: extract all levels");
-        println!("\nArguments:");
-        println!("  file           Path to markdown file to parse");
-        println!("  -              Read from stdin");
-        println!("\nOutput format:");
-        println!("  Generates XML with headers and line numbers:");
-        println!("  <entry line=\"5\">## Header Text</entry>");
-        return;
-    }
-
-    // Parse arguments
-    let mut max_level: Option<u8> = None;
-    let mut file_arg: Option<String> = None;
-
-    let mut i = 1;
-    while i < args.len() {
-        match args[i].as_str() {
-            "--max-level" => {
-                if i + 1 >= args.len() {
-                    eprintln!("Error: --max-level requires a value");
-                    process::exit(1);
-                }
-                max_level = Some(args[i + 1].parse().unwrap_or_else(|_| {
-                    eprintln!("Error: --max-level must be a number between 1 and 6");
-                    process::exit(1);
-                }));
-                if max_level.unwrap() < 1 || max_level.unwrap() > 6 {
-                    eprintln!("Error: --max-level must be between 1 and 6");
-                    process::exit(1);
-                }
-                i += 2;
-            }
-            arg => {
-                file_arg = Some(arg.to_string());
-                i += 1;
-            }
-        }
-    }
-
-    let file = file_arg.unwrap_or_else(|| {
-        eprintln!("Error: No input file specified");
-        process::exit(1);
-    });
-
-    let content = if file == "-" {
+    let content = if cli.file == "-" {
         let mut buffer = String::new();
         io::stdin()
             .read_to_string(&mut buffer)
             .expect("Failed to read from stdin");
         buffer
     } else {
-        fs::read_to_string(&file).unwrap_or_else(|err| {
-            eprintln!("Error reading file '{}': {}", file, err);
-            process::exit(1);
+        fs::read_to_string(&cli.file).unwrap_or_else(|err| {
+            eprintln!("Error reading file '{}': {}", cli.file, err);
+            std::process::exit(1);
         })
     };
 
     let stdout = io::stdout();
     let mut writer = stdout.lock();
-    extract_toc_stream(&content, max_level, &mut writer).expect("Failed to write output");
+    extract_toc_stream(&content, cli.max_level, &mut writer).expect("Failed to write output");
 }
 
 /// Stream TOC entries directly to a writer as they're discovered
@@ -96,7 +49,7 @@ fn extract_toc_stream<W: Write>(
     options.insert(Options::ENABLE_TASKLISTS);
     options.insert(Options::ENABLE_YAML_STYLE_METADATA_BLOCKS);
 
-    let parser = Parser::new_ext(content, options).into_offset_iter();
+    let parser = MarkdownParser::new_ext(content, options).into_offset_iter();
     let mut in_heading = false;
     let mut heading_start_offset: usize = 0;
     let mut heading_text = String::new();
