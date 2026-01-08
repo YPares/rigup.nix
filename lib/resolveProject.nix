@@ -1,17 +1,26 @@
 # rigup flake's self
 flake:
-# Resolves complete project structure from rigup.toml configuration
+# Resolves complete project structure from rigup.toml file(s) and riglets folder.
+# Mandatory arguments are 'inputs' and 'projectUri'.
+#
 # Arguments:
 #   - projectUri: a URI indentifying your project, to be used in error messages
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
 #   - systems: list of systems to generate rigs for (e.g., ["x86_64-linux"])
+#   - rigletsDir: directory where to look for riglets
+#   - tomlConfig: path to rigup.toml
+#   - localTomlConfig: path to rigup.local.toml
 #   - checkRiglets: if true, a singleton rig for each riglet will be built as part of checks.${system}
 #   - checkRigs: if true, all rigs' derivations will be included into checks.${system}
+#
 # Returns: { riglets = {...}; rigs.<system>.<rig> = {...}; [ checks.<system>."<rig>-{home,shell}" = <derivation> ] }
 {
   projectUri,
   inputs,
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
+  rigletsDir ? "${inputs.self}/riglets",
+  tomlConfig ? "${inputs.self}/rigup.toml",
+  localTomlConfig ? "${inputs.self}/rigup.local.toml",
   checkRiglets ? false,
   checkRigs ? false,
 }:
@@ -33,19 +42,24 @@ let
     };
   };
 
-  # Auto-discover all riglets from riglets/ directory
-  rigletsDir = enhancedInputs.self + "/riglets";
+  # Tidy up some paths for error message purposes
+  tryRmStorePrefix =
+    absPath:
+    let
+      matches = builtins.match "^${builtins.storeDir}/[^/]+/(.+)$" (toString absPath);
+    in
+    if matches == null then absPath else builtins.head matches;
 
   # Each riglet takes self as a first argument, and is wrapped by creating a dummy module whose sole purpose is to import the riglet and define a unique `key` for evalModules deduplication.
   # This ensures that if riglet A imports riglet B, and B is also added explicitly,
   # evalModules only processes B once.
-  applyFlakeSelf = rigletName: rigletPath: {
+  applyRigletFirstArg = rigletAbsPath: {
     # To deduplicate if the same riglet is added twice to the rig
-    key = rigletPath;
-    # For error messages - shows full path in Nix store
-    _file = "${projectUri}#riglets.${rigletName} (${rigletPath})";
+    key = rigletAbsPath;
+    # For error messages (shows path relative to projectUri & full path in Nix store)
+    _file = "${projectUri}/${tryRmStorePrefix rigletAbsPath} (${rigletAbsPath})";
     # Pass enhanced inputs so riglets can access claudeMarketplace
-    imports = [ (import rigletPath enhancedInputs.self) ];
+    imports = [ (import rigletAbsPath enhancedInputs.self) ];
   };
 
   riglets = concatMapAttrs (
@@ -53,20 +67,16 @@ let
     optionalAttrs
       (
         (match ".*\\.nix$" fileName != null && fileName != "default.nix")
-        || (entry == "directory" && pathExists (rigletsDir + "/${fileName}/default.nix"))
+        || (entry == "directory" && pathExists "${rigletsDir}/${fileName}/default.nix")
       )
       (
         let
           # .nix files: strip extension; directories: keep as-is
           rigletName = replaceStrings [ ".nix" ] [ "" ] fileName;
-          rigletPath =
-            if entry == "directory" then
-              rigletsDir + "/${fileName}/default.nix"
-            else
-              rigletsDir + "/${fileName}";
+          rigletRelPath = if entry == "directory" then "${fileName}/default.nix" else fileName;
         in
         {
-          "${rigletName}" = applyFlakeSelf rigletName rigletPath;
+          "${rigletName}" = applyRigletFirstArg "${rigletsDir}/${rigletRelPath}";
         }
       )
   ) (if pathExists rigletsDir then builtins.readDir rigletsDir else { });
@@ -81,7 +91,8 @@ let
         rigName: rigDef:
         recursiveUpdate {
           riglets = { };
-          config._file = "${projectUri}/${baseNameOf source}::[rigs.${rigName}.config] (${source})"; # Will be shown in error messages
+          config._file = # Will be shown in error messages
+            "${projectUri}/${tryRmStorePrefix source}::[rigs.${rigName}.config] (${source})";
         } rigDef
       ) contents.rigs or { };
     };
@@ -90,7 +101,7 @@ let
   # Takes riglets attrset from TOML: { self = ["riglet1", ...]; input = ["riglet2", ...]; }
   # Returns list of resolved modules
   rigletsSpecToModules =
-    source: rigName: rigletsSpec:
+    rigDefError: rigletsSpec:
     concatLists (
       attrValues (
         mapAttrs (
@@ -98,35 +109,39 @@ let
           map (
             n:
             enhancedInputs.${input}.riglets.${n}
-              or (throw "${projectUri}/${baseNameOf source}::[rigs.${rigName}] uses `${input}.riglets.${n}` which does not exist\n(source: ${source})")
+              or (throw (rigDefError "uses `${input}.riglets.${n}` which does not exist"))
           ) names
         ) rigletsSpec
       )
     );
 
-  tomlContentsToRigs =
-    system: source: rigName: rigDef:
+  tomlContentsToRig =
+    system: tomlSource: rigName: rigDef:
     let
       pkgs = import inputs.nixpkgs { inherit system; };
-      modules = rigletsSpecToModules source rigName rigDef.riglets ++ [ rigDef.config ];
+      rigDefError =
+        msg:
+        "${projectUri}/${tryRmStorePrefix tomlSource}::[rigs.${rigName}] ${msg}\n(source: ${tomlSource})";
+      modules = rigletsSpecToModules rigDefError rigDef.riglets ++ [ rigDef.config ];
     in
     if rigDef ? "extends" then
       let
         baseRigInputs = attrNames rigDef.extends;
         baseRigInput =
           if builtins.length baseRigInputs != 1 then
-            throw "${projectUri}/${baseNameOf source}::[rigs.${rigName}] extends more than one base rig\n(source: ${source})"
+            throw (rigDefError "extends more than one base rig")
           else
             builtins.head baseRigInputs;
         baseRigName = rigDef.extends.${baseRigInput};
+        baseRig =
+          enhancedInputs.${baseRigInput}.rigs.${system}.${baseRigName} or (throw (
+            rigDefError "extends `${baseRigInput}.rigs.${system}.${baseRigName}` which does not exist"
+          ));
       in
-      (enhancedInputs.${baseRigInput}.rigs.${system}.${baseRigName}
-        or (throw "${projectUri}/${baseNameOf source}::[rigs.${rigName}] extends `${baseRigInput}.rigs.${system}.${baseRigName}` which does not exist\n(source: ${source})")
-      ).extend
-        {
-          newName = rigName;
-          extraModules = modules;
-        }
+      baseRig.extend {
+        newName = rigName;
+        extraModules = modules;
+      }
     else
       flake.lib.buildRig {
         inherit pkgs modules;
@@ -136,12 +151,8 @@ let
   # Build rigs for all systems
   rigs = genAttrs systems (
     system:
-    let
-      toml = enhancedInputs.self + "/rigup.toml";
-      localToml = enhancedInputs.self + "/rigup.local.toml";
-    in
-    mapAttrs (tomlContentsToRigs system toml) (loadTomlConfig toml).rigs
-    // mapAttrs (tomlContentsToRigs system localToml) (loadTomlConfig localToml).rigs
+    mapAttrs (tomlContentsToRig system tomlConfig) (loadTomlConfig tomlConfig).rigs
+    // mapAttrs (tomlContentsToRig system localTomlConfig) (loadTomlConfig localTomlConfig).rigs
   );
 
   rigChecks =

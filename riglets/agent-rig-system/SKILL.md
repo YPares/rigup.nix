@@ -192,7 +192,11 @@ Then use `rigup.lib.resolveProject` in your flake.nix:
     #   - exposes one main "entrypoint" function, callable through the flake "object" itself
     #   - inspects user flake's inputs and repository's contents
     #   - constructs (part of) user flake's outputs
-    rigup { inherit inputs; }
+    rigup {
+      inherit inputs;
+      # A unique name, used in error messages, to make it more explicit where mentioned riglets come from
+      projectUri = "some-username/some-project-name";
+    }
 }
 ```
 
@@ -210,7 +214,10 @@ For config not representable in TOML:
       pkgs = import nixpkgs { inherit system; };
     in
     pkgs.lib.recursiveUpdate # merges both recursively, second arg taking precedence
-      (rigup.lib.resolveProject { inherit inputs; })
+      (rigup.lib.resolveProject {
+        inherit inputs;
+        projectUri = "...";
+      })
       {
         rigs.${system}.custom = rigup.lib.buildRig {
           name = "my-custom-rig";

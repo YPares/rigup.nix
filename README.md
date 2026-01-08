@@ -301,8 +301,11 @@ Your `flake.nix` should be:
   outputs = { self, rigup, ... }@inputs:
     rigup {
       inherit inputs;
-      # Include this if you want your rigs to be built as part of `nix flake check`
+      # A unique name to identify your project in error messages :
+      projectUri = "my-username/my-project";
+      # Add this if you want your rigs and/or riglets to be built as part of `nix flake check` :
       #checkRigs = true;
+      #checkRiglets = true;
     };
 }
 ```
@@ -350,7 +353,10 @@ It is mainly because pure data (that can already cover a large set of use cases)
       pkgs = import nixpkgs { inherit system; };
     in
     pkgs.lib.recursiveUpdate  # merge both recursively, second arg taking precedence
-      (rigup { inherit inputs; })
+      (rigup {
+        inherit inputs;
+        projectUri = "...";
+      })
       {
         # Override or extend with custom rigs
         rigs.${system}.custom = rigup.lib.buildRig {
@@ -375,8 +381,8 @@ It is mainly because pure data (that can already cover a large set of use cases)
 }
 ```
 
-**IMPORTANT:** This makes the `rigup.toml` entirely _optional_, but it is **still necessary** to use `rigup { inherit inputs; }` to construct your flake's outputs.
-This is so `rigup` can discover which riglets are defined in your `$PROJECT_ROOT/riglets/` and set up the `riglets` output of your flake.
+**IMPORTANT:** This makes the `rigup.toml` entirely _optional_, but it is **still necessary** to use `rigup { inherit inputs; ... }` to construct your flake's outputs.
+This is so `rigup` can discover which riglets are defined in your `$PROJECT_ROOT/riglets/` and correctly set up the `riglets` output of your flake.
 
 As the above suggests, you can totally mix both options: define some simple rigs in the `rigup.toml` and some advanced ones in Nix code.
 Although, prefer splitting you rigs' definitions in separate Nix files rather than declaring everything in your `flake.nix`, the example above is just for the sake of concision.

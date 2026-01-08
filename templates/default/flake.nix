@@ -22,6 +22,7 @@
     }@inputs:
     rigup {
       inherit inputs;
+      projectUri = "my-username/my-repo";
       checkRigs = true;
     };
 }
