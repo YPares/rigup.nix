@@ -23,18 +23,6 @@ in
           "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
         ]
         ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
-
-        hooks.SessionStart = [
-          {
-            matcher = "startup";
-            hooks = [
-              {
-                type = "command";
-                command = "cat ${manifestPath}";
-              }
-            ];
-          }
-        ];
       };
     in
     # Return a folder derivation with bin/ subfolder
@@ -44,7 +32,7 @@ in
       # For later reference, if needed
       export RIG_MANIFEST="${manifestPath}"
 
-      exec ${pkgs.lib.getExe claude-code} --settings "${settingsJson}" "$@"
+      exec ${pkgs.lib.getExe claude-code} --append-system-prompt "$(cat ${manifestPath})" --settings "${settingsJson}" "$@"
     '';
 
   config.riglets.claude-code = {
