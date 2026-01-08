@@ -7,12 +7,13 @@ use std::io::{self, IsTerminal, Write};
 use std::process::{Command, Stdio};
 use textwrap::{wrap, Options};
 
-/// Pipe output through less if stdout is a TTY, otherwise print directly
-pub fn pipe_through_less(content: &str, no_pager: bool) -> Result<()> {
+/// Execute a closure that writes to output, piping through less if stdout is a TTY
+pub fn with_output<F>(no_pager: bool, write_fn: F) -> Result<()>
+where
+    F: FnOnce(&mut dyn Write) -> Result<()>,
+{
     let stdout = io::stdout();
-
-    // Check if stdout is a TTY and pager is not disabled
-    if stdout.is_terminal() && !no_pager {
+    if !no_pager && stdout.is_terminal() {
         // Spawn less with flags:
         // -R: preserve ANSI color codes
         // -S: don't wrap lines (scroll horizontally)
@@ -23,17 +24,16 @@ pub fn pipe_through_less(content: &str, no_pager: bool) -> Result<()> {
             .stdin(Stdio::piped())
             .spawn()
             .into_diagnostic()?;
-
-        if let Some(mut stdin) = child.stdin.take() {
-            stdin.write_all(content.as_bytes()).into_diagnostic()?;
-        }
-
+        let mut stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| miette::miette!("Failed to capture stdin pipe from less process"))?;
+        write_fn(&mut stdin)?;
         child.wait().into_diagnostic()?;
     } else {
-        // Not a TTY or pager disabled, just print directly
-        print!("{}", content);
+        // Not a TTY or pager disabled, write directly to stdout
+        write_fn(&mut stdout.lock())?;
     }
-
     Ok(())
 }
 

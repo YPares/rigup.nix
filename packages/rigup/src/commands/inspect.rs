@@ -1,4 +1,4 @@
-use crate::display::{display_riglet, pipe_through_less, wrap_with_prefix};
+use crate::display::{display_riglet, with_output, wrap_with_prefix};
 use crate::error::RigupError;
 use crate::nix::{get_system, parse_flake_ref, resolve_flake_path, run_nix_eval_json};
 use crate::types::{ConfigOption, ConfigValue, RigInspection};
@@ -227,70 +227,74 @@ pub fn inspect_rig(
         .map(|(w, _)| w.0 as usize)
         .unwrap_or(80);
 
-    // Collect output into a buffer
-    let mut output = String::new();
+    // Stream output directly through less or stdout
+    with_output(no_pager, |output| {
+        // Display rig header
+        writeln!(
+            output,
+            "📟 {} {}",
+            inspection.name.bright_blue().bold(),
+            if let Some(ref prog) = inspection.entrypoint {
+                format!("(entrypoint: {})", prog.magenta())
+            } else {
+                String::new()
+            }
+        )
+        .into_diagnostic()?;
 
-    // Display rig header
-    writeln!(
-        output,
-        "📟 {} {}",
-        inspection.name.bright_blue().bold(),
-        if let Some(ref prog) = inspection.entrypoint {
-            format!("(entrypoint: {})", prog.magenta())
-        } else {
-            String::new()
+        // Display riglets section
+        if !inspection.riglets.is_empty() {
+            writeln!(output, " ├─🧩 {}", "Riglets".bold()).into_diagnostic()?;
+
+            let mut riglets_vec: Vec<_> = inspection.riglets.iter().collect();
+            riglets_vec.sort_by(|a, b| a.0.cmp(b.0));
+            let riglets_count = riglets_vec.len();
+
+            for (idx, (riglet_name, meta)) in riglets_vec.into_iter().enumerate() {
+                let is_last = idx == riglets_count - 1;
+                // display_riglet still uses String internally for wrapping,
+                // but we write it out immediately
+                let mut riglet_output = String::new();
+                display_riglet(
+                    &mut riglet_output,
+                    riglet_name,
+                    meta,
+                    " │ ",
+                    is_last,
+                    terminal_width,
+                    detailed,
+                    no_descriptions,
+                )?;
+                write!(output, "{}", riglet_output).into_diagnostic()?;
+            }
         }
-    )
-    .into_diagnostic()?;
 
-    // Display riglets section
-    if !inspection.riglets.is_empty() {
-        writeln!(output, " ├─🧩 {}", "Riglets".bold()).into_diagnostic()?;
+        // Display config options section
+        if !inspection.options.is_empty() {
+            let section_branch = if inspection.riglets.is_empty() {
+                "└─"
+            } else {
+                "└─"
+            };
+            let section_prefix = "   ";
 
-        let mut riglets_vec: Vec<_> = inspection.riglets.iter().collect();
-        riglets_vec.sort_by(|a, b| a.0.cmp(b.0));
-        let riglets_count = riglets_vec.len();
+            writeln!(output, " {}⚙️  {}", section_branch, "Configuration".bold())
+                .into_diagnostic()?;
 
-        for (idx, (riglet_name, meta)) in riglets_vec.into_iter().enumerate() {
-            let is_last = idx == riglets_count - 1;
-            display_riglet(
-                &mut output,
-                riglet_name,
-                meta,
-                " │ ",
-                is_last,
+            let mut config_output = String::new();
+            display_config_values(
+                &mut config_output,
+                &inspection.options,
+                section_prefix,
                 terminal_width,
                 detailed,
                 no_descriptions,
             )?;
+            write!(output, "{}", config_output).into_diagnostic()?;
         }
-    }
 
-    // Display config options section
-    if !inspection.options.is_empty() {
-        let section_branch = if inspection.riglets.is_empty() {
-            "└─"
-        } else {
-            "└─"
-        };
-        let section_prefix = "   ";
-
-        writeln!(output, " {}⚙️  {}", section_branch, "Configuration".bold()).into_diagnostic()?;
-
-        display_config_values(
-            &mut output,
-            &inspection.options,
-            section_prefix,
-            terminal_width,
-            detailed,
-            no_descriptions,
-        )?;
-    }
-
-    writeln!(output).into_diagnostic()?;
-
-    // Pipe output through less if stdout is a TTY and pager is not disabled
-    pipe_through_less(&output, no_pager)?;
+        Ok(())
+    })?;
 
     Ok(())
 }
