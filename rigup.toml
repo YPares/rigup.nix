@@ -43,6 +43,9 @@ typst.template = "simple"
 extends.self = "example-rig"
 riglets.self = ["claude-code"]
 
+[rigs.example-rig-claude.config]
+claude-code.strictMcpConfig = true
+
 [rigs.example-rig-claude.config.agent.personality]
 inspiration = "Max Mayfield (from Stranger Things)"
 tone = "passive-agressive"
