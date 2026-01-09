@@ -8,8 +8,7 @@ flake:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
 #   - systems: list of systems to generate rigs for (e.g., ["x86_64-linux"])
 #   - rigletsDir: directory where to look for riglets
-#   - tomlConfig: path to rigup.toml
-#   - localTomlConfig: path to rigup.local.toml
+#   - tomlConfigs: path to rigup.toml(s) files
 #   - checkRiglets: if true, a singleton rig for each riglet will be built as part of checks.${system}
 #   - checkRigs: if true, all rigs' derivations will be included into checks.${system}
 #
@@ -19,8 +18,10 @@ flake:
   inputs,
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
   rigletsDir ? "${inputs.self}/riglets",
-  tomlConfig ? "${inputs.self}/rigup.toml",
-  localTomlConfig ? "${inputs.self}/rigup.local.toml",
+  tomlConfigs ? [
+    "${inputs.self}/rigup.toml"
+    "${inputs.self}/rigup.local.toml"
+  ],
   checkRiglets ? false,
   checkRigs ? false,
 }:
@@ -151,8 +152,29 @@ let
   # Build rigs for all systems
   rigs = genAttrs systems (
     system:
-    mapAttrs (tomlContentsToRig system tomlConfig) (loadTomlConfig tomlConfig).rigs
-    // mapAttrs (tomlContentsToRig system localTomlConfig) (loadTomlConfig localTomlConfig).rigs
+    let
+      inherit (attrsets) zipAttrsWith;
+
+      loadedConfigs = map loadTomlConfig tomlConfigs;
+      mergeRigDefs = _rigName: zipAttrsWith mergeRigDefAttrs;
+      mergeRigDefAttrs =
+        attrName:
+        let
+          case.extends = zipAttrsWith (_inputName: vals: tail vals);
+          case.riglets = zipAttrsWith mergeRigletSources;
+          case.config = 
+        in
+        case.${attrName};
+      mergeRigletSources = _sourceName: concat;
+    in
+    {
+      rigs = zipAttrsWith mergeRigDefs (map (c: c.rigs) loadedConfigs);
+      # genAttrs
+      # allRigNames
+      # (rigName: 1);
+      # mapAttrs (tomlContentsToRig system tomlConfig) (loadTomlConfig tomlConfig).rigs
+      # // mapAttrs (tomlContentsToRig system localTomlConfig) (loadTomlConfig localTomlConfig).rigs
+    }
   );
 
   rigChecks =
