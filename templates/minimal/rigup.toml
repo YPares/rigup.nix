@@ -13,8 +13,7 @@ rigup = ["agent-rig-system"]
 
 # Local overrides:
 # Create rigup.local.toml and add it to .gitignore to override config without modifying this file.
-# Local values take precedence:
-#   - Riglet lists are concatenated
-#   - Config values are deeply merged (local overrides base)
-#   - Extends values are replaced
+#
+# rigup.local.toml can define new rigs that extend the ones defined here.
+# 
 # rigup CLI tool will automatically `git add` it so it is always part of the evaluated flake, even if gitignored.

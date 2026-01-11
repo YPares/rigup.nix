@@ -11,6 +11,7 @@ flake:
 #   - configOptions: serializable nested attrset of option name -> option info (description, type, default, value)
 #   - home: complete rig directory (RIG.md + bin/ + docs/ + .config/)
 #   - shell: complete rig, in devShell form (slightly different manifest to directly read from nix store instead of local symlinks)
+#   - modules: the set of modules passed to buildRig
 #   - extend: function that takes a list of extra riglet modules and combines them with those of the rig
 #   - entrypoint: null, or folder derivation with `bin/<entrypoint_executable>`
 #   - manifest: default manifest with full Nix store paths, overridable to show shorter paths (see flake.lib.genManifest for available args)
@@ -356,6 +357,7 @@ let
       shell
       manifest
       allExeNames
+      modules
       configOptions
       ;
   };

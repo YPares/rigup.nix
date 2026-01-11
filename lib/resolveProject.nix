@@ -92,6 +92,7 @@ let
         rigName: rigDef:
         recursiveUpdate {
           inherit source;
+          extends = { };
           riglets = { };
           config = {
             key = "${source}::${rigName}";
@@ -102,22 +103,35 @@ let
       ) contents.rigs or { };
     };
 
+  ensureList = x: if isList x then x else [ x ];
+
+  extendsSpecToRigs =
+    system: rigDefError: extendsSpec:
+    concatLists (
+      mapAttrsToList (
+        input: namesFromInputs:
+        map (
+          baseRigName:
+          enhancedInputs.${input}.rigs.${system}.${baseRigName}
+            or (throw (rigDefError "extends `${input}.rigs.${system}.${baseRigName}` which does not exist"))
+        ) (ensureList namesFromInputs)
+      ) extendsSpec
+    );
+
   # Resolve riglets from the TOML structure
   # Takes riglets attrset from TOML: { self = ["riglet1", ...]; input = ["riglet2", ...]; }
   # Returns list of resolved modules
   rigletsSpecToModules =
     rigDefError: rigletsSpec:
     concatLists (
-      attrValues (
-        mapAttrs (
-          input: names:
-          map (
-            n:
-            enhancedInputs.${input}.riglets.${n}
-              or (throw (rigDefError "uses `${input}.riglets.${n}` which does not exist"))
-          ) names
-        ) rigletsSpec
-      )
+      mapAttrsToList (
+        input: namesFromInputs:
+        map (
+          rigletName:
+          enhancedInputs.${input}.riglets.${rigletName}
+            or (throw (rigDefError "uses `${input}.riglets.${rigletName}` which does not exist"))
+        ) (ensureList namesFromInputs)
+      ) rigletsSpec
     );
 
   tomlContentsToRig =
@@ -127,31 +141,15 @@ let
       rigDefError =
         msg:
         "${projectUri}/${tryRmStorePrefix rigDef.source}::[rigs.${rigName}] ${msg}\n(source: ${rigDef.source})";
-      modules = rigletsSpecToModules rigDefError rigDef.riglets ++ [ rigDef.config ];
     in
-    if rigDef ? "extends" then
-      let
-        baseRigInputs = attrNames rigDef.extends;
-        baseRigInput =
-          if builtins.length baseRigInputs != 1 then
-            throw (rigDefError "extends more than one base rig")
-          else
-            builtins.head baseRigInputs;
-        baseRigName = rigDef.extends.${baseRigInput};
-        baseRig =
-          enhancedInputs.${baseRigInput}.rigs.${system}.${baseRigName} or (throw (
-            rigDefError "extends `${baseRigInput}.rigs.${system}.${baseRigName}` which does not exist"
-          ));
-      in
-      baseRig.extend {
-        newName = rigName;
-        extraModules = modules;
-      }
-    else
-      flake.lib.buildRig {
-        inherit pkgs modules;
-        name = rigName;
-      };
+    flake.lib.buildRig {
+      inherit pkgs;
+      name = rigName;
+      modules =
+        concatMap (r: r.modules) (extendsSpecToRigs system rigDefError rigDef.extends)
+        ++ rigletsSpecToModules rigDefError rigDef.riglets
+        ++ [ rigDef.config ];
+    };
 
   # Build rigs for all systems
   rigs = genAttrs systems (
