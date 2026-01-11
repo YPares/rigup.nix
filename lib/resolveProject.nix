@@ -8,8 +8,7 @@ flake:
 #   - inputs: flake inputs attrset (must include self and nixpkgs)
 #   - systems: list of systems to generate rigs for (e.g., ["x86_64-linux"])
 #   - rigletsDir: directory where to look for riglets
-#   - tomlConfig: path to rigup.toml
-#   - localTomlConfig: path to rigup.local.toml
+#   - tomlConfigs: path to rigup.toml(s) files
 #   - checkRiglets: if true, a singleton rig for each riglet will be built as part of checks.${system}
 #   - checkRigs: if true, all rigs' derivations will be included into checks.${system}
 #
@@ -19,8 +18,10 @@ flake:
   inputs,
   systems ? inputs.nixpkgs.lib.systems.flakeExposed,
   rigletsDir ? "${inputs.self}/riglets",
-  tomlConfig ? "${inputs.self}/rigup.toml",
-  localTomlConfig ? "${inputs.self}/rigup.local.toml",
+  tomlConfigs ? [
+    "${inputs.self}/rigup.toml"
+    "${inputs.self}/rigup.local.toml"
+  ],
   checkRiglets ? false,
   checkRigs ? false,
 }:
@@ -90,9 +91,13 @@ let
       rigs = mapAttrs (
         rigName: rigDef:
         recursiveUpdate {
+          inherit source;
           riglets = { };
-          config._file = # Will be shown in error messages
-            "${projectUri}/${tryRmStorePrefix source}::[rigs.${rigName}.config] (${source})";
+          config = {
+            key = "${source}::${rigName}";
+            _file = # Will be shown in error messages
+              "${projectUri}/${tryRmStorePrefix source}::[rigs.${rigName}.config] (${source})";
+          };
         } rigDef
       ) contents.rigs or { };
     };
@@ -116,12 +121,12 @@ let
     );
 
   tomlContentsToRig =
-    system: tomlSource: rigName: rigDef:
+    system: rigName: rigDef:
     let
       pkgs = import inputs.nixpkgs { inherit system; };
       rigDefError =
         msg:
-        "${projectUri}/${tryRmStorePrefix tomlSource}::[rigs.${rigName}] ${msg}\n(source: ${tomlSource})";
+        "${projectUri}/${tryRmStorePrefix rigDef.source}::[rigs.${rigName}] ${msg}\n(source: ${rigDef.source})";
       modules = rigletsSpecToModules rigDefError rigDef.riglets ++ [ rigDef.config ];
     in
     if rigDef ? "extends" then
@@ -151,8 +156,21 @@ let
   # Build rigs for all systems
   rigs = genAttrs systems (
     system:
-    mapAttrs (tomlContentsToRig system tomlConfig) (loadTomlConfig tomlConfig).rigs
-    // mapAttrs (tomlContentsToRig system localTomlConfig) (loadTomlConfig localTomlConfig).rigs
+    let
+      loadedConfigs = map loadTomlConfig tomlConfigs;
+      mergeRigDefs =
+        rigName: rigDefs:
+        let
+          sources = concatStringsSep "\n" (map (d: " - ${tryRmStorePrefix d.source} (${d.source})") rigDefs);
+        in
+        if length rigDefs > 1 then
+          throw "In ${projectUri}: rig `${rigName}` is defined in several files:\n${sources}\nTo override some rig's config in another TOML file, define a new rig that extends it."
+        else
+          head rigDefs;
+    in
+    mapAttrs (tomlContentsToRig system) (
+      attrsets.zipAttrsWith mergeRigDefs (map (c: c.rigs) loadedConfigs)
+    )
   );
 
   rigChecks =

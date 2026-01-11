@@ -3,7 +3,6 @@ use std::fmt;
 
 #[derive(Debug, Diagnostic)]
 pub enum RigupError {
-    #[diagnostic(help("Check that nix is installed and the flake is valid"))]
     NixCommandFailed {
         code: i32,
         #[source_code]
