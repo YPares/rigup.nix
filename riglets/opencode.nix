@@ -68,6 +68,8 @@ in
 
       # OpenCode config with permissions and MCP servers
       opencodeConfigJson = (pkgs.formats.json { }).generate "${rig.name}-opencode-config.json" {
+        "$schema" = "https://opencode.ai/config.json";
+
         instructions = [
           manifestPath
         ];
@@ -99,19 +101,12 @@ in
         printf "\033[0;33m%s\n\033[0m" "$1" >&2
       }
 
-      # OpenCode may try to write to its config, so we copy it to a writeable directory
-      export OPENCODE_CONFIG_DIR="${config.opencode.persistentConfigDir}"
-      export OPENCODE_CONFIG="$OPENCODE_CONFIG_DIR/config.json"
-      mkdir -p "$OPENCODE_CONFIG_DIR"
-
       export PATH="${rig.toolRoot}/bin:$PATH"
       export RIG_DOCS="${rig.docRoot}"
       # Exported for convenience
       export RIG_MANIFEST="${manifestPath}"
 
-      cp "${opencodeConfigJson}" "$OPENCODE_CONFIG"
-      chmod +w "$OPENCODE_CONFIG"
-      warn "Overwrote $OPENCODE_CONFIG"
+      export OPENCODE_CONFIG="${opencodeConfigJson}"
 
       ${lib.optionalString config.opencode.disableLspDownload "export OPENCODE_DISABLE_LSP_DOWNLOAD=true"}
 
@@ -123,7 +118,7 @@ in
       description = "Launch OpenCode with rig context";
       intent = "base";
       disclosure = "none";
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
     };
   };
