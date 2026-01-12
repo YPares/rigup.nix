@@ -36,7 +36,6 @@
         inherit inputs;
         projectUri = "YPares/rigup.nix";
         checkRiglets = true;
-        checkRigs = true;
       })
 
       {
