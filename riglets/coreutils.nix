@@ -121,6 +121,8 @@ in
     meta = {
       intent = "base";
       disclosure = "none";
+      status = "stable";
+      version = "0.1.0";
       description = "ls, cat, wc, etc. commands, so the rig's entrypoint may be pre-configured to allow them all";
       keywords = [
         "coreutils"

@@ -83,6 +83,7 @@ self:
       default = null;
     };
   };
+
   config.riglets.agent-personality = {
     meta = {
       description = "Give a personality to the agent";
@@ -94,7 +95,7 @@ self:
       ];
       intent = "playbook";
       disclosure = lib.mkDefault "eager";
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
     };
 
