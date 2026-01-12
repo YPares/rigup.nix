@@ -48,6 +48,21 @@ playfulness = "occasional"
 alignment = { lawfulness = "chaotic", goodness = "good" }
 obedience = "petulant"
 
+# Rig defined by extending from example-rig to add direct opencode integration to it
+[rigs.example-rig-opencode]
+extends.self = "example-rig"
+riglets.self = ["opencode"]
+
+[rigs.example-rig-opencode.config]
+opencode.persistentConfigDir = ".opencode"
+
+[rigs.example-rig-opencode.config.agent.personality]
+inspiration = "Fa Mulan"
+tone = "courteous"
+playfulness = "occasional"
+alignment = { lawfulness = "neutral", goodness = "good" }
+obedience = "unruly"
+
 # Like the above, but with copilot-cli integration
 [rigs.example-rig-copilot]
 extends.self = "example-rig"
@@ -72,7 +87,7 @@ cursor-agent.persistentConfigDir = ".cursor"
 inspiration = "Sauron"
 tone = "ruthless"
 playfulness = "inexistent"
-alignment = { lawfulness = "chaotic", goodness = "evil" }  # Yes all the examples are chaotic. Else where is the fun?
+alignment = { lawfulness = "chaotic", goodness = "evil" }
 obedience = "adamant"
 
 # Local (non-committed) overrides:
