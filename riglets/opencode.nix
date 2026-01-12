@@ -20,6 +20,44 @@ in
       # A fake default to allow this riglet to be checked in isolation
       default = "/home/fake-user-sdf45llk431/.config/opencode";
     };
+
+    # See https://opencode.ai/docs/lsp/#built-in
+    disableLspDownload = mkOption {
+      type = types.bool;
+      description = "Disable auto-downloads of LSP servers";
+      default = false;
+    };
+
+    lspServers = mkOption {
+      description = "LSP servers to be used by the agent";
+      default = { };
+      type = types.attrsOf (
+        types.submodule {
+          options = {
+            disabled = mkOption {
+              type = types.bool;
+              description = "Disable this LSP";
+              default = false;
+            };
+            command = mkOption {
+              type = types.nullOr types.package;
+              description = "Which package to run. 'null' to use default opencode support for this LSP";
+              default = null;
+            };
+            extensions = mkOption {
+              type = types.nullOr (types.listOf types.str);
+              description = "Which file extensions to use this LSP server with (including '.' prefixes). 'null' to use default opencode support for this LSP";
+              default = null;
+            };
+            initialization = mkOption {
+              type = types.nullOr (types.attrsOf types.anything);
+              description = "Initialization options to send to the LSP server";
+              default = null;
+            };
+          };
+        }
+      );
+    };
   };
 
   # Define the entrypoint for this rig - launches OpenCode with rig context
@@ -36,13 +74,21 @@ in
 
         # Grant read access to specific Nix store paths that OpenCode needs
         permission = {
-          bash = pkgs.lib.listToAttrs (
+          bash = lib.listToAttrs (
             map (cmd: {
               name = "${cmd} *";
               value = "allow";
             }) rig.allExeNames
           );
         };
+
+        lsp = lib.mapAttrs (
+          _name: s:
+          lib.filterAttrs (_: x: x != null) s
+          // lib.optionalAttrs (s.command != null) {
+            command = [ (lib.getExe s.command) ];
+          }
+        ) config.opencode.lspServers;
       };
     in
     # Return a folder derivation with bin/ subfolder
@@ -67,7 +113,9 @@ in
       chmod +w "$OPENCODE_CONFIG"
       warn "Overwrote $OPENCODE_CONFIG"
 
-      exec ${pkgs.lib.getExe opencode} "$@"
+      ${lib.optionalString config.opencode.disableLspDownload "export OPENCODE_DISABLE_LSP_DOWNLOAD=true"}
+
+      exec ${lib.getExe opencode} "$@"
     '';
 
   config.riglets.opencode = {

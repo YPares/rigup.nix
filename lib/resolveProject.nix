@@ -162,7 +162,11 @@ let
           sources = concatStringsSep "\n" (map (d: " - ${tryRmStorePrefix d.source} (${d.source})") rigDefs);
         in
         if length rigDefs > 1 then
-          throw "In ${projectUri}: rig `${rigName}` is defined in several files:\n${sources}\nTo override some rig's config in another TOML file, define a new rig that extends it."
+          throw ''
+            In ${projectUri}: rig `${rigName}` is defined in several files:
+            ${sources}
+            To override some rig's config in another TOML file, define a new rig that extends it.
+          ''
         else
           head rigDefs;
     in
