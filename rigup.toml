@@ -53,9 +53,6 @@ obedience = "petulant"
 extends.self = "example-rig"
 riglets.self = ["opencode"]
 
-[rigs.example-rig-opencode.config]
-opencode.persistentConfigDir = ".opencode"
-
 [rigs.example-rig-opencode.config.agent.personality]
 inspiration = "Fa Mulan"
 tone = "courteous"

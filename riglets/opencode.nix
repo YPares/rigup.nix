@@ -12,15 +12,6 @@ let
 in
 {
   options.opencode = {
-    # OpenCode may want to write to its config directory.
-    # This folder can hold conversation history, etc., so we use a user-provided path
-    persistentConfigDir = mkOption {
-      type = types.pathWith { inStore = false; };
-      description = "Persistent folder in which to store the generated config for OpenCode";
-      # A fake default to allow this riglet to be checked in isolation
-      default = "/home/fake-user-sdf45llk431/.config/opencode";
-    };
-
     # See https://opencode.ai/docs/lsp/#built-in
     disableLspDownload = mkOption {
       type = types.bool;
