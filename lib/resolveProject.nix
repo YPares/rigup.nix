@@ -151,6 +151,41 @@ let
         ++ [ rigDef.config ];
     };
 
+  # Adds to each rig attrs that can be used from `nix build/run` or `rigup build/run` CLIs to quickly create an extended rig
+  addQuickExtensionAttrs =
+    system: rig:
+    rig
+    // {
+      # `<rig-name>._with.<riglet>` adds a riglet to the rig
+      _with = concatMapAttrs (
+        inputName: input:
+        optionalAttrs (input ? riglets) (
+          mapAttrs (
+            rigletName: riglet:
+            addQuickExtensionAttrs system (
+              rig.extend {
+                extraModules = [ riglet ];
+              }
+            )
+          ) input.riglets
+        )
+      ) enhancedInputs;
+      # `<rig-name1>._comb.<rig-name2>` extends the rig with another rig's contents
+      _comb = concatMapAttrs (
+        inputName: input:
+        optionalAttrs (input ? rigs && input.rigs ? "${system}") (
+          mapAttrs (
+            rigName: otherRig:
+            addQuickExtensionAttrs system (
+              rig.extend {
+                extraModules = otherRig.modules;
+              }
+            )
+          ) input.rigs.${system}
+        )
+      ) enhancedInputs;
+    };
+
   # Build rigs for all systems
   rigs = genAttrs systems (
     system:
@@ -170,9 +205,9 @@ let
         else
           head rigDefs;
     in
-    mapAttrs (tomlContentsToRig system) (
-      attrsets.zipAttrsWith mergeRigDefs (map (c: c.rigs) loadedConfigs)
-    )
+    mapAttrs (
+      rigName: rigDef: addQuickExtensionAttrs system (tomlContentsToRig system rigName rigDef)
+    ) (attrsets.zipAttrsWith mergeRigDefs (map (c: c.rigs) loadedConfigs))
   );
 
   rigChecks =
