@@ -30,7 +30,7 @@ in
   config.entrypoint =
     rig:
     let
-      cliConfigJson = (pkgs.formats.json { }).generate "${rig.name}-cli-config.json" {
+      cliConfigJson = (pkgs.formats.json { }).generate "cli-config.json" {
         # https://cursor.com/docs/cli/reference/configuration#required-fields
         inherit (config.cursor-agent) editor;
         version = 1;

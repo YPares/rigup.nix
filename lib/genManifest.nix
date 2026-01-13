@@ -181,6 +181,6 @@ pkgs.writeTextFile {
     ## Contents of the Rig
 
     ${readFile (
-      (pkgs.formats.xml { withHeader = false; }).generate "${rigName}-manifest.xml" (rigToXml rigName)
+      (pkgs.formats.xml { withHeader = false; }).generate "rig-manifest.xml" (rigToXml rigName)
     )}'';
 }

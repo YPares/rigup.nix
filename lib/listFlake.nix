@@ -23,7 +23,7 @@ let
             let
               # Build a rig with only this riglet (and its imports if it has any)
               tempRig = rigupFlake.lib.buildRig {
-                name = "tmp-rig-${inputName}-${rigletName}";
+                name = "tmp-rig";
                 inherit pkgs;
                 modules = [ rigletModule ];
               };

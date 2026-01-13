@@ -67,7 +67,7 @@ in
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
       # OpenCode config with permissions and MCP servers
-      opencodeConfigJson = (pkgs.formats.json { }).generate "${rig.name}-opencode-config.json" {
+      opencodeConfigJson = (pkgs.formats.json { }).generate "opencode-config.json" {
         "$schema" = "https://opencode.ai/config.json";
 
         instructions = [

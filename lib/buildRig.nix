@@ -85,7 +85,7 @@ let
 
   # XDG_CONFIG_HOME folder to set for all _wrapped_ tools
   configRoot = pkgs.symlinkJoin {
-    name = "${rigName}-config";
+    name = "rig-config-root";
     paths = map (riglet: riglet.configFiles) (attrValues evaluated.config.riglets);
   };
 
@@ -119,7 +119,7 @@ let
   wrapWithConfigHome =
     tools:
     riglib.wrapWithEnv {
-      name = "${rigName}-wrapped-tools";
+      name = "rig-wrapped-tools";
       inherit tools;
       env.XDG_CONFIG_HOME = configRoot;
     };
@@ -133,12 +133,12 @@ let
       } (attrValues evaluated.config.riglets);
     in
     pkgs.buildEnv {
-      name = "${rigName}-all-tools";
+      name = "rig-all-tools";
       paths = [ (wrapWithConfigHome allTools.wrapped) ] ++ allTools.unwrapped;
     };
 
   # Docs folder (with symlinks to docs for all riglets)
-  docRoot = pkgs.runCommand "${rigName}-docs" { } ''
+  docRoot = pkgs.runCommand "rig-doc-root" { } ''
     mkdir -p $out
     ${concatStringsSep "\n" (
       mapAttrsToList (
@@ -168,7 +168,7 @@ let
     if evaluated.config.entrypoint != null then evaluated.config.entrypoint baseRig else null;
 
   # Complete agent home directory
-  home = pkgs.runCommand "${rigName}-home" { } ''
+  home = pkgs.runCommand "rig-home" { } ''
     mkdir -p $out
     ln -s ${toolRoot} $out/.local
     ln -s ${configRoot} $out/.config
@@ -245,7 +245,7 @@ let
       modules = modules ++ extraModules;
     };
 
-  allExesDeriv = pkgs.runCommand "${rigName}-commands" { } ''
+  allExesDeriv = pkgs.runCommand "rig-all-exes" { } ''
     dir="${toolRoot}/bin"
     if [ -d "$dir" ]; then
       ls ${toolRoot}/bin > $out

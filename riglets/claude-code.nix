@@ -14,7 +14,7 @@ in
     let
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
-      settingsJson = (pkgs.formats.json { }).generate "${rig.name}-settings.json" {
+      settingsJson = (pkgs.formats.json { }).generate "settings.json" {
         # Grant read access to specific Nix store paths that Claude Code needs
         permissions.allow = [
           "Read(${manifestPath})" # The RIG.md manifest file

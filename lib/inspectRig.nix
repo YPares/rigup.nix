@@ -12,7 +12,7 @@ let
     if flake ? rigs && flake.rigs ? ${system} && flake.rigs.${system} ? ${rigName} then
       flake.rigs.${system}.${rigName}
     else
-      builtins.throw "Rig '${rigName}' not found in flake for system '${system}'";
+      throw "Rig '${rigName}' not found in flake for system '${system}'";
 
   # Extract riglets metadata from the rig
   rigletsData = rig.meta or { };
