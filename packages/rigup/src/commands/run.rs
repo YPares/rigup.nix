@@ -1,5 +1,5 @@
 use crate::nix::{build_flake_ref, get_system, parse_flake_ref};
-use miette::{IntoDiagnostic, Result};
+use miette::{diagnostic, IntoDiagnostic, Report, Result};
 use std::process::Command;
 
 pub fn run_entrypoint(
@@ -25,10 +25,16 @@ pub fn run_entrypoint(
 
     let status = cmd.status().into_diagnostic()?;
 
-    if !status.success() {
-        let code = status.code().unwrap_or(1);
-        return Err(miette::miette!("Entrypoint exited with status: {}", code));
+    if status.success() {
+        Ok(())
+    } else {
+        Err(Report::from(
+            diagnostic!("'nix run' exited with code {}", status.code().unwrap_or(1)).with_help(
+                format!(
+                    "Check that rig '{}' exists and does provide an entrypoint",
+                    rig
+                ),
+            ),
+        ))
     }
-
-    Ok(())
 }

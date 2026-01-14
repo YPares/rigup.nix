@@ -41,5 +41,5 @@ check:
 
 # Run rigup CLI (debug mode)
 [positional-arguments]
-@run *args:
+@rigup *args:
     cargo run --manifest-path packages/rigup/Cargo.toml -- "$@"

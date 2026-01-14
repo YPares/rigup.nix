@@ -15,7 +15,26 @@ use miette::Result;
 #[command(about = "Build your AI agent's rig\nParameterizable skills and tools, packaged together via Nix modules", long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
+
+    #[command(flatten)]
+    run_args: RunArgs,
+}
+
+#[derive(Parser, Debug)]
+struct RunArgs {
+    /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
+    ///
+    /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo[/branch]`, `github:user/repo#myrig`
+    flake_ref: Option<String>,
+
+    /// Arguments to forward to the entrypoint
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    args: Vec<String>,
+
+    /// Disable auto-staging of rigup.local.toml
+    #[arg(long)]
+    no_stage: bool,
 }
 
 #[derive(Subcommand)]
@@ -28,19 +47,8 @@ enum Commands {
         #[arg(short, long, default_value = "default")]
         template: String,
     },
-    /// Run a rig's entrypoint
-    Run {
-        /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
-        ///
-        /// Current repo must use `.#` prefix. Examples: `.#myrig`, `github:user/repo[/branch]`, `github:user/repo#myrig`
-        flake_ref: Option<String>,
-        /// Arguments to forward to the entrypoint
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-        args: Vec<String>,
-        /// Disable auto-staging of rigup.local.toml
-        #[arg(long)]
-        no_stage: bool,
-    },
+    /// Run a rig's entrypoint (default subcommand)
+    Run(RunArgs),
     /// Build a rig's home directory
     Build {
         /// Flake reference in the form `<flake>#<rig>` (defaults to `.#default`)
@@ -130,40 +138,40 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Browse {
+        Some(Commands::Browse {
             flake_ref,
             with_,
             no_stage,
-        } => {
+        }) => {
             browse_rig_docs(with_, flake_ref, no_stage)?;
         }
-        Commands::New {
+        Some(Commands::New {
             directory,
             template,
-        } => {
+        }) => {
             new_project(directory, template)?;
         }
-        Commands::Build {
+        Some(Commands::Build {
             flake_ref,
             no_stage,
-        } => {
+        }) => {
             build_rig(flake_ref, no_stage)?;
         }
-        Commands::Shell {
+        Some(Commands::Shell {
             flake_ref,
             command,
             no_stage,
-        } => {
+        }) => {
             enter_shell(flake_ref, command, no_stage)?;
         }
-        Commands::Show {
+        Some(Commands::Show {
             flake,
             with_inputs,
             no_pager,
             detailed,
             no_descriptions,
             no_stage,
-        } => {
+        }) => {
             show_flake(
                 flake,
                 with_inputs,
@@ -173,21 +181,25 @@ fn main() -> Result<()> {
                 no_stage,
             )?;
         }
-        Commands::Inspect {
+        Some(Commands::Inspect {
             flake_ref,
             no_pager,
             detailed,
             no_descriptions,
             no_stage,
-        } => {
+        }) => {
             inspect_rig(flake_ref, no_pager, detailed, no_descriptions, no_stage)?;
         }
-        Commands::Run {
-            flake_ref,
-            args,
-            no_stage,
-        } => {
-            run_entrypoint(flake_ref, &args, no_stage)?;
+        Some(Commands::Run(run_args)) => {
+            run_entrypoint(run_args.flake_ref, &run_args.args, run_args.no_stage)?;
+        }
+        // If no subcommand is provided, default to Run
+        None => {
+            run_entrypoint(
+                cli.run_args.flake_ref,
+                &cli.run_args.args,
+                cli.run_args.no_stage,
+            )?;
         }
     }
 
