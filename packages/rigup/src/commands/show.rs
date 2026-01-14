@@ -22,20 +22,20 @@ pub fn show_flake(
 
     // Use the helper function from rigup.lib to discover all riglets and rigs
     let eval_expr = format!(
-        "let \
-           flake = builtins.getFlake \"{}\"; \
-           rigup = if flake ? lib && flake.lib ? listFlake \
-                   then flake \
-                   else flake.inputs.rigup; \
-         in rigup.lib.listFlake {{ \
-           inherit flake; \
-           system = \"{}\"; \
-           includeInputs = {}; \
+        "let
+           flake = builtins.getFlake \"{}\";
+           rigup = if flake ? lib && flake.lib ? listFlake
+                   then flake
+                   else flake.inputs.rigup;
+         in rigup.lib.listFlake {{
+           inherit flake;
+           system = \"{}\";
+           includeInputs = {};
          }}",
         flake_expr, system, with_inputs
     );
 
-    eprintln!("Discovering riglets and rigs...");
+    eprintln!("Discovering riglets and rigs in flake '{}'...", flake_path);
 
     // Run nix eval and parse the result
     let result = run_nix_eval_json(&eval_expr)?;

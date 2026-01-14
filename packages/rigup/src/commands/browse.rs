@@ -13,7 +13,7 @@ pub fn browse_rig_docs(
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
     let full_ref = build_flake_ref(&flake_path, &rig, &system, "docRoot", no_stage)?;
 
-    eprintln!("Building docRoot for rig '{}'...", rig);
+    eprintln!("Building docRoot of rig {}#{}...", flake_path, rig);
 
     let output = Command::new("nix")
         .args(&["build", &full_ref, "--no-link", "--print-out-paths"])

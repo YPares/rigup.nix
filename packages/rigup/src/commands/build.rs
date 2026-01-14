@@ -30,7 +30,10 @@ pub fn build_rig(flake_ref: Option<String>, no_stage: bool) -> Result<()> {
     let output_path = output_dir.join(&rig);
     let output_path_str = output_path.to_string_lossy().to_string();
 
-    eprintln!("Building rig '{}' for system '{}'...", rig, system);
+    eprintln!(
+        "Building rig {}#{} for system {}...",
+        flake_path, rig, system
+    );
     run_command_inherit("nix", vec!["build", &full_ref, "-o", &output_path_str])?;
 
     eprintln!("Rig built successfully at: {}", output_path.display());

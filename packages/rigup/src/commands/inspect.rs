@@ -198,20 +198,20 @@ pub fn inspect_rig(
 
     // Use inspectRig to get detailed rig information
     let eval_expr = format!(
-        "let \
-           flake = builtins.getFlake \"{}\"; \
-           rigup = if flake ? lib && flake.lib ? inspectRig \
-                   then flake \
-                   else flake.inputs.rigup; \
-         in rigup.lib.inspectRig {{ \
-           inherit flake; \
-           system = \"{}\"; \
-           rigName = \"{}\"; \
+        "let
+           flake = builtins.getFlake \"{}\";
+           rigup = if flake ? lib && flake.lib ? inspectRig
+                   then flake
+                   else flake.inputs.rigup;
+         in rigup.lib.inspectRig {{
+           inherit flake;
+           system = \"{}\";
+           rigName = \"{}\";
          }}",
         flake_expr, system, rig_name
     );
 
-    eprintln!("Inspecting rig '{}'...", rig_name);
+    eprintln!("Inspecting rig {}#{}...", flake_path, rig_name);
 
     // Run nix eval and parse the result
     let result = run_nix_eval_json(&eval_expr)?;

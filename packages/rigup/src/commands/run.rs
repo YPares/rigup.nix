@@ -11,7 +11,7 @@ pub fn run_entrypoint(
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
     let entrypoint_ref = build_flake_ref(&flake_path, &rig, &system, "entrypoint", no_stage)?;
 
-    eprintln!("Running entrypoint for rig '{}'...", rig);
+    eprintln!("Running entrypoint of rig {}#{}...", flake_path, rig);
 
     // Use nix run directly on the entrypoint derivation
     let mut cmd = Command::new("nix");
@@ -29,7 +29,7 @@ pub fn run_entrypoint(
         Ok(())
     } else {
         Err(Report::from(
-            diagnostic!("'nix run' exited with code {}", status.code().unwrap_or(1)).with_help(
+            diagnostic!("nix run exited with code {}", status.code().unwrap_or(1)).with_help(
                 format!(
                     "Check that rig '{}' exists and does provide an entrypoint",
                     rig

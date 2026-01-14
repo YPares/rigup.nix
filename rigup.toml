@@ -48,6 +48,10 @@ playfulness = "occasional"
 alignment = { lawfulness = "chaotic", goodness = "good" }
 obedience = "petulant"
 
+# 'default' just aliases 'example-rig-claude'
+[rigs.default]
+extends.self = "example-rig-claude"
+
 # Rig defined by extending from example-rig to add direct opencode integration to it
 [rigs.example-rig-opencode]
 extends.self = "example-rig"
