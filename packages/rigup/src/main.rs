@@ -4,11 +4,14 @@ mod error;
 mod nix;
 mod types;
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
+use clap_complete::{generate, Shell};
+use clap_complete_nushell::Nushell;
 use commands::{
     browse_rig_docs, build_rig, enter_shell, inspect_rig, new_project, run_entrypoint, show_flake,
 };
 use miette::Result;
+use std::io;
 
 #[derive(Parser)]
 #[command(name = "rigup")]
@@ -132,6 +135,38 @@ enum Commands {
         #[arg(long)]
         no_stage: bool,
     },
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        #[arg(value_enum)]
+        shell: SupportedShell,
+    },
+}
+
+#[derive(Clone, Debug)]
+enum SupportedShell {
+    Standard(Shell),
+    Nushell,
+}
+
+impl ValueEnum for SupportedShell {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[
+            Self::Standard(Shell::Bash),
+            Self::Standard(Shell::Zsh),
+            Self::Standard(Shell::Fish),
+            Self::Standard(Shell::Elvish),
+            Self::Standard(Shell::PowerShell),
+            Self::Nushell,
+        ]
+    }
+
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        match self {
+            Self::Standard(shell) => shell.to_possible_value(),
+            Self::Nushell => Some(clap::builder::PossibleValue::new("nushell")),
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -192,6 +227,15 @@ fn main() -> Result<()> {
         }
         Some(Commands::Run(run_args)) => {
             run_entrypoint(run_args.flake_ref, &run_args.args, run_args.no_stage)?;
+        }
+        Some(Commands::Completions { shell }) => {
+            let mut cmd = Cli::command();
+            match shell {
+                SupportedShell::Standard(shell) => {
+                    generate(shell, &mut cmd, "rigup", &mut io::stdout())
+                }
+                SupportedShell::Nushell => generate(Nushell, &mut cmd, "rigup", &mut io::stdout()),
+            }
         }
         // If no subcommand is provided, default to Run
         None => {
