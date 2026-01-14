@@ -1,4 +1,5 @@
 mod commands;
+// mod completions; // TODO: Add custom flake ref completion
 mod display;
 mod error;
 mod nix;
@@ -6,6 +7,7 @@ mod types;
 
 use clap::{CommandFactory, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, Shell};
+use clap_complete::env::CompleteEnv;
 use clap_complete_nushell::Nushell;
 use commands::{
     browse_rig_docs, build_rig, enter_shell, inspect_rig, new_project, run_entrypoint, show_flake,
@@ -170,6 +172,9 @@ impl ValueEnum for SupportedShell {
 }
 
 fn main() -> Result<()> {
+    // Handle dynamic shell completions
+    CompleteEnv::with_factory(Cli::command).complete();
+
     let cli = Cli::parse();
 
     match cli.command {
