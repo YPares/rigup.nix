@@ -122,13 +122,19 @@ pub fn build_flake_ref(
     flake_path: &str,
     rig: &str,
     system: &str,
-    component: &str,
+    component: Option<&str>,
     no_stage: bool,
 ) -> Result<String> {
     let resolved_path = resolve_flake_path(flake_path, no_stage)?;
     Ok(format!(
-        "{}#rigs.{}.{}.{}",
-        resolved_path, system, rig, component
+        "{}#rigs.{}.{}{}",
+        resolved_path,
+        system,
+        rig,
+        match component {
+            Some(c) => format!(".{}", c),
+            None => String::new(),
+        }
     ))
 }
 

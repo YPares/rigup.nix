@@ -22,20 +22,30 @@ pub fn show_flake(
 
     // Use the helper function from rigup.lib to discover all riglets and rigs
     let eval_expr = format!(
-        "let
-           flake = builtins.getFlake \"{}\";
-           rigup = if flake ? lib && flake.lib ? listFlake
-                   then flake
-                   else flake.inputs.rigup;
-         in rigup.lib.listFlake {{
-           inherit flake;
-           system = \"{}\";
-           includeInputs = {};
-         }}",
-        flake_expr, system, with_inputs
+        r###"
+            let
+                flake = builtins.getFlake "{flake}";
+                listFlake = if flake ? lib && flake.lib ? listFlake
+                    then flake.lib.listFlake
+                    else flake.inputs.rigup.lib.listFlake or (throw ''
+                        Flake {flake_expr} does not seem to be using rigup.nix. It must have an input named 'rigup'
+                    '');
+            in listFlake {{
+                inherit flake;
+                system = "{system}";
+                includeInputs = {with_inputs};
+            }}
+        "###,
+        flake = flake_expr,
+        system = system,
+        with_inputs = with_inputs
     );
 
-    eprintln!("Discovering riglets and rigs in flake '{}'...", flake_path);
+    eprintln!(
+        "> Analyzing {flake}#riglets and #rigs.{system}",
+        flake = flake_expr,
+        system = system
+    );
 
     // Run nix eval and parse the result
     let result = run_nix_eval_json(&eval_expr)?;

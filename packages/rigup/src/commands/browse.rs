@@ -11,9 +11,9 @@ pub fn browse_rig_docs(
 ) -> Result<()> {
     let system = get_system();
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
-    let full_ref = build_flake_ref(&flake_path, &rig, &system, "docRoot", no_stage)?;
+    let full_ref = build_flake_ref(&flake_path, &rig, &system, Some("docRoot"), no_stage)?;
 
-    eprintln!("Building docRoot of rig {}#{}...", flake_path, rig);
+    eprintln!("> Building {}", full_ref);
 
     let output = Command::new("nix")
         .args(&["build", &full_ref, "--no-link", "--print-out-paths"])
@@ -42,7 +42,7 @@ pub fn browse_rig_docs(
     let program =
         browser.unwrap_or_else(|| env::var("EDITOR").unwrap_or_else(|_| "less".to_string()));
 
-    eprintln!("Opening documentation at: {}", doc_path.display());
+    eprintln!("> Opening {}", doc_path.display());
 
     run_command_inherit(&program, vec![doc_path.to_str().unwrap()])?;
 

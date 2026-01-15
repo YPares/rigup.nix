@@ -1,6 +1,8 @@
 use crate::display::{display_riglet, with_output, wrap_with_prefix};
 use crate::error::RigupError;
-use crate::nix::{get_system, parse_flake_ref, resolve_flake_path, run_nix_eval_json};
+use crate::nix::{
+    build_flake_ref, get_system, parse_flake_ref, resolve_flake_path, run_nix_eval_json,
+};
 use crate::types::{ConfigOption, ConfigValue, RigInspection};
 use itertools::Itertools;
 use miette::{IntoDiagnostic, Result};
@@ -191,27 +193,33 @@ pub fn inspect_rig(
     let system = get_system();
 
     // Parse flake reference
-    let (flake_path, rig_name) = parse_flake_ref(flake_ref.as_deref())?;
+    let (flake_path, rig_attrpath) = parse_flake_ref(flake_ref.as_deref())?;
 
     // Resolve flake path and ensure rigup.local.toml is staged if needed
     let flake_expr = resolve_flake_path(&flake_path, no_stage)?;
 
     // Use inspectRig to get detailed rig information
     let eval_expr = format!(
-        "let
-           flake = builtins.getFlake \"{}\";
-           rigup = if flake ? lib && flake.lib ? inspectRig
-                   then flake
-                   else flake.inputs.rigup;
-         in rigup.lib.inspectRig {{
-           inherit flake;
-           system = \"{}\";
-           rigName = \"{}\";
-         }}",
-        flake_expr, system, rig_name
+        r###"
+            let
+                flake = builtins.getFlake "{flake}";
+                rig = flake.rigs.{system}.{rig} or (throw ''
+                    Flake '{flake}' does not output {rig}
+                '');
+            in {{
+                name = "{rig}";
+                riglets = rig.meta or {{ }};
+                entrypoint = rig.entrypoint.name or null;
+                options = rig.configOptions or {{ }};
+            }}
+        "###,
+        flake = flake_expr,
+        system = system,
+        rig = rig_attrpath
     );
 
-    eprintln!("Inspecting rig {}#{}...", flake_path, rig_name);
+    let flake_ref = build_flake_ref(&flake_path, &rig_attrpath, &system, None, no_stage)?;
+    eprintln!("> Inspecting {}", &flake_ref);
 
     // Run nix eval and parse the result
     let result = run_nix_eval_json(&eval_expr)?;

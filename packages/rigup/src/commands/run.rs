@@ -9,9 +9,9 @@ pub fn run_entrypoint(
 ) -> Result<()> {
     let system = get_system();
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
-    let entrypoint_ref = build_flake_ref(&flake_path, &rig, &system, "entrypoint", no_stage)?;
+    let entrypoint_ref = build_flake_ref(&flake_path, &rig, &system, Some("entrypoint"), no_stage)?;
 
-    eprintln!("Running entrypoint of rig {}#{}...", flake_path, rig);
+    eprintln!("> Running {}", entrypoint_ref);
 
     // Use nix run directly on the entrypoint derivation
     let mut cmd = Command::new("nix");

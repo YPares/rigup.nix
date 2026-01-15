@@ -4,7 +4,9 @@ use miette::Result;
 pub fn enter_shell(flake_ref: Option<String>, command: Vec<String>, no_stage: bool) -> Result<()> {
     let system = get_system();
     let (flake_path, rig) = parse_flake_ref(flake_ref.as_deref())?;
-    let full_ref = build_flake_ref(&flake_path, &rig, &system, "shell", no_stage)?;
+    let full_ref = build_flake_ref(&flake_path, &rig, &system, Some("shell"), no_stage)?;
+
+    eprintln!("> Opening {}", full_ref);
 
     let mut args = vec!["develop", &full_ref];
 
