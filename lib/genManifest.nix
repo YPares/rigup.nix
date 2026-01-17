@@ -34,8 +34,10 @@ let
   inherit (flake.packages.${system}) extract-md-toc;
 
   # Intent descriptions for manifest
-  intentDescriptions = {
-    base = throw "Riglets with intent \"base\" should not be disclosed in the manifest: set meta.disclosure = \"none\"";
+  intentDescriptions = rigletName: {
+    base = throw ''
+      Riglet ${rigletName} has intent "base" and should not be disclosed in the manifest: set meta.disclosure = "none"
+    '';
     sourcebook = "specialized facts, knowledge, or domain context for guiding your thinking";
     toolbox = "collection of tools/resources for you to use whenever needed";
     cookbook = "specialized techniques and patterns; arcane tricks to learn";
@@ -70,6 +72,17 @@ let
     let
       mainDocFile = "${docRoot}/${rigletName}/${rigletMeta.mainDocFile}";
       shownMainDocFile = "${shownDocRoot}/${rigletName}/${rigletMeta.mainDocFile}";
+      optionalMeta =
+        if rigletMeta.disclosure == "eager" then
+          { }
+        else
+          {
+            inherit (rigletMeta) description;
+            keywords = concatStringsSep ", " rigletMeta.keywords;
+          }
+          // optionalAttrs (rigletMeta.whenToUse != [ ]) {
+            whenToUse.useCase = rigletMeta.whenToUse;
+          };
       mainDocFileInfo =
         if rigletMeta.disclosure == "eager" then
           { fullContent = "\n${readFile mainDocFile}"; }
@@ -89,33 +102,32 @@ let
           { };
     in
     if !builtins.pathExists mainDocFile then
-      throw "genManifest: ${rigletName}.meta.mainDocFile (\"${rigletMeta.mainDocFile}\") not found in riglet's docs"
+      throw ''
+        genManifest: ${rigletName}.meta.mainDocFile ("${rigletMeta.mainDocFile}") not found in riglet's docs
+      ''
     else
       {
         "@name" = rigletName;
-        inherit (rigletMeta) description;
-        intent = "${rigletMeta.intent}: ${intentDescriptions.${rigletMeta.intent}}";
-        keywords = concatStringsSep ", " rigletMeta.keywords;
-        inherit (rigletMeta) version;
+        "@version" = rigletMeta.version;
+        "@intent" = rigletMeta.intent;
+        whatItContains = (intentDescriptions rigletName).${rigletMeta.intent};
         mainDocFile = {
           "@source" = shownMainDocFile;
         }
         // mainDocFileInfo;
       }
+      // optionalMeta
       // (
         let
           warning = warningFromMeta rigletMeta;
         in
         optionalAttrs (warning != null) { inherit warning; }
-      )
-      // optionalAttrs (rigletMeta.whenToUse != [ ]) {
-        whenToUse.useCase = rigletMeta.whenToUse;
-      };
+      );
 
   rigToXml = rigName: {
     rigSystem = {
       "@name" = rigName;
-      # Will generate ONE <riglet ...>...</riglet> node PER element in the associated list:
+      # Will generate ONE <riglet> tag PER element in the associated list:
       riglet = filter (x: x != null) (
         mapAttrsToList (
           rigletName: rigletMeta:
@@ -133,7 +145,8 @@ pkgs.writeTextFile {
     Hello. The **rig** you will be using today is called "${rigName}".
     Your rig is made up of **riglets**—each provides specialized capabilities, domain knowledge, and all tools needed to execute that knowledge, packaged with configuration and metadata.
     Riglets generalize the Agent Skills pattern: a Skill bundled with executable tools, configuration, and metadata.
-    Each riglet below has `intent` and `whenToUse` sections—**these are is the MOST important sections**. They tell you exactly what to expect from the riglet's doc and when to consult it.
+    Riglets below have `whatItContains` and `whenToUse` sections—**these are the MOST important sections**. They tell you exactly what to expect from the riglet's doc and when to consult it.
+    **When in doubt whether to use a riglet or not: USE IT.**
 
     ## How to Use
 
