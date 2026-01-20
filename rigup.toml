@@ -42,9 +42,8 @@ typst.template = "simple"
 [rigs.example-rig-claude]
 extends.self = "example-rig"
 riglets.self = ["claude-code"]
-
-[rigs.example-rig-claude.config]
-claude-code.strictMcpConfig = true
+config.claude-code.strictMcpConfig = true
+config.models.default.modelId = "opus"
 
 [rigs.example-rig-claude.config.agent.personality]
 inspiration = "Max Mayfield (from Stranger Things)"
@@ -61,6 +60,8 @@ extends.self = "example-rig-claude"
 [rigs.example-rig-opencode]
 extends.self = "example-rig"
 riglets.self = ["opencode"]
+config.models.default.providerId = "opencode"
+config.models.default.modelId = "glm-4.7-free"
 
 [rigs.example-rig-opencode.config.agent.personality]
 inspiration = "Fa Mulan"
@@ -85,6 +86,7 @@ obedience = "liberal"
 [rigs.example-rig-cursor]
 extends.self = "example-rig"
 riglets.self = ["cursor"]
+config.models.default.modelId = "opus-4.5"
 # config.cursor.justSetupProject = true
   # If true, the entrypoiny will not start cursor-agent:
   # it will only setup the .cursor/ folder in the CWD, to be used by Cursor IDE.

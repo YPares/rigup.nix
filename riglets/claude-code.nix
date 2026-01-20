@@ -11,6 +11,8 @@ let
   inherit (self.inputs.llm-agents.packages.${system}) claude-code;
 in
 {
+  imports = [ self.riglets.models ];
+
   options.claude-code = with lib; {
     strictMcpConfig = mkOption {
       description = "Deactivate all MCP servers besides those configured in the rig";
@@ -25,24 +27,29 @@ in
     let
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
-      settingsJson = riglib.toJSON {
-        # Grant read access to specific Nix store paths that Claude Code needs
-        permissions.allow = [
-          "Read(${manifestPath})" # The RIG.md manifest file
-          "Read(${rig.docRoot}/**)" # All documentation files
-          "Read(${rig.configRoot}/**)" # All config files
-          "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
-        ]
-        ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
+      settingsJson = riglib.toJSON (
+        {
+          # Grant read access to specific Nix store paths that Claude Code needs
+          permissions.allow = [
+            "Read(${manifestPath})" # The RIG.md manifest file
+            "Read(${rig.docRoot}/**)" # All documentation files
+            "Read(${rig.configRoot}/**)" # All config files
+            "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
+          ]
+          ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
 
-        # Add deny rules for specific tool subcommands
-        # Format: Bash(tool subcommand:*) - the colon is BEFORE the asterisk, after the full command
-        permissions.deny = lib.flatten (
-          lib.mapAttrsToList (
-            tool: patterns: map (pattern: "Bash(${tool} ${pattern}:*)") patterns
-          ) rig.denyRules
-        );
-      };
+          # Add deny rules for specific tool subcommands
+          # Format: Bash(tool subcommand:*) - the colon is BEFORE the asterisk, after the full command
+          permissions.deny = lib.flatten (
+            lib.mapAttrsToList (
+              tool: patterns: map (pattern: "Bash(${tool} ${pattern}:*)") patterns
+            ) rig.denyRules
+          );
+        }
+        // lib.optionalAttrs (config.models.default.modelId != null) {
+          model = config.models.default.modelId;
+        }
+      );
 
       mcpConfig = riglib.toJSON {
         mcpServers = pkgs.lib.mapAttrs (

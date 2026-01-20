@@ -12,6 +12,8 @@ let
   inherit (lib) mkOption types;
 in
 {
+  imports = [ self.riglets.models ];
+
   options.opencode = {
     # See https://opencode.ai/docs/lsp/#built-in
     disableLspDownload = mkOption {
@@ -59,65 +61,77 @@ in
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
       # OpenCode config with permissions and MCP servers
-      opencodeConfigJson = riglib.toJSON {
-        "$schema" = "https://opencode.ai/config.json";
+      opencodeConfigJson = riglib.toJSON (
+        {
+          "$schema" = "https://opencode.ai/config.json";
 
-        instructions = [
-          manifestPath
-        ];
+          instructions = [
+            manifestPath
+          ];
 
-        # Grant read access to specific Nix store paths that OpenCode needs
-        permission = {
-          bash =
-            lib.listToAttrs (
-              map (cmd: {
-                name = "${cmd} *";
-                value = "allow";
-              }) rig.allExeNames
-            )
-            # Add deny rules for specific tool subcommands
-            # OpenCode uses wildcard patterns, so we add " *" suffix
-            // lib.listToAttrs (
-              lib.flatten (
-                lib.mapAttrsToList (
-                  tool: patterns:
-                  map (pattern: {
-                    name = "${tool} ${pattern} *";
-                    value = "deny";
-                  }) patterns
-                ) rig.denyRules
+          # Grant read access to specific Nix store paths that OpenCode needs
+          permission = {
+            bash =
+              lib.listToAttrs (
+                map (cmd: {
+                  name = "${cmd} *";
+                  value = "allow";
+                }) rig.allExeNames
               )
-            );
-        };
+              # Add deny rules for specific tool subcommands
+              # OpenCode uses wildcard patterns, so we add " *" suffix
+              // lib.listToAttrs (
+                lib.flatten (
+                  lib.mapAttrsToList (
+                    tool: patterns:
+                    map (pattern: {
+                      name = "${tool} ${pattern} *";
+                      value = "deny";
+                    }) patterns
+                  ) rig.denyRules
+                )
+              );
+          };
 
-        lsp = lib.mapAttrs (
-          _name: s:
-          lib.filterAttrs (_: x: x != null) s
-          // lib.optionalAttrs (s.command != null) {
-            command = [ (lib.getExe s.command) ];
-          }
-        ) config.opencode.lspServers;
+          lsp = lib.mapAttrs (
+            _name: s:
+            lib.filterAttrs (_: x: x != null) s
+            // lib.optionalAttrs (s.command != null) {
+              command = [ (lib.getExe s.command) ];
+            }
+          ) config.opencode.lspServers;
 
-        mcp = lib.mapAttrs (
-          name: s:
-          {
-            # OpenCode uses "local" for command-based servers and "remote" for URL-based servers
-            type = if s.resolvedCommand != null then "local" else "remote";
-            enabled = true;
-          }
-          // lib.optionalAttrs (s.resolvedCommand != null) { command = [ s.resolvedCommand ]; }
-          // lib.optionalAttrs (s.url != null) { inherit (s) url; }
-        ) rig.mcpServers;
+          mcp = lib.mapAttrs (
+            name: s:
+            {
+              # OpenCode uses "local" for command-based servers and "remote" for URL-based servers
+              type = if s.resolvedCommand != null then "local" else "remote";
+              enabled = true;
+            }
+            // lib.optionalAttrs (s.resolvedCommand != null) { command = [ s.resolvedCommand ]; }
+            // lib.optionalAttrs (s.url != null) { inherit (s) url; }
+          ) rig.mcpServers;
 
-        command = lib.mapAttrs (
-          name: cmd:
-          {
-            template = cmd.template;
-            description = cmd.description;
-          }
-          // lib.optionalAttrs cmd.useSubAgent { subtask = true; }
-        ) (lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands);
-      };
+          command = lib.mapAttrs (
+            name: cmd:
+            {
+              template = cmd.template;
+              description = cmd.description;
+            }
+            // lib.optionalAttrs cmd.useSubAgent { subtask = true; }
+          ) (lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands);
+        }
+        // lib.optionalAttrs (config.models.default.modelId != null) {
+          model = (
+            if config.models.default.providerId == null then
+              throw ''
+                If models.default.modelId is set, then models.default.providerId must be too
+              ''
+            else
+              "${config.models.default.providerId}/${config.models.default.modelId}"
+          );
+        }
+      );
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "opencode" ''

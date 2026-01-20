@@ -10,6 +10,8 @@ let
   inherit (pkgs) lib;
 in
 {
+  imports = [ self.riglets.models ];
+
   options.cursor = {
     # To setup a project to use with Cursor IDE
     justSetupProject = riglib.options.flag "Only set up .cursor/ in CWD, don't run cursor-agent";
@@ -168,7 +170,11 @@ in
           ''
         else
           ''
-            ${lib.getExe self.inputs.llm-agents.packages.${system}.cursor-agent} "$@"
+            ${lib.getExe self.inputs.llm-agents.packages.${system}.cursor-agent} ${
+              lib.optionalString (
+                config.models.default.modelId != null
+              ) "--model ${lib.escapeShellArg config.models.default.modelId}"
+            } "$@"
           ''
       }
     '';
