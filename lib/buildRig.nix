@@ -258,6 +258,19 @@ let
   # All commands available through the rig
   allExeNames = builtins.filter (s: s != "") (splitString "\n" (builtins.readFile allExesDeriv));
 
+  # Collect promptCommands from all riglets
+  promptCommands =
+    let
+      collectFromRiglet =
+        rigletName: riglet:
+        concatMapAttrs (commandName: def: {
+          "${rigletName}:${commandName}" = def;
+        }) riglet.promptCommands;
+    in
+    foldl' (acc: r: acc // collectFromRiglet r.name r) { } (
+      mapAttrsToList (n: r: r // { name = n; }) evaluated.config.riglets
+    );
+
   # Collect MCP servers from all riglets
   mcpServers =
     let
@@ -378,6 +391,7 @@ let
       manifest
       allExeNames
       modules
+      promptCommands
       mcpServers
       configOptions
       ;

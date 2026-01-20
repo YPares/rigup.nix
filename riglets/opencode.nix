@@ -93,6 +93,8 @@ in
           // pkgs.lib.optionalAttrs (s.resolvedCommand != null) { command = [ s.resolvedCommand ]; }
           // pkgs.lib.optionalAttrs (s.url != null) { inherit (s) url; }
         ) rig.mcpServers;
+
+        command = rig.promptCommands;
       };
     in
     # Return a folder derivation with bin/ subfolder

@@ -51,6 +51,27 @@ in
               default = null;
             };
 
+            # WARNING: STILL EXPERIMENTAL. Schema for promptCommands is subject to change
+            promptCommands = mkOption {
+              description = ''Reusable prompt templates ("slash commands" for Claude Code or simply "commands" for OpenCode)'';
+              type = types.attrsOf (
+                types.submodule {
+                  options = {
+                    template = mkOption {
+                      description = "The command template itself. Can use $ARGUMENTS, $1, $2...";
+                      type = types.str;
+                    };
+                    description = mkOption {
+                      description = "Short explanation of what this prompt command does. Will usually be shown in a help or autocompletion menu by the harness";
+                      type = types.str;
+                    };
+                  };
+                }
+              );
+              default = { };
+            };
+
+            # WARNING: STILL EXPERIMENTAL. Schema for mcpServers is subject to change
             mcpServers = mkOption {
               description = "MCP (Model Context Protocol) servers this riglet provides";
               type = types.attrsOf (
