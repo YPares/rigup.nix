@@ -11,6 +11,8 @@ let
   inherit (lib) mkOption types;
 in
 {
+  imports = [ self.riglets.model-selector ];
+
   options.opencode = {
     # See https://opencode.ai/docs/lsp/#built-in
     disableLspDownload = mkOption {
@@ -58,22 +60,23 @@ in
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
       # OpenCode config with permissions and MCP servers
-      opencodeConfigJson = (pkgs.formats.json { }).generate "opencode-config.json" {
-        "$schema" = "https://opencode.ai/config.json";
+      opencodeConfigJson = (pkgs.formats.json { }).generate "opencode-config.json" (
+        {
+          "$schema" = "https://opencode.ai/config.json";
 
-        instructions = [
-          manifestPath
-        ];
+          instructions = [
+            manifestPath
+          ];
 
-        # Grant read access to specific Nix store paths that OpenCode needs
-        permission = {
-          bash = lib.listToAttrs (
-            map (cmd: {
-              name = "${cmd} *";
-              value = "allow";
-            }) rig.allExeNames
-          );
-        };
+          # Grant read access to specific Nix store paths that OpenCode needs
+          permission = {
+            bash = lib.listToAttrs (
+              map (cmd: {
+                name = "${cmd} *";
+                value = "allow";
+              }) rig.allExeNames
+            );
+          };
 
         lsp = lib.mapAttrs (
           _name: s:
@@ -82,7 +85,18 @@ in
             command = [ (lib.getExe s.command) ];
           }
         ) config.opencode.lspServers;
-      };
+      }
+      // lib.optionalAttrs (config.model-selector.modelId != null) {
+          model = (
+            if config.model-selector.providerId == null then
+              throw ''
+                If model-selector.modelId is set, then model-selector.providerId must be too
+              ''
+            else
+              "--model ${config.model-selector.providerId}/${config.model-selector.modelId}"
+          );
+        }
+      );
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "opencode" ''

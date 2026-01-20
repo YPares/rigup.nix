@@ -57,6 +57,10 @@ extends.self = "example-rig-claude"
 extends.self = "example-rig"
 riglets.self = ["opencode"]
 
+[rigs.example-rig-opencode.config.model-selector]
+providerId = "opencode"
+modelId = "glm-4.7-free"
+
 [rigs.example-rig-opencode.config.agent.personality]
 inspiration = "Fa Mulan"
 tone = "courteous"
