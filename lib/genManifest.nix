@@ -164,6 +164,9 @@ pkgs.writeTextFile {
     ### Access Resources
 
     **Documentation:**
+    ${optionalString (shownDocRoot != docRoot) ''
+      - The folder containing all rig docs is `${docRoot}`, abbreviated here as `${shownDocRoot}`
+    ''}
     - Each riglet listed below will mention its `mainDocFile`: it is the one you should always read **first**
     - If there is more to read, the rest of a riglet's doc files will always be mentioned **explicitly** in its `mainDocFile`. DO NOT hunt for them proactively
     - If paths mention `$FOO` variables, these are **ACTUAL env vars**, which you can use as such without having to expand them
