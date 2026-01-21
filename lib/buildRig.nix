@@ -49,9 +49,11 @@ let
   };
 
   # Extract the executable or package name from a tool (using eval-time metadata).
-  # For indicative purposes, as for some packages, this name might not match an actual
-  # exe name once the package is built, and some package may expose several exes
-  getToolName =
+  # This is only for indicative purposes, as for some packages this name might not match an actual
+  # exe name once the package is built, and some packages may expose several exes.
+  # However, this already permits to extract some useful metadata from riglets (that the rigup CLI
+  # can show) **prior** to building the tool derivations (and therefore we avoid IFD)
+  getToolMainProgramName =
     tool:
     with builtins;
     if isPath tool then
@@ -70,7 +72,7 @@ let
   # Docs per riglet
   docAttrs = mapAttrs (_: riglet: riglet.docs) evaluated.config.riglets;
 
-  # Metadata per riglet, enriched with computed command names
+  # Metadata per riglet, enriched with mainProgram name for each provided tool
   rigMeta = mapAttrs (
     rigletName: riglet:
     riglet.meta
@@ -80,7 +82,7 @@ let
         let
           normalized = normalizeTools riglet.tools;
         in
-        map getToolName (normalized.wrapped ++ normalized.unwrapped);
+        map getToolMainProgramName (normalized.wrapped ++ normalized.unwrapped);
     }
   ) evaluated.config.riglets;
 
@@ -377,7 +379,8 @@ let
   # Serialize the rig's config options for inspection
   configOptions = serializeOptionsTree evaluated.options;
 
-  # Build the base rig attrset (without entrypoint and extend to avoid circularity)
+  # The base rig attrset (without 'entrypoint' and 'extend' to avoid circularity)
+  # that will be fed to the 'entrypoint' function if one riglet defines it
   baseRig = {
     name = rigName;
     meta = rigMeta;
