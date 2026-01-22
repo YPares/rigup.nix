@@ -30,6 +30,7 @@ in
   config.entrypoint =
     rig:
     let
+      inherit (pkgs) lib;
       cliConfigJson = (pkgs.formats.json { }).generate "cli-config.json" {
         # https://cursor.com/docs/cli/reference/configuration#required-fields
         inherit (config.cursor-agent) editor;
@@ -63,26 +64,60 @@ in
       set -euo pipefail
 
       warn() {
-        printf "\033[0;33m%s\n\033[0m" "$1" >&2
+        printf "\033[0;33m%s\033[0m\n" "$1" >&2
       }
 
-      # cursor-agent will try to overwrite the config, so we need to copy it in a writeable temp directory
+      err() {
+        printf "\033[0;31m%s\033[0m\n" "$1" >&2
+      }
+
+      gitignored () {
+        ${lib.getExe pkgs.git} check-ignore "$1" > /dev/null
+      }
+
+      cp-if-ignored() {
+        src="$1"
+        dest="$2"
+        if gitignored "$dest"; then
+          cp "$src" "$dest"
+          chmod +w "$dest"
+          warn "Overwrote $dest"
+        else
+          err "$dest is not gitignored. Refusing to copy"
+          exit 1
+        fi
+      }
+
       export CURSOR_CONFIG_DIR="${config.cursor-agent.persistentConfigDir}"
+
+      if [ ! -d "$CURSOR_CONFIG_DIR" ]; then
+        err "$CURSOR_CONFIG_DIR does not exist. Please create it first"
+        exit 1
+      fi
+
       mkdir -p "$CURSOR_CONFIG_DIR/rules"
 
       export PATH="${rig.toolRoot}/bin:$PATH"
       export RIG_DOCS="${rig.docRoot}"
       export RIG_MANIFEST="$CURSOR_CONFIG_DIR/rules/rig-manifest.mdc"
 
-      cp "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
-      chmod +w "$CURSOR_CONFIG_DIR/cli-config.json"
-      warn "Overwrote $CURSOR_CONFIG_DIR/cli-config.json"
+      cp-if-ignored "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
+      cp-if-ignored "${mcpConfigJson}" "$CURSOR_CONFIG_DIR/mcp.json"
+      ${lib.optionalString (rig.promptCommands != { }) ''
+        mkdir -p "$CURSOR_CONFIG_DIR/commands"
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (cmdName: cmd: ''
+            cmdPath="$CURSOR_CONFIG_DIR/commands/rig:${cmdName}.md"
+            cp-if-ignored "${pkgs.writeText "cursor-command.md" ''
+              <!-- ${cmd.description} -->
 
-      cp "${mcpConfigJson}" "$CURSOR_CONFIG_DIR/mcp.json"
-      chmod +w "$CURSOR_CONFIG_DIR/mcp.json"
-      warn "Overwrote $CURSOR_CONFIG_DIR/mcp.json"
+              ${cmd.template}
+            ''}" "$cmdPath"
+          '') rig.promptCommands
+        )}
+      ''}
 
-      cp "${pkgs.writeText "rig-manifest.mdc" ''
+      cp-if-ignored "${pkgs.writeText "rig-manifest.mdc" ''
         ---
         alwaysApply: true
         ---
@@ -96,8 +131,7 @@ in
           )
         }        
       ''}" "$RIG_MANIFEST"
-      chmod +w "$RIG_MANIFEST"
-      warn "Overwrote $RIG_MANIFEST"
+
       warn "IMPORTANT: Unless $CURSOR_CONFIG_DIR is your project's top-level .cursor/ folder, instruct first your agent to read $RIG_MANIFEST"
 
       ${pkgs.lib.getExe cursor-agent} "$@"

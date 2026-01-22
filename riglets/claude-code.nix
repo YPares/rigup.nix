@@ -64,23 +64,16 @@ in
 
             # Generate command Markdown files
             ${lib.concatStringsSep "\n" (
-              lib.mapAttrsToList (
-                namespacedName: cmd:
-                let
-                  frontmatter = ''
-                    ---
-                    description: ${cmd.description}
-                    ${lib.optionalString cmd.useSubAgent "context: fork"}
-                    ---
+              lib.mapAttrsToList (namespacedName: cmd: ''
+                cat > $out/commands/${namespacedName}.md <<'CMDEOF'
+                ---
+                description: ${cmd.description}
+                ${lib.optionalString cmd.useSubAgent "context: fork"}
+                ---
 
-                  '';
-                in
-                ''
-                  cat > $out/commands/${namespacedName}.md <<'CMDEOF'
-                  ${frontmatter + cmd.template}
-                  CMDEOF
-                ''
-              ) rig.promptCommands
+                ${cmd.template}
+                CMDEOF
+              '') rig.promptCommands
             )}
           ''
         else
