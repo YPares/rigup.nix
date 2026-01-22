@@ -176,6 +176,7 @@ self:
           Summarize all the revisions from revset `$1`.
           (Run `jj log -r "$1" --git` to get the log output with the diff of each revision)
         '';
+        useSubAgent = true;
       };
     };
   };

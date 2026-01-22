@@ -94,7 +94,14 @@ in
           // lib.optionalAttrs (s.url != null) { inherit (s) url; }
         ) rig.mcpServers;
 
-        command = lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands;
+        command = lib.mapAttrs (
+          name: cmd:
+          {
+            template = cmd.template;
+            description = cmd.description;
+          }
+          // lib.optionalAttrs cmd.useSubAgent { subtask = true; }
+        ) (lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands);
       };
     in
     # Return a folder derivation with bin/ subfolder

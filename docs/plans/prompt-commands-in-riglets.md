@@ -138,7 +138,7 @@ promptCommands = mkOption {
   description = "Prompt commands this riglet provides (slash commands in harnesses like Claude Code)";
   type = types.attrsOf (types.submodule {
     options = {
-      content = mkOption {
+      template = mkOption {
         description = "Markdown content of the template. Can reference variables like $ARGUMENTS, $1, $2, etc.";
         type = types.str;
       };
@@ -178,16 +178,10 @@ promptCommands = mkOption {
         default = null;
       };
 
-      subtask = mkOption {
-        description = "Force subagent invocation (OpenCode-specific, may be ignored by other harnesses)";
+      useSubAgent = mkOption {
+        description = "Have a sub-agent read and run the command";
         type = types.bool;
         default = false;
-      };
-
-      context = mkOption {
-        description = "Execution context - 'fork' for sub-agent (Claude Code), maps to 'subtask' in OpenCode";
-        type = types.nullOr (types.enum ["fork"]);
-        default = null;
       };
     };
   });

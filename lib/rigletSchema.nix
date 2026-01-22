@@ -61,9 +61,16 @@ in
                       description = "The command template itself. Can use $ARGUMENTS, $1, $2...";
                       type = types.str;
                     };
+
                     description = mkOption {
-                      description = "Short explanation of what this prompt command does. Will usually be shown in a help or autocompletion menu by the harness";
+                      description = "Short explanation of what this prompt command does. Usually shown in help or autocompletion menu in the harness";
                       type = types.str;
+                    };
+
+                    useSubAgent = mkOption {
+                      description = "Have a sub-agent read and run the command (`context: fork` in Claude Code, `subtask: true` in OpenCode). Support depends on harness";
+                      type = types.bool;
+                      default = false;
                     };
                   };
                 }

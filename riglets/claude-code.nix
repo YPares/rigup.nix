@@ -66,10 +66,12 @@ in
             lib.mapAttrsToList (
               namespacedName: cmd:
               let
-                # Generate frontmatter if description exists
-                frontmatter = lib.optionalString (cmd.description != "") ''
+                # Generate frontmatter if needed
+                hasFrontmatter = cmd.description != "" || cmd.useSubAgent;
+                frontmatter = lib.optionalString hasFrontmatter ''
                   ---
-                  description: ${cmd.description}
+                  ${lib.optionalString (cmd.description != "") "description: ${cmd.description}"}
+                  ${lib.optionalString cmd.useSubAgent "context: fork"}
                   ---
 
                 '';
