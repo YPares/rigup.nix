@@ -46,6 +46,44 @@ in
           // pkgs.lib.optionalAttrs (s.headers != { }) { inherit (s) headers; }
         ) rig.mcpServers;
       };
+
+      # Generate Claude Code plugin for prompt commands (only if there are any)
+      pluginDir = lib.optionalAttrs (rig.promptCommands != { }) {
+        path = pkgs.runCommand "rig-prompt-commands-cc-plugin" { } ''
+          mkdir -p $out/.claude-plugin $out/commands
+
+          # Generate plugin manifest
+          cat > $out/.claude-plugin/plugin.json <<'EOF'
+          {
+            "name": "rig",
+            "description": "Prompt commands from agent rig",
+            "version": "0.0.0"
+          }
+          EOF
+
+          # Generate command files
+          ${lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (
+              namespacedName: cmd:
+              let
+                # Generate frontmatter if description exists
+                frontmatter = lib.optionalString (cmd.description != "") ''
+                  ---
+                  description: ${cmd.description}
+                  ---
+
+                '';
+                fullContent = frontmatter + cmd.template;
+              in
+              ''
+                cat > $out/commands/${namespacedName}.md <<'CMDEOF'
+                ${fullContent}
+                CMDEOF
+              ''
+            ) rig.promptCommands
+          )}
+        '';
+      };
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "claude" ''
@@ -61,6 +99,7 @@ in
         --settings "${settingsJson}" \
         --mcp-config ${mcpConfig} \
         ${lib.optionalString config.claude-code.strictMcpConfig "--strict-mcp-config"} \
+        ${lib.optionalString (pluginDir != { }) "--plugin-dir ${pluginDir.path}"} \
         "$@"
     '';
 

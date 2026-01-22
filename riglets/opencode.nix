@@ -83,18 +83,18 @@ in
           }
         ) config.opencode.lspServers;
 
-        mcp = pkgs.lib.mapAttrs (
+        mcp = lib.mapAttrs (
           name: s:
           {
             # OpenCode uses "local" for command-based servers and "remote" for URL-based servers
             type = if s.resolvedCommand != null then "local" else "remote";
             enabled = true;
           }
-          // pkgs.lib.optionalAttrs (s.resolvedCommand != null) { command = [ s.resolvedCommand ]; }
-          // pkgs.lib.optionalAttrs (s.url != null) { inherit (s) url; }
+          // lib.optionalAttrs (s.resolvedCommand != null) { command = [ s.resolvedCommand ]; }
+          // lib.optionalAttrs (s.url != null) { inherit (s) url; }
         ) rig.mcpServers;
 
-        command = rig.promptCommands;
+        command = lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands;
       };
     in
     # Return a folder derivation with bin/ subfolder

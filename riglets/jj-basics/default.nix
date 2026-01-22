@@ -168,16 +168,13 @@ self:
         description = "Summarize all revisions from some revset";
         # We put `pkgs.jujutsu` in the riglet's `tools` above, so `jj` will be in the PATH.
         # The call to `jj` will be expanded before being shown to the agent.
-        # IMPORTANT: The !`<cmd>` syntax is common to Claude Code and OpenCode to indicate
-        # a command that should be expanded, but other harnesses may send the template
-        # as it is to the LLM, which may then choose to run the command or not
+        # IMPORTANT: The !`<cmd>` syntax (common to Claude Code and OpenCode) indicate
+        # a bash command that should be expanded *into* the template before the LLM see it,
+        # BUT Claude Code doesn't support including $N arguments into it.
+        # This is why we don't use it here.
         template = ''
           Summarize all the revisions from revset `$1`.
-          Here is the jj log output with the diff of each revision inlined:
-
-          ```
-          !`jj log -r "$1" --git`
-          ```
+          (Run `jj log -r "$1" --git` to get the log output with the diff of each revision)
         '';
       };
     };
