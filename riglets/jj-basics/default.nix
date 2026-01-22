@@ -164,7 +164,7 @@ self:
     };
 
     promptCommands = {
-      summarize-all-revs = {
+      summarize-revset = {
         description = "Summarize all revisions from some revset";
         # We put `pkgs.jujutsu` in the riglet's `tools` above, so `jj` will be in the PATH.
         # The call to `jj` will be expanded before being shown to the agent.

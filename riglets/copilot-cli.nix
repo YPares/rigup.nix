@@ -47,7 +47,7 @@ in
       set -euo pipefail
 
       warn() {
-        printf "\\033[0;33m%s\\n\\033[0m" "$1" >&2
+        printf "> \033[0;33m%s\033[0m\n" "$1" >&2
       }
 
       export PATH="${rig.toolRoot}/bin:$PATH"
@@ -57,9 +57,14 @@ in
       # For later reference, if needed
       export RIG_MANIFEST="${instructionsDir}/AGENTS.md"
 
+      ${pkgs.lib.optionalString (rig.promptCommands != { }) ''
+        warn "github-cli does not support custom commands"
+        warn "  Rig's prompt commands are ignored"
+      ''}
+
       ${pkgs.lib.optionalString (rig.mcpServers != { }) ''
-        warn "github-cli doesn't support setting MCP servers outside of XDG_CONFIG_HOME for now"
-        warn "The rig's MCP config is ignored"
+        warn "github-cli does not support setting MCP servers outside of your XDG_CONFIG_HOME"
+        warn "  Rig's MCP config is ignored"
       ''}
 
       exec ${pkgs.lib.getExe copilot-cli} ${pkgs.lib.escapeShellArgs copilotArgs} "$@"

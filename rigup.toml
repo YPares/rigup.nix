@@ -81,13 +81,13 @@ playfulness = "exceptional"
 alignment = { lawfulness = "chaotic", goodness = "neutral" }
 obedience = "liberal"
 
-# Like the above, but with cursor-agent integration
+# Like the above, but with cursor integration
 [rigs.example-rig-cursor]
 extends.self = "example-rig"
-riglets.self = ["cursor-agent"]
-
-[rigs.example-rig-cursor.config]
-cursor-agent.persistentConfigDir = ".cursor"
+riglets.self = ["cursor"]
+# config.cursor.justSetupProject = true
+  # If true, the entrypoiny will not start cursor-agent:
+  # it will only setup the .cursor/ folder in the CWD, to be used by Cursor IDE.
 
 [rigs.example-rig-cursor.config.agent.personality]
 inspiration = "Sauron"
