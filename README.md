@@ -417,6 +417,12 @@ But this enables riglets to perform things that Skills just cannot do:
 
 ## Features
 
+- **One Config To Rule Them All:** `rigup` will generate config for:
+  - Claude Code
+  - OpenCode
+  - Cursor & `cursor-agent`
+  - `copilot-cli` (although `copilot-cli` does not allow custom prompt commands, and MCP servers can only be set in user's config for now)
+  - ...and possibly others to come (PRs are welcome!)
 - **Declarative composition:** Module system for riglet interaction
 - **Data-driven config:** `rigup.toml` for CLI-manageable rigs
 - **Auto-discovery:** Riglets from `riglets/` automatically exposed, as well as rigs from `rigup.toml`
