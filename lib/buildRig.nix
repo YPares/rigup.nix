@@ -156,7 +156,7 @@ let
   # The rig manifest file from riglet metadata and docs, overridable
   #
   # See lib/genManifest.nix for full documentation
-  manifest = pkgs.lib.makeOverridable flake.lib.genManifest {
+  manifest = makeOverridable flake.lib.genManifest {
     inherit
       pkgs
       rigName
@@ -266,7 +266,15 @@ let
       collectFromRiglet =
         rigletName: riglet:
         concatMapAttrs (commandName: def: {
-          "${rigletName}:${commandName}" = def;
+          "${rigletName}:${commandName}" =
+            def
+            // optionalAttrs (def.readDocsFirst && riglet.docs != null) {
+              template = ''
+                **First, if not done already, read mainDocFile of riglet ${rigletName}.**
+
+                ${def.template}
+              '';
+            };
         }) riglet.promptCommands;
     in
     foldl' (acc: r: acc // collectFromRiglet r.name r) { } (
@@ -323,7 +331,7 @@ let
 
       wrapValue =
         val:
-        if pkgs.lib.isFunction val then
+        if isFunction val then
           # IMPORTANT: builtins.isFunction doesn't work here (it has false negatives)
           "<function>"
         else if (builtins.isAttrs val && val ? type && val.type == "derivation") || builtins.isPath val then
@@ -337,7 +345,7 @@ let
       default = if opt ? default then wrapValue opt.default else null;
       value = if opt.isDefined or false && opt ? value then wrapValue opt.value else null;
     }
-    // pkgs.lib.optionalAttrs (enumValues != null && builtins.isList enumValues) {
+    // optionalAttrs (enumValues != null && builtins.isList enumValues) {
       inherit enumValues;
     };
 

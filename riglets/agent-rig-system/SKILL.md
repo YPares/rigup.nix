@@ -112,7 +112,7 @@ _:
     # so if you have a ready to use folder you can do:
     #docs = ./path/to/skill/folder;
 
-    # Configuration files (optional) for tools following the 
+    # Configuration files (optional) for tools following the
     # [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
     configFiles = riglib.writeFileTree {
       # Built from a Nix attrset
@@ -127,6 +127,19 @@ _:
         echo hello
       '';
     };
+
+    # EXPERIMENTAL: Prompt commands (slash commands for harnesses like Claude Code)
+    # promptCommands.my-cmd = {
+    #   template = "Do something specific with $ARGUMENTS";
+    #   description = "What this command does";
+    #   useSubAgent = false;
+    # };
+
+    # EXPERIMENTAL: MCP (Model Context Protocol) servers
+    # mcpServers.my-server = {
+    #   command = pkgs.my-mcp-server;  # For stdio transport
+    #   transport = "stdio";
+    # };
   };
 }
 ```
@@ -153,6 +166,35 @@ See `references/riglib-utilities.md` for details on helper functions available v
 - **riglib.useScriptFolder** - Convert folder of scripts into wrapped tool packages
 
 `riglib` is defined in `{{repoRoot}}/lib/mkRiglib.nix`
+
+### Experimental Features
+
+**WARNING**: These features are still experimental and their schema may change.
+
+#### Prompt Commands
+
+Riglets can define reusable prompt templates (slash commands) for agent harnesses like Claude Code:
+
+```nix
+promptCommands.analyze = {
+  template = "Analyze $1 for potential issues";
+  description = "Perform code analysis";
+  useSubAgent = false;  # Whether to run in a sub-agent
+};
+```
+
+Templates use standard Claude command syntax: `$ARGUMENTS` for all args, or `$1`, `$2`, etc. for specific positional arguments.
+
+#### MCP Servers
+
+Riglets can provide MCP (Model Context Protocol) servers to extend agent capabilities:
+
+```nix
+mcpServers.my-tools = {
+  command = pkgs.my-mcp-server;  # Package that starts the server
+  transport = "stdio";            # stdio, sse, or http
+};
+```
 
 ## Cross-Riglet/Flake Interaction
 

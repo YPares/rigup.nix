@@ -67,6 +67,12 @@ in
                       type = types.str;
                     };
 
+                    readDocsFirst = mkOption {
+                      description = "Add an instruction to read the riglet's doc first (if it contains any)";
+                      type = types.bool;
+                      default = true;
+                    };
+
                     useSubAgent = mkOption {
                       description = "Have a sub-agent read and run the command (`context: fork` in Claude Code, `subtask: true` in OpenCode). Support depends on harness";
                       type = types.bool;

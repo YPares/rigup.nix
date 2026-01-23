@@ -169,7 +169,6 @@ pkgs.writeTextFile {
     ''}
     - Each riglet listed below will mention its `mainDocFile`: it is the one you should always read **first**
     - If there is more to read, the rest of a riglet's doc files will always be mentioned **explicitly** in its `mainDocFile`. DO NOT hunt for them proactively
-    - If paths mention `$FOO` variables, these are **ACTUAL env vars**, which you can use as such without having to expand them
     - Relative paths in docs are ALWAYS relative **to the file mentioning them**
     - Do not re-read doc files already loaded in your context. If any doc changes after you read it, the **USER is responsible** for notifying you
 
