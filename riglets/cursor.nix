@@ -150,7 +150,7 @@ in
       description = "Set up project for use with cursor, and optionally launch cursor-agent";
       intent = "base";
       disclosure = "none";
-      status = "experimental";
+      status = "stable";
       version = "0.1.0";
     };
   };
