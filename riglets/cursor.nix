@@ -93,14 +93,25 @@ in
 
       mkdir -p "$CURSOR_CONFIG_DIR/rules"
 
-      export PATH="${rig.toolRoot}/bin:$PATH"
-      export RIG_DOCS="${rig.docRoot}"
+      ${
+        if config.cursor.justSetupProject then
+          ''
+            cp-if-ignored "${pkgs.writeText "rig-activate.sh" ''
+              export PATH="${rig.toolRoot}/bin:$PATH"
+            ''}" "$CURSOR_CONFIG_DIR/rig-activate.sh"
+          ''
+        else
+          ''
+            export PATH="${rig.toolRoot}/bin:$PATH"
+            export RIG_DOCS="${rig.docRoot}"
+            cp-if-ignored "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
+          ''
+      }
+
       export RIG_MANIFEST="$CURSOR_CONFIG_DIR/rules/rig-manifest.mdc"
 
-      ${lib.optionalString (!config.cursor.justSetupProject) ''
-        cp-if-ignored "${cliConfigJson}" "$CURSOR_CONFIG_DIR/cli-config.json"
-      ''}
       cp-if-ignored "${mcpConfigJson}" "$CURSOR_CONFIG_DIR/mcp.json"
+
       ${lib.optionalString (rig.promptCommands != { }) ''
         mkdir -p "$CURSOR_CONFIG_DIR/commands"
         ${lib.concatStringsSep "\n" (
@@ -125,10 +136,21 @@ in
 
         ${
           builtins.readFile (
-            rig.manifest.override {
-              manifestFileName = "rig-manifest.mdc";
-              shownDocRoot = "$RIG_DOCS";
-            }
+            rig.manifest.override (
+              {
+                manifestFileName = "rig-manifest.mdc";
+              }
+              // (
+                if config.cursor.justSetupProject then
+                  {
+                    shownActivationScript = ".cursor/rig-activate.sh";
+                  }
+                else
+                  {
+                    shownDocRoot = "$RIG_DOCS";
+                  }
+              )
+            )
           )
         }        
       ''}" "$RIG_MANIFEST"
