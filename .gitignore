@@ -2,7 +2,7 @@
 .direnv/
 
 # VSCode & copilot-cli
-.vscode/mcp.json
+.vscode/
 
 # nix
 result

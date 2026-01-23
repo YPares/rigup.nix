@@ -98,6 +98,11 @@ playfulness = "inexistent"
 alignment = { lawfulness = "chaotic", goodness = "evil" }
 obedience = "adamant"
 
+# Like the above, but with vscode integration
+[rigs.example-rig-vscode]
+extends.self = "example-rig"
+riglets.self = ["vscode-copilot"]
+
 # Local (non-committed) overrides:
 # Create `rigup.local.toml` and add it to .gitignore to override config without modifying this file.
 # rigup CLI tool will automatically `git add` it so it is always part of the evaluated flake, even if gitignored.
