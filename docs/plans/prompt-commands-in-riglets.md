@@ -271,7 +271,7 @@ Update `riglets/claude-code.nix` to generate a plugin and load via `--plugin-dir
 
 ```nix
 # In entrypoint function:
-pluginDir = pkgs.runCommand "rig-plugin" {} ''
+pluginDir = pkgs.runCommandLocal "rig-plugin" {} ''
   mkdir -p $out/.claude-plugin $out/commands
 
   # Generate plugin manifest
@@ -372,7 +372,7 @@ Then pass via `OPENCODE_CONFIG` as already done in the entrypoint.
 Simpler for `riglets/cursor-agent.nix` (no frontmatter):
 
 ```nix
-cursorCommandsDir = pkgs.runCommand "cursor-commands" {} ''
+cursorCommandsDir = pkgs.runCommandLocal "cursor-commands" {} ''
   mkdir -p $out
   ${lib.concatStringsSep "\n" (
     lib.mapAttrsToList (name: tmpl: ''

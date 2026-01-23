@@ -406,7 +406,7 @@ home = let
   configRenderer = if usesSecrets
     then riglib.mkSecretConfigRenderer { inherit configRoot rigName; }
     else null;
-in pkgs.runCommand "${rigName}-home" {} ''
+in pkgs.runCommandLocal "${rigName}-home" {} ''
   mkdir -p $out
   ln -s ${toolRoot} $out/.local
   ln -s ${docRoot} $out/docs

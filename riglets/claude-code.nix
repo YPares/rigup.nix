@@ -50,7 +50,7 @@ in
       # Generate Claude Code plugin for prompt commands (only if there are any)
       pluginDir =
         if rig.promptCommands != { } then
-          pkgs.runCommand "rig-prompt-commands-cc-plugin" { } ''
+          pkgs.runCommandLocal "rig-prompt-commands-cc-plugin" { } ''
             mkdir -p $out/.claude-plugin $out/commands
 
             # Generate plugin manifest

@@ -77,7 +77,7 @@ let
 
   mkFilteredCoreutils =
     commands:
-    pkgs.runCommand "coreutils-filtered" { } ''
+    pkgs.runCommandLocal "coreutils-filtered" { } ''
       mkdir -p $out/bin
       for cmd in ${pkgs.lib.concatStringsSep " " commands}; do
         if [ -f ${pkgs.coreutils}/bin/$cmd ]; then

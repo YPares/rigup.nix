@@ -141,7 +141,7 @@ let
     };
 
   # Docs folder (with symlinks to docs for all riglets)
-  docRoot = pkgs.runCommand "rig-doc-root" { } ''
+  docRoot = pkgs.runCommandLocal "rig-doc-root" { } ''
     mkdir -p $out
     ${concatStringsSep "\n" (
       mapAttrsToList (
@@ -171,7 +171,7 @@ let
     if evaluated.config.entrypoint != null then evaluated.config.entrypoint baseRig else null;
 
   # Complete agent home directory
-  home = pkgs.runCommand "rig-home" { } ''
+  home = pkgs.runCommandLocal "rig-home" { } ''
     mkdir -p $out
     ln -s ${toolRoot} $out/.local
     ln -s ${configRoot} $out/.config
@@ -248,7 +248,7 @@ let
       modules = modules ++ extraModules;
     };
 
-  allExesDeriv = pkgs.runCommand "rig-all-exes" { } ''
+  allExesDeriv = pkgs.runCommandLocal "rig-all-exes" { } ''
     dir="${toolRoot}/bin"
     if [ -d "$dir" ]; then
       ls ${toolRoot}/bin > $out

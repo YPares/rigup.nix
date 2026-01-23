@@ -63,7 +63,7 @@ let
   # shallow=false: all headings
   generateToc =
     rigletName: file: shallow:
-    pkgs.runCommand "${rigletName}-${optionalString shallow "shallow-"}toc" { } ''
+    pkgs.runCommandLocal "${rigletName}-${optionalString shallow "shallow-"}toc" { } ''
       ${extract-md-toc}/bin/extract-md-toc ${if shallow then "--max-level 2" else ""} ${file} > $out
     '';
 

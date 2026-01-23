@@ -16,6 +16,8 @@ let
       };
   };
 
+  noSub = deriv: deriv // { allowSubstitutes = false; };
+
   # Convert nested attribute set to directory tree of files
   # Usage: writeFileTree pkgs { "SKILL.md" = "..."; references."foo.md" = "..."; }
   # Creates: derivation with SKILL.md and references/foo.md
@@ -54,7 +56,7 @@ let
           ) attrs
         );
     in
-    pkgs.runCommand "file-tree" { } (mkFileCommands "" tree);
+    pkgs.runCommandLocal "file-tree" { } (mkFileCommands "" tree);
 
   # Convert a script path to a package by wrapping it with writeShellScriptBin
   # Derives the executable name from the script's filename (without extension)
@@ -143,7 +145,7 @@ let
       strict ? true, # Fail if the template mentions variables which aren't present in 'data'
     }:
     with pkgs.lib;
-    pkgs.runCommand (baseNameOf template) { } ''
+    pkgs.runCommandLocal (baseNameOf template) { } ''
       ${getExe pkgs.minijinja} ${optionalString strict "--strict"} ${template} ${
         (pkgs.formats.json { }).generate "minijinja-data.json" data
       } --format json --output $out
