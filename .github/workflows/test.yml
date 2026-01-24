@@ -1,4 +1,4 @@
-name: "Test"
+name: "nix flake check"
 on:
   pull_request:
   push:
