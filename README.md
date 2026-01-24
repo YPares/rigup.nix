@@ -25,6 +25,8 @@ First, install the `rigup` CLI tool:
 nix profile add github:YPares/rigup.nix#rigup
 ```
 
+Cached binaries should be provided by `garnix.io` (for both x86_64 Linux and ARM64 OSX). The first time, nix should prompt you about accepting the flake config to activate garnix as a substituter.
+
 _**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
 
 If already installed, update with:
