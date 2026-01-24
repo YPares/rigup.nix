@@ -268,7 +268,7 @@ let
         concatMapAttrs (commandName: def: {
           "${rigletName}:${commandName}" =
             def
-            // optionalAttrs (def.readDocsFirst && riglet.docs != null && riglets.meta.disclosure != "eager") {
+            // optionalAttrs (def.readDocsFirst && riglet.docs != null && riglet.meta.disclosure != "eager") {
               template = ''
                 **First, if not done already, read mainDocFile of riglet ${rigletName}.**
 
