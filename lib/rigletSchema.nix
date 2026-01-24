@@ -68,7 +68,7 @@ in
                     };
 
                     readDocsFirst = mkOption {
-                      description = "Add an instruction to read the riglet's doc first (if it contains any)";
+                      description = "Add an instruction to read the riglet's doc first (if it is not eagerly disclosed and contains docs)";
                       type = types.bool;
                       default = true;
                     };
