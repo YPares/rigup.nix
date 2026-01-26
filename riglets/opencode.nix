@@ -68,12 +68,26 @@ in
 
         # Grant read access to specific Nix store paths that OpenCode needs
         permission = {
-          bash = lib.listToAttrs (
-            map (cmd: {
-              name = "${cmd} *";
-              value = "allow";
-            }) rig.allExeNames
-          );
+          bash =
+            lib.listToAttrs (
+              map (cmd: {
+                name = "${cmd} *";
+                value = "allow";
+              }) rig.allExeNames
+            )
+            # Add deny rules for specific tool subcommands
+            # OpenCode uses wildcard patterns, so we add " *" suffix
+            // lib.listToAttrs (
+              lib.flatten (
+                lib.mapAttrsToList (
+                  tool: patterns:
+                  map (pattern: {
+                    name = "${tool} ${pattern} *";
+                    value = "deny";
+                  }) patterns
+                ) rig.denyRules
+              )
+            );
         };
 
         lsp = lib.mapAttrs (
