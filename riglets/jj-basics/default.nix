@@ -3,6 +3,7 @@ self:
   config,
   pkgs,
   riglib,
+  lib,
   ...
 }:
 {
@@ -13,6 +14,14 @@ self:
       pkgs.jujutsu
     ]
     ++ riglib.useScriptFolder ./scripts;
+
+    # These JJ subcommands will be forbidden
+    denyRules = lib.mkDefault {
+      jj = [
+        "git push"
+        "git fetch"
+      ];
+    };
 
     meta = {
       description = "Jujutsu version control fundamentals and workflows";

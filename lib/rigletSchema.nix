@@ -51,6 +51,17 @@ in
               default = null;
             };
 
+            denyRules = mkOption {
+              description = ''
+                Command deny rules for harness entrypoints, structured by tool name.
+                Each tool can have a list of command patterns to deny.
+                Example: { git = ["push" "pull"]; jj = ["git push"]; }
+                These rules complement the blanket allow rules that entrypoints generate for all rig tools.
+              '';
+              type = types.attrsOf (types.listOf types.str);
+              default = { };
+            };
+
             # WARNING: STILL EXPERIMENTAL. Schema for promptCommands is subject to change
             promptCommands = mkOption {
               description = ''Reusable prompt templates ("slash commands" for Claude Code or simply "commands" for OpenCode)'';

@@ -34,6 +34,14 @@ in
           "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
         ]
         ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
+
+        # Add deny rules for specific tool subcommands
+        # Format: Bash(tool subcommand:*) - the colon is BEFORE the asterisk, after the full command
+        permissions.deny = lib.flatten (
+          lib.mapAttrsToList (
+            tool: patterns: map (pattern: "Bash(${tool} ${pattern}:*)") patterns
+          ) rig.denyRules
+        );
       };
 
       mcpConfig = riglib.toJSON {

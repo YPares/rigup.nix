@@ -67,6 +67,11 @@ in
         warn "  Rig's MCP config is ignored"
       ''}
 
+      ${pkgs.lib.optionalString (rig.denyRules != { }) ''
+        warn "github-cli does not support deny rules via CLI arguments"
+        warn "  Rig's deny rules are ignored"
+      ''}
+
       exec ${pkgs.lib.getExe copilot-cli} ${pkgs.lib.escapeShellArgs copilotArgs} "$@"
     '';
 
