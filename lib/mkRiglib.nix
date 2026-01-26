@@ -36,6 +36,16 @@ let
     tree:
     with pkgs.lib;
     let
+      # Recursively apply alwaysLocal to derivation values to prevent substituter queries
+      preventSubstitution =
+        value:
+        if isDerivation value then
+          alwaysLocal value
+        else if isAttrs value && !(isDerivation value) then
+          mapAttrs (_: preventSubstitution) value
+        else
+          value;
+
       # Recursively build file creation commands
       mkFileCommands =
         prefix: attrs:
@@ -66,7 +76,7 @@ let
           ) attrs
         );
     in
-    pkgs.runCommandLocal "file-tree" { } (mkFileCommands "" tree);
+    pkgs.runCommandLocal "file-tree" { } (mkFileCommands "" (preventSubstitution tree));
 
   # Convert a script path to a package by wrapping it with writeShellScriptBin
   # Derives the executable name from the script's filename (without extension)

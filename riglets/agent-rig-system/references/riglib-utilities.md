@@ -14,6 +14,7 @@ Converts nested attrsets to directory trees:
   - Strings (inline content)
   - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
   - Derivations (e.g., `pkgs.writeText` or `riglib.toJSON`)
+- **Automatically marks all derivation inputs as non-substitutable** to avoid querying remote caches for cheap-to-build markdown files
 
 ### Example Usage
 
