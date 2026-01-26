@@ -300,6 +300,16 @@ let
       mapAttrsToList (n: r: r // { name = n; }) evaluated.config.riglets
     );
 
+  # Collect deny rules from all riglets
+  # Structure: { toolName = ["subcommand1" "subcommand2" ...]; }
+  denyRules =
+    let
+      # Merge deny rules from multiple riglets, concatenating lists for same tool
+      mergeDenyRules =
+        acc: riglet: acc // (mapAttrs (tool: patterns: (acc.${tool} or [ ]) ++ patterns) riglet.denyRules);
+    in
+    foldl' mergeDenyRules { } (attrValues evaluated.config.riglets);
+
   # Convert an option to a serializable format for inspection
   serializeOption =
     opt:
@@ -404,6 +414,7 @@ let
       modules
       promptCommands
       mcpServers
+      denyRules
       configOptions
       ;
   };

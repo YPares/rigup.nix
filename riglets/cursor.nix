@@ -33,7 +33,13 @@ in
             "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
           ]
           ++ map (cmd: "Shell(${cmd})") rig.allExeNames; # Allow executing all rig tools
-        permissions.deny = [ ];
+
+        # Add deny rules for specific tool subcommands
+        permissions.deny = lib.flatten (
+          lib.mapAttrsToList (
+            tool: patterns: map (pattern: "Shell(${tool} ${pattern})") patterns
+          ) rig.denyRules
+        );
       };
 
       # MCP servers configuration
