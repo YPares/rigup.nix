@@ -43,9 +43,10 @@ nix profile upgrade rigup
 This CLI tool makes it easier to:
 
 - get information about riglets and rigs exposed by a flake and its inputs (`rigup show`)
+- show the contents of a rig, including which options can be used to customize it with their description, type, default and current values (`rigup inspect`)
+- directly start a coding agent harness (`rigup run` or just `rigup`) if the rig contains a riglet that provides an _entrypoint_. Entrypoints act as connectors, wrapping a harness executable to start it with the appropriate config
 - build a full rig as a folder of symlinks (`rigup build`)
-- start a rig as a subshell with `$PATH` and `$RIG_MANIFEST` (path to the `RIG.md`) set up (`rigup shell`)
-- directly start a coding agent harness (`rigup run`) if your rig contains a riglet that provides an _entrypoint_. Entrypoints act as connectors, wrapping a harness executable to start it with the appropriate config
+- use a rig as a subshell, with `$PATH` and `$RIG_MANIFEST` (path to the `RIG.md`) set up (`rigup shell`)
 
 (Note all these commands are just wrappers, provided for convenience, around the rigup Nix library. So you may still do everything with the usual `nix {build,develop,run}` commands if you prefer)
 
