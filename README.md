@@ -1,17 +1,22 @@
 ![logo](assets/logo/rigup-logo.jpg)
 
-# Self-Contained, Modular, Reusable AI Agent Skills
+# Self-Contained & Modular AI Agent Config
 
-`rigup` is a Nix-based system for packaging AI agent skills with the tools and config needed to execute them.
+`rigup` is a Nix-based system for packaging knowledge, instructions and skills for your AI agent with the tools and config needed to execute them.
 
 A _riglet_ is _executable knowledge_:
 
 - metadata to indicate to your agent what this riglet is for and when it is useful to consult it
-- a set of operations, instructions, processes, a.k.a a new [Skill](https://code.claude.com/docs/en/skills) for your agent. As with Skills, these instructions are _lazily_ loaded: your agent reads them when it needs to, or is prompted to
+- a set of operations, instructions, processes, a.k.a a new [Skill](https://code.claude.com/docs/en/skills) for your agent
 - the tools (nix packages) needed to execute these instructions
 - the configuration for these tools (if any)
 
 By combining the relevant riglets together, you build your agent's _rig_: the tools it needs to work on your project, and the operational knowledge it needs to use those tools properly and efficiently.
+
+By default, the documentation of a riglet is _lazily_ loaded (like Skills are): at startup your agent is fed a manifest, only showing for each riglet a quick description and a set of use cases.
+It will then go on reading it when it needs to, or is prompted to.
+However, `rigup` gives you more control than Skills traditionally do in terms of when your agent should be exposed to a riglet's content.
+For instance, a fundamental riglet can be set to have an _eager_ disclosure (forcing the agent to see the whole SKILL.md at startup), while another one can have a _shallow-toc_ disclosure (the agent will see a table of contents of the riglet's main SKILL.md).
 
 `rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies. The "main entrance" to the rig will be the `RIG.md` manifest that rigup will generate for your AI agent to read, and through which it will discover all the available tools, knowledge and processes to follow.
 
