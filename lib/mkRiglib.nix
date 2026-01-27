@@ -16,7 +16,17 @@ let
       };
   };
 
-  noSub = deriv: deriv // { allowSubstitutes = false; };
+  # Override a derivation so its always built locally, and not queried from remote substituters
+  alwaysLocal =
+    x:
+    if pkgs.lib.isDerivation x then
+      x
+      // {
+        preferLocalBuild = true;
+        allowSubstitutes = false;
+      }
+    else
+      x;
 
   # Convert nested attribute set to directory tree of files
   # Usage: writeFileTree pkgs { "SKILL.md" = "..."; references."foo.md" = "..."; }
@@ -65,7 +75,7 @@ let
     let
       scriptName = baseNameOf (toString scriptPath);
     in
-    pkgs.writeShellScriptBin scriptName (builtins.readFile scriptPath);
+    alwaysLocal (pkgs.writeShellScriptBin scriptName (builtins.readFile scriptPath));
 
   # Convert all files in a folder to a list of wrapped script packages
   #
@@ -102,10 +112,10 @@ let
       # Check if a filename has one of the allowed extensions
       hasAllowedExt = filename: any (ext: hasSuffix ext (toLower filename)) normalizedExts;
     in
-    cleanSourceWith {
+    alwaysLocal (cleanSourceWith {
       src = rootPath;
       filter = filepath: type: type == "directory" || hasAllowedExt filepath;
-    };
+    });
 
   # Wrap a set of tools to fix a specific set of environment variables for them
   wrapWithEnv =
@@ -115,27 +125,29 @@ let
       env,
     }:
     with pkgs.lib;
-    pkgs.symlinkJoin {
-      inherit name;
-      paths = tools;
-      buildInputs = [ pkgs.makeBinaryWrapper ];
-      postBuild =
-        let
-          setFlagsList = concatMap (
-            { name, value }:
-            [
-              "--set"
-              name
-              value
-            ]
-          ) (attrsToList env);
-        in
-        ''
-          for prg in $out/bin/*; do
-            wrapProgram "$prg" ${escapeShellArgs setFlagsList}
-          done
-        '';
-    };
+    alwaysLocal (
+      pkgs.symlinkJoin {
+        inherit name;
+        paths = tools;
+        buildInputs = [ pkgs.makeBinaryWrapper ];
+        postBuild =
+          let
+            setFlagsList = concatMap (
+              { name, value }:
+              [
+                "--set"
+                name
+                value
+              ]
+            ) (attrsToList env);
+          in
+          ''
+            for prg in $out/bin/*; do
+              wrapProgram "$prg" ${escapeShellArgs setFlagsList}
+            done
+          '';
+      }
+    );
 
   # Render a minijinja template
   renderMinijinja =
@@ -145,16 +157,19 @@ let
       strict ? true, # Fail if the template mentions variables which aren't present in 'data'
     }:
     with pkgs.lib;
+    let
+      # Mark the JSON data file as non-substitutable since it's cheap to generate
+      jsonData = alwaysLocal ((pkgs.formats.json { }).generate "minijinja-data.json" data);
+    in
     pkgs.runCommandLocal (baseNameOf template) { } ''
-      ${getExe pkgs.minijinja} ${optionalString strict "--strict"} ${template} ${
-        (pkgs.formats.json { }).generate "minijinja-data.json" data
-      } --format json --output $out
+      ${getExe pkgs.minijinja} ${optionalString strict "--strict"} ${template} ${jsonData} --format json --output $out
     '';
 in
 # Helper functions to use for riglet declarations
 {
   inherit
     options
+    alwaysLocal
     writeFileTree
     wrapScriptPath
     useScriptFolder
