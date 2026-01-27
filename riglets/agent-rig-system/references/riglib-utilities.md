@@ -2,24 +2,6 @@
 
 Riglets have access to `riglib` helper functions for common patterns.
 
-## riglib.alwaysLocal
-
-Marks a derivation as non-substitutable, preventing Nix from querying remote caches for it:
-
-- Takes a single derivation argument
-- Returns the same derivation with `allowSubstitutes = false`
-- Useful for cheap-to-build, project-specific derivations that will never be in a cache
-- **Note**: `writeFileTree` and `renderMinijinja` automatically apply this to their dependencies
-
-### Example Usage
-
-```nix
-# Mark a generated config file as non-substitutable
-configFile = riglib.alwaysLocal (
-  (pkgs.formats.json {}).generate "my-config.json" { setting = "value"; }
-);
-```
-
 ## riglib.writeFileTree
 
 Converts nested attrsets to directory trees:
@@ -120,3 +102,20 @@ docs = riglib.writeFileTree {
   };
 };
 ```
+
+## riglib.alwaysLocal
+
+Marks a derivation as non-substitutable, preventing Nix from querying remote caches for it:
+
+- Takes a single derivation argument
+- Useful for cheap-to-build, project-specific derivations that will never be in a cache
+
+### Example Usage
+
+```nix
+# Mark a generated config file as non-substitutable
+configFile = riglib.alwaysLocal (
+  (pkgs.formats.json {}).generate "my-config.json" { setting = "value"; }
+);
+```
+
