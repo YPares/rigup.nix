@@ -4,6 +4,7 @@ self:
   system,
   lib,
   config,
+  riglib,
   ...
 }:
 let
@@ -58,7 +59,7 @@ in
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
       # OpenCode config with permissions and MCP servers
-      opencodeConfigJson = (pkgs.formats.json { }).generate "opencode-config.json" {
+      opencodeConfigJson = riglib.toJSON {
         "$schema" = "https://opencode.ai/config.json";
 
         instructions = [

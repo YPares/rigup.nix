@@ -36,7 +36,7 @@ self:
     };
 
     configFiles = riglib.writeFileTree {
-      jj."config.toml" = (pkgs.formats.toml { }).generate "jj-config" {
+      jj."config.toml" = riglib.toTOML {
         user = {
           name = config.agent.identity.name;
           email = config.agent.identity.email;

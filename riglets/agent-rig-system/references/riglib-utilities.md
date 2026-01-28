@@ -13,7 +13,7 @@ Converts nested attrsets to directory trees:
 - Leaf values can be:
   - Strings (inline content)
   - File paths (e.g., `./SKILL.md` - useful for directory-based riglets)
-  - Derivations (e.g., `pkgs.writeText` or `(pkgs.formats.<format> {}).generate`)
+  - Derivations (e.g., `pkgs.writeText` or `riglib.toJSON`)
 
 ### Example Usage
 
@@ -118,4 +118,8 @@ configFile = riglib.alwaysLocal (
   (pkgs.formats.json {}).generate "my-config.json" { setting = "value"; }
 );
 ```
+
+### Utilities
+
+`riglib.toJSON`, `toTOML`, `toXML` and `toYAML` wrap `(pkgs.formats.<format> {}).generate` with `alwaysLocal`.
 

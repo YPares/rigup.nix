@@ -21,7 +21,7 @@ in
   config.entrypoint =
     rig:
     let
-      cliConfigJson = (pkgs.formats.json { }).generate "cli-config.json" {
+      cliConfigJson = riglib.toJSON {
         # https://cursor.com/docs/cli/reference/configuration#required-fields
         inherit (config.cursor) editor;
         version = 1;
@@ -37,7 +37,7 @@ in
       };
 
       # MCP servers configuration
-      mcpConfigJson = (pkgs.formats.json { }).generate "mcp.json" {
+      mcpConfigJson = riglib.toJSON {
         mcpServers = lib.mapAttrs (
           name: s:
           {

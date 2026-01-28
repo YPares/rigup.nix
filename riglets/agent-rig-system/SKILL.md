@@ -54,7 +54,7 @@ Riglets are Nix modules with access to `riglib` helpers
 # First argument: the defining flake's `self`
 # Gives access to `self.inputs.*` and `self.riglets.*`
 # Use `_:` if you don't need it
-_:
+self:
 
 # Second argument: module args from evalModules
 { config, pkgs, lib, riglib, ... }: {
@@ -116,7 +116,7 @@ _:
     # [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
     configFiles = riglib.writeFileTree {
       # Built from a Nix attrset
-      myapp."config.toml" = (pkgs.formats.toml {}).generate "myapp-config" {
+      myapp."config.toml" = riglib.localTOML {
         setting = "value";
       };
       # Read from existing file

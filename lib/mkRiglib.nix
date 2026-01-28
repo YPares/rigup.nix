@@ -157,13 +157,35 @@ let
       strict ? true, # Fail if the template mentions variables which aren't present in 'data'
     }:
     with pkgs.lib;
-    let
-      # Mark the JSON data file as non-substitutable since it's cheap to generate
-      jsonData = alwaysLocal ((pkgs.formats.json { }).generate "minijinja-data.json" data);
-    in
     pkgs.runCommandLocal (baseNameOf template) { } ''
-      ${getExe pkgs.minijinja} ${optionalString strict "--strict"} ${template} ${jsonData} --format json --output $out
+      ${getExe pkgs.minijinja} ${optionalString strict "--strict"} ${template} ${toJSON data} --format json --output $out
     '';
+
+  # Format a (nested) Nix attrset to a JSON, TOML, YAML or XML file.
+  # Forces local build and disallows remote substituters so no time is spent querying
+  formatLocal =
+    {
+      format,
+      name ? "local.${format}",
+      opts ? { },
+    }:
+    attrset:
+    let
+      formatter =
+        pkgs.formats.${format} or (throw "riglib.formatLocal: format '${format}' not supported");
+    in
+    alwaysLocal ((formatter opts).generate name attrset);
+  # Generate a JSON file from a Nix attrset. See formatLocal
+  toJSON = formatLocal { format = "json"; };
+  # Generate a TOML file from a Nix attrset. See formatLocal
+  toTOML = formatLocal { format = "toml"; };
+  # Generate a YAML file from a Nix attrset. See formatLocal
+  toYAML = formatLocal { format = "yaml"; };
+  # Generate an XML file without header from a Nix attrset. See formatLocal
+  toXML = formatLocal {
+    format = "xml";
+    opts.withHeader = false;
+  };
 in
 # Helper functions to use for riglet declarations
 {
@@ -176,5 +198,10 @@ in
     filterFileTree
     wrapWithEnv
     renderMinijinja
+    formatLocal
+    toJSON
+    toTOML
+    toYAML
+    toXML
     ;
 }

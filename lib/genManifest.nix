@@ -32,6 +32,7 @@ with pkgs.lib;
 let
   inherit (pkgs.stdenv.hostPlatform) system;
   inherit (flake.packages.${system}) extract-md-toc;
+  riglib = flake.lib.mkRiglib { inherit pkgs; };
 
   # Intent descriptions for manifest
   intentDescriptions = rigletName: {
@@ -124,7 +125,7 @@ let
         optionalAttrs (warning != null) { inherit warning; }
       );
 
-  rigToXml = rigName: {
+  rigToXML = rigName: {
     rigSystem = {
       "@name" = rigName;
       # Will generate ONE <riglet> tag PER element in the associated list:
@@ -195,7 +196,5 @@ pkgs.writeTextFile {
     ''}
     ## Contents of the Rig
 
-    ${readFile (
-      (pkgs.formats.xml { withHeader = false; }).generate "rig-manifest.xml" (rigToXml rigName)
-    )}'';
+    ${readFile (riglib.toXML (rigToXML rigName))}'';
 }

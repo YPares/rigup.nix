@@ -4,6 +4,7 @@ self:
   system,
   lib,
   config,
+  riglib,
   ...
 }:
 let
@@ -24,7 +25,7 @@ in
     let
       manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
 
-      settingsJson = (pkgs.formats.json { }).generate "settings.json" {
+      settingsJson = riglib.toJSON {
         # Grant read access to specific Nix store paths that Claude Code needs
         permissions.allow = [
           "Read(${manifestPath})" # The RIG.md manifest file
@@ -35,7 +36,7 @@ in
         ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
       };
 
-      mcpConfig = (pkgs.formats.json { }).generate "mcp-config.json" {
+      mcpConfig = riglib.toJSON {
         mcpServers = pkgs.lib.mapAttrs (
           name: s:
           {
