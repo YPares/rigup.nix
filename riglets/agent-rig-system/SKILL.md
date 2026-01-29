@@ -116,7 +116,7 @@ self:
     # [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)
     configFiles = riglib.writeFileTree {
       # Built from a Nix attrset
-      myapp."config.toml" = riglib.localTOML {
+      myapp."config.toml" = riglib.toTOML {
         setting = "value";
       };
       # Read from existing file

@@ -128,7 +128,7 @@ Then add to it a `<riglet-name>.nix` file:
 #   - `self.inputs.*` for external package dependencies
 #   - `self.riglets.*` for inter-riglet imports
 # Just use `_` if you don't need it
-_:
+self:
 
 # Second argument: module args constructed by the _user_ of the riglet, when the full rig is built
 # - config is the final aggregated config of the rig using my-riglet,
@@ -137,9 +137,13 @@ _:
 # - riglib is injected by rigup, and contains utility functions to build riglets
 { config, pkgs, system, riglib, ... }: {
 
-  # (Optional) Which riglets to depend on (whether from self or other flakes)
+  # (Optional) Which riglets to depend on (whether from self or input flakes)
   # If this riglet is included in a rig, ALL the riglets it imports will automatically be included as well
-  imports = [ ... ];
+  imports = [
+    self.riglets.foo
+    self.inputs.aaa.riglets.bar
+    ...
+  ];
 
   # Each riglet must declare itself under config.riglets.<riglet-name>
   # <riglet-name> MUST be the SAME as the file name, minus the .nix extension
