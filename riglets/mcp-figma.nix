@@ -6,7 +6,7 @@ _:
     description = "HTTP url of the remote MCP server";
     default = "https://mcp.figma.com/mcp";
   };
-  
+
   config.riglets.mcp-figma = {
     mcpServers.figma = {
       transport = "http";

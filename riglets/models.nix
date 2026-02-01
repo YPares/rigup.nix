@@ -1,15 +1,15 @@
 _:
 { lib, ... }:
 {
-  options.models = {
+  options.models = with lib.types; {
     default = {
       providerId = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
+        type = nullOr str;
         description = "Model provider ID. Can be ignored depending on the entrypoint";
         default = null;
       };
       modelId = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
+        type = nullOr str;
         description = "Model ID";
         default = null;
       };

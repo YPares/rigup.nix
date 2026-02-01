@@ -93,7 +93,7 @@ config.models.default.modelId = "opus-4.5"
 
 [rigs.example-rig-cursor.config.agent.personality]
 inspiration = "Sauron"
-tone = "ruthless"
+tone = "tyrannic"
 playfulness = "inexistent"
 alignment = { lawfulness = "chaotic", goodness = "evil" }
 obedience = "adamant"

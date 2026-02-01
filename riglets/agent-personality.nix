@@ -25,7 +25,8 @@ self:
         "abrupt"
         "passive-agressive"
         "ruthless"
-        "vindicative"
+        "tyrannic"
+        "sadistic"
       ];
       default = "casual";
     };
