@@ -71,6 +71,12 @@ in
 
           # Grant read access to specific Nix store paths that OpenCode needs
           permission = {
+            # external_directory is needed for paths outside the working directory
+            external_directory = {
+              "${builtins.unsafeDiscardStringContext rig.docRoot}/**" = "allow";
+              "${builtins.unsafeDiscardStringContext rig.toolRoot}/**" = "allow";
+              "${builtins.unsafeDiscardStringContext rig.configRoot}/**" = "allow";
+            };
             bash =
               lib.listToAttrs (
                 map (cmd: {

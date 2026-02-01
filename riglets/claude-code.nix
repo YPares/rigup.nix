@@ -29,12 +29,14 @@ in
 
       settingsJson = riglib.toJSON (
         {
-          # Grant read access to specific Nix store paths that Claude Code needs
+          # Grant read access to specific Nix store paths that Claude Code needs.
+          # IMPORTANT: claude-code wants absolute paths to start with a DOUBLE slash.
+          # Single-slash paths are interpreted as *relative to the settings.json file*
+          # (see https://code.claude.com/docs/en/iam#tool-specific-permission-rules)
           permissions.allow = [
-            "Read(${manifestPath})" # The RIG.md manifest file
-            "Read(${rig.docRoot}/**)" # All documentation files
-            "Read(${rig.configRoot}/**)" # All config files
-            "Read(${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
+            "Read(/${rig.docRoot}/**)" # All documentation files
+            "Read(/${rig.configRoot}/**)" # All config files
+            "Read(/${rig.toolRoot}/**)" # Tool files (for inspecting share/, lib/, etc.)
           ]
           ++ map (cmd: "Bash(${cmd}:*)") rig.allExeNames; # Allow executing all rig tools
 
