@@ -2,10 +2,7 @@
 _:
 { ... }:
 {
-  config.mcpServers.linear = {
-    transport = "http";
-    url = "https://mcp.linear.app/mcp";
-  };
+  config.mcpServers.linear.url = "https://mcp.linear.app/mcp";
 
   config.riglets.mcp-linear.meta = {
     description = "Linear MCP Server (HTTP)";

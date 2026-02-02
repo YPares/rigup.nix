@@ -10,7 +10,6 @@ _:
   };
 
   config.mcpServers.context7 = {
-    transport = "http";
     url = "https://mcp.context7.com/mcp";
     headers.CONTEXT7_API_KEY = "$" + config.mcp-context7.apiKeyEnvVar;
   };

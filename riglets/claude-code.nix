@@ -54,14 +54,19 @@ in
       );
 
       mcpConfig = riglib.toJSON {
-        mcpServers = pkgs.lib.mapAttrs (
-          name: s:
-          {
-            type = s.transport;
-          }
-          // pkgs.lib.optionalAttrs (s.command != null) { command = lib.getExe s.command; }
-          // pkgs.lib.optionalAttrs (s.url != null) { inherit (s) url; }
-          // pkgs.lib.optionalAttrs (s.headers != { }) { inherit (s) headers; }
+        mcpServers = lib.mapAttrs (
+          name: def:
+          if def ? command then
+            {
+              type = "stdio";
+              command = lib.getExe def.command;
+            }
+          else
+            {
+              type = if def.useSSE then "sse" else "http";
+              inherit (def) url;
+            }
+            // lib.optionalAttrs (def.headers != { }) { inherit (def) headers; }
         ) rig.mcpServers;
       };
 

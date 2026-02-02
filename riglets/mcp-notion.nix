@@ -2,10 +2,7 @@
 _:
 { ... }:
 {
-  config.mcpServers.notion = {
-    transport = "http";
-    url = "https://mcp.notion.com/mcp";
-  };
+  config.mcpServers.notion.url = "https://mcp.notion.com/mcp";
 
   config.riglets.mcp-notion.meta = {
     description = "Notion MCP server (HTTP)";

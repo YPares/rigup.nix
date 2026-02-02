@@ -8,7 +8,34 @@ let
     types.package
     types.path
   ];
+
   packageList = types.listOf packageLike;
+
+  localMCP = types.submodule {
+    options.command = mkOption {
+      description = "Single-exe package that starts a local MCP server (stdio transport)";
+      type = types.package;
+    };
+  };
+
+  remoteMCP = types.submodule {
+    options = {
+      url = mkOption {
+        description = "URL for remote MCP server (SSE/HTTP transport)";
+        type = types.str;
+      };
+      useSSE = mkOption {
+        description = "Use Server-Side Events instead of plain HTTP";
+        type = types.bool;
+        default = false;
+      };
+      headers = mkOption {
+        description = "HTTP headers for remote MCP server";
+        type = types.attrsOf types.str;
+        default = { };
+      };
+    };
+  };
 in
 {
   options = {
@@ -205,34 +232,10 @@ in
     mcpServers = mkOption {
       description = "Configuration for MCP (Model Context Protocol) servers";
       type = types.attrsOf (
-        types.submodule {
-          options = {
-            command = mkOption {
-              description = "Package that starts the MCP server (stdio transport only). Nullable for remote servers (sse/http).";
-              type = types.nullOr types.package;
-              default = null;
-            };
-            transport = mkOption {
-              description = "Transport type for MCP communication";
-              type = types.enum [
-                "stdio"
-                "sse"
-                "http"
-              ];
-              default = "stdio";
-            };
-            url = mkOption {
-              description = "URL for remote MCP servers (sse/http transport)";
-              type = types.nullOr types.str;
-              default = null;
-            };
-            headers = mkOption {
-              description = "HTTP headers for remote MCP servers (e.g., for authentication)";
-              type = types.attrsOf types.str;
-              default = { };
-            };
-          };
-        }
+        types.oneOf [
+          (types.addCheck localMCP (x: x ? command))
+          (types.addCheck remoteMCP (x: x ? url))
+        ]
       );
       default = { };
     };

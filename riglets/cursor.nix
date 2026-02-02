@@ -47,13 +47,18 @@ in
       # MCP servers configuration
       mcpConfigJson = riglib.toJSON {
         mcpServers = lib.mapAttrs (
-          name: s:
-          {
-            type = s.transport;
-          }
-          // lib.optionalAttrs (s.command != null) { command = lib.getExe s.command; }
-          // lib.optionalAttrs (s.url != null) { inherit (s) url; }
-          // lib.optionalAttrs (s.headers != { }) { inherit (s) headers; }
+          name: def:
+          if def ? command then
+            {
+              type = "stdio";
+              command = lib.getExe def.command;
+            }
+          else
+            {
+              type = if def.useSSE then "sse" else "http";
+              inherit (def) url;
+            }
+            // lib.optionalAttrs (def.headers != { }) { inherit (def) headers; }
         ) rig.mcpServers;
       };
 

@@ -108,14 +108,20 @@ in
           ) config.opencode.lspServers;
 
           mcp = lib.mapAttrs (
-            name: s:
-            {
-              # OpenCode uses "local" for command-based servers and "remote" for URL-based servers
-              type = if s.command != null then "local" else "remote";
-              enabled = true;
-            }
-            // lib.optionalAttrs (s.command != null) { command = [ (lib.getExe s.command) ]; }
-            // lib.optionalAttrs (s.url != null) { inherit (s) url; }
+            name: def:
+            if def ? command then
+              {
+                enabled = true;
+                type = "local";
+                command = [ (lib.getExe def.command) ];
+              }
+            else
+              {
+                enabled = true;
+                type = "remote";
+                inherit (def) url;
+              }
+              // lib.optionalAttrs (def.headers != { }) { inherit (def) headers; }
           ) rig.mcpServers;
 
           command = lib.mapAttrs (
