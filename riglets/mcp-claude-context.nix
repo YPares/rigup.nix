@@ -28,34 +28,30 @@ _:
     };
   };
 
-  config.riglets.mcp-claude-context = {
-    mcpServers.claude-context = {
-      command =
-        with config.mcp-claude-context;
-        pkgs.writeShellApplication {
-          name = "mcp-claude-context";
-          runtimeInputs = [ pkgs.nodejs ];
-          text =
-            ''export MILVUS_TOKEN="$''
-            + milvusTokenEnvVar
-            + ''"''
-            + ''
+  config.mcpServers.claude-context.command =
+    with config.mcp-claude-context;
+    pkgs.writeShellApplication {
+      name = "mcp-claude-context";
+      runtimeInputs = [ pkgs.nodejs ];
+      text =
+        ''export MILVUS_TOKEN="$''
+        + milvusTokenEnvVar
+        + ''"''
+        + ''
 
-              export EMBEDDING_PROVIDER="${embeddingProvider}"
-              ${optionalString (ollamaModel != null) ''
-                export OLLAMA_MODEL="${ollamaModel}"
-              ''}
-              exec npx @zilliz/claude-context-mcp@latest "$@"
-            '';
-        };
+          export EMBEDDING_PROVIDER="${embeddingProvider}"
+          ${optionalString (ollamaModel != null) ''
+            export OLLAMA_MODEL="${ollamaModel}"
+          ''}
+          exec npx @zilliz/claude-context-mcp@latest "$@"
+        '';
     };
 
-    meta = {
-      description = "MCP Claude Context Server with Milvus vector store";
-      intent = "base";
-      disclosure = "none";
-      status = "experimental";
-      version = "0.1.0";
-    };
+  config.riglets.mcp-claude-context.meta = {
+    description = "claude-context MCP server, with Milvus vector store";
+    intent = "base";
+    disclosure = "none";
+    status = "experimental";
+    version = "0.1.0";
   };
 }

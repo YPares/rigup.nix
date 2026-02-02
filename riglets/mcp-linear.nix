@@ -2,18 +2,16 @@
 _:
 { ... }:
 {
-  config.riglets.mcp-linear = {
-    mcpServers.linear = {
-      transport = "http";
-      url = "https://mcp.linear.app/mcp";
-    };
+  config.mcpServers.linear = {
+    transport = "http";
+    url = "https://mcp.linear.app/mcp";
+  };
 
-    meta = {
-      description = "MCP Linear Server for issue tracking";
-      intent = "base";
-      disclosure = "none";
-      status = "experimental";
-      version = "0.1.0";
-    };
+  config.riglets.mcp-linear.meta = {
+    description = "Linear MCP Server (HTTP)";
+    intent = "base";
+    disclosure = "none";
+    status = "experimental";
+    version = "0.1.0";
   };
 }

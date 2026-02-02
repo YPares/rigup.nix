@@ -11,24 +11,20 @@ _:
     type = lib.types.singleLineStr;
   };
 
-  config.riglets.mcp-chrome-devtools = {
-    mcpServers.chrome-devtools = {
-      command = pkgs.writeShellApplication {
-        name = "mcp-chrome-devtools";
-        runtimeInputs = [ pkgs.nodejs ];
-        text = ''
-          exec npx -y chrome-devtools-mcp@latest \
-            --browser-url=${config.mcp-chrome-devtools.browserUrl}
-        '';
-      };
-    };
+  config.mcpServers.chrome-devtools.command = pkgs.writeShellApplication {
+    name = "mcp-chrome-devtools";
+    runtimeInputs = [ pkgs.nodejs ];
+    text = ''
+      exec npx -y chrome-devtools-mcp@latest \
+        --browser-url=${config.mcp-chrome-devtools.browserUrl}
+    '';
+  };
 
-    meta = {
-      description = "MCP server for chrome-devtools";
-      intent = "base";
-      disclosure = "none";
-      status = "experimental";
-      version = "0.1.0";
-    };
+  config.riglets.mcp-chrome-devtools.meta = {
+    description = "MCP server for chrome-devtools";
+    intent = "base";
+    disclosure = "none";
+    status = "experimental";
+    version = "0.1.0";
   };
 }

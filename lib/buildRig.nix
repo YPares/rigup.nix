@@ -167,9 +167,6 @@ let
       ;
   };
 
-  entrypoint =
-    if evaluated.config.entrypoint != null then evaluated.config.entrypoint baseRig else null;
-
   # Complete agent home directory
   home = pkgs.runCommandLocal "rig-home" { } ''
     mkdir -p $out
@@ -281,25 +278,6 @@ let
       mapAttrsToList (n: r: r // { name = n; }) evaluated.config.riglets
     );
 
-  # Collect MCP servers from all riglets
-  mcpServers =
-    let
-      collectFromRiglet =
-        rigletName: riglet:
-        mapAttrs (
-          serverName: def:
-          def
-          // {
-            inherit rigletName;
-            # Handle nullable command (remote servers have no local command)
-            resolvedCommand = if def.command != null then getExe def.command else null;
-          }
-        ) riglet.mcpServers;
-    in
-    foldl' (acc: r: acc // collectFromRiglet r.name r) { } (
-      mapAttrsToList (n: r: r // { name = n; }) evaluated.config.riglets
-    );
-
   # Collect deny rules from all riglets
   # Structure: { toolName = ["subcommand1" "subcommand2" ...]; }
   denyRules =
@@ -402,6 +380,7 @@ let
   baseRig = {
     name = rigName;
     meta = rigMeta;
+    inherit (evaluated.config) mcpServers;
     inherit
       toolRoot
       configRoot
@@ -413,7 +392,6 @@ let
       allExeNames
       modules
       promptCommands
-      mcpServers
       denyRules
       configOptions
       ;
@@ -423,6 +401,6 @@ baseRig
 // {
   inherit extend;
 }
-// optionalAttrs (entrypoint != null) {
-  inherit entrypoint;
+// optionalAttrs (evaluated.config.entrypoint != null) {
+  entrypoint = evaluated.config.entrypoint baseRig;
 }

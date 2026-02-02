@@ -42,7 +42,7 @@ typst.template = "simple"
 [rigs.example-rig-claude]
 extends.self = "example-rig"
 riglets.self = ["claude-code"]
-config.claude-code.strictMcpConfig = true
+# config.claude-code.strictMcpConfig = true
 config.models.default.modelId = "opus"
 
 [rigs.example-rig-claude.config.agent.personality]

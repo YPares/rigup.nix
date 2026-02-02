@@ -111,10 +111,10 @@ in
             name: s:
             {
               # OpenCode uses "local" for command-based servers and "remote" for URL-based servers
-              type = if s.resolvedCommand != null then "local" else "remote";
+              type = if s.command != null then "local" else "remote";
               enabled = true;
             }
-            // lib.optionalAttrs (s.resolvedCommand != null) { command = [ s.resolvedCommand ]; }
+            // lib.optionalAttrs (s.command != null) { command = [ (lib.getExe s.command) ]; }
             // lib.optionalAttrs (s.url != null) { inherit (s) url; }
           ) rig.mcpServers;
 

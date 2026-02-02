@@ -40,7 +40,7 @@ in
             };
 
             docs = mkOption {
-              description = "Documentation derivation or path (folder)";
+              description = "Documentation folder. It can be a derivation or a path";
               type = types.nullOr packageLike;
               default = null;
             };
@@ -51,6 +51,8 @@ in
               default = null;
             };
 
+            # Currently, deny rules are scoped per riglet.
+            # WARNING: STILL EXPERIMENTAL. Schema for custom rules is subject to change
             denyRules = mkOption {
               description = ''
                 Command deny rules for harness entrypoints, structured by tool name.
@@ -62,9 +64,11 @@ in
               default = { };
             };
 
+            # promptCommands all have a name, but to allow two commands with the same name to coexist in the rig (and possibly with other commands from user's or project's config), buildRig will prefix them by the riglet's name.
+            # This is why promptCommands are scoped per riglet.
             # WARNING: STILL EXPERIMENTAL. Schema for promptCommands is subject to change
             promptCommands = mkOption {
-              description = ''Reusable prompt templates ("slash commands" for Claude Code or simply "commands" for OpenCode)'';
+              description = ''Reusable prompt templates ("slash commands" for Claude Code, or simply "commands" for OpenCode)'';
               type = types.attrsOf (
                 types.submodule {
                   options = {
@@ -88,42 +92,6 @@ in
                       description = "Have a sub-agent read and run the command (`context: fork` in Claude Code, `subtask: true` in OpenCode). Support depends on harness";
                       type = types.bool;
                       default = false;
-                    };
-                  };
-                }
-              );
-              default = { };
-            };
-
-            # WARNING: STILL EXPERIMENTAL. Schema for mcpServers is subject to change
-            mcpServers = mkOption {
-              description = "MCP (Model Context Protocol) servers this riglet provides";
-              type = types.attrsOf (
-                types.submodule {
-                  options = {
-                    command = mkOption {
-                      description = "Package that starts the MCP server (stdio transport only). Nullable for remote servers (sse/http).";
-                      type = types.nullOr types.package;
-                      default = null;
-                    };
-                    transport = mkOption {
-                      description = "Transport type for MCP communication";
-                      type = types.enum [
-                        "stdio"
-                        "sse"
-                        "http"
-                      ];
-                      default = "stdio";
-                    };
-                    url = mkOption {
-                      description = "URL for remote MCP servers (sse/http transport)";
-                      type = types.nullOr types.str;
-                      default = null;
-                    };
-                    headers = mkOption {
-                      description = "HTTP headers for remote MCP servers (e.g., for authentication)";
-                      type = types.attrsOf types.str;
-                      default = { };
                     };
                   };
                 }
@@ -220,6 +188,7 @@ in
       default = { };
     };
 
+    # entrypoint is not scoped per riglet, as only one should exist for the entire rig
     entrypoint = mkOption {
       description = ''
         Optional entrypoint for the rig. Only ONE riglet in a rig should define this.
@@ -227,6 +196,45 @@ in
       '';
       type = types.nullOr (types.functionTo packageLike);
       default = null;
+    };
+
+    # mcpServers are already scoped by name, and conversely to commands it would make little sense to have two mcpServers named the same in the rig (plus, harnesses would not support this).
+    # So mcpServers are not scoped per riglet.
+    # Also, this permits to add simple MCP configs (e.g. that requires only 'transport' & 'url') directly in rigup.toml.
+    # WARNING: STILL EXPERIMENTAL. Schema for mcpServers is subject to change
+    mcpServers = mkOption {
+      description = "Configuration for MCP (Model Context Protocol) servers";
+      type = types.attrsOf (
+        types.submodule {
+          options = {
+            command = mkOption {
+              description = "Package that starts the MCP server (stdio transport only). Nullable for remote servers (sse/http).";
+              type = types.nullOr types.package;
+              default = null;
+            };
+            transport = mkOption {
+              description = "Transport type for MCP communication";
+              type = types.enum [
+                "stdio"
+                "sse"
+                "http"
+              ];
+              default = "stdio";
+            };
+            url = mkOption {
+              description = "URL for remote MCP servers (sse/http transport)";
+              type = types.nullOr types.str;
+              default = null;
+            };
+            headers = mkOption {
+              description = "HTTP headers for remote MCP servers (e.g., for authentication)";
+              type = types.attrsOf types.str;
+              default = { };
+            };
+          };
+        }
+      );
+      default = { };
     };
   };
 }

@@ -2,18 +2,16 @@
 _:
 { ... }:
 {
-  config.riglets.mcp-notion = {
-    mcpServers.notion = {
-      transport = "http";
-      url = "https://mcp.notion.com/mcp";
-    };
+  config.mcpServers.notion = {
+    transport = "http";
+    url = "https://mcp.notion.com/mcp";
+  };
 
-    meta = {
-      description = "MCP Notion Server for workspace integration";
-      intent = "base";
-      disclosure = "none";
-      status = "experimental";
-      version = "0.1.0";
-    };
+  config.riglets.mcp-notion.meta = {
+    description = "Notion MCP server (HTTP)";
+    intent = "base";
+    disclosure = "none";
+    status = "experimental";
+    version = "0.1.0";
   };
 }

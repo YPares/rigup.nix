@@ -59,7 +59,7 @@ in
           {
             type = s.transport;
           }
-          // pkgs.lib.optionalAttrs (s.resolvedCommand != null) { command = s.resolvedCommand; }
+          // pkgs.lib.optionalAttrs (s.command != null) { command = lib.getExe s.command; }
           // pkgs.lib.optionalAttrs (s.url != null) { inherit (s) url; }
           // pkgs.lib.optionalAttrs (s.headers != { }) { inherit (s) headers; }
         ) rig.mcpServers;
