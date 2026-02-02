@@ -9,7 +9,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     blueprint.url = "github:numtide/blueprint";
-    llm-agents.url = "github:numtide/llm-agents.nix";
+    # Pinning until opencode 1.1.49 is released,
+    # because of https://github.com/anomalyco/opencode/issues/11732
+    llm-agents.url = "github:numtide/llm-agents.nix/989ed811a3115ffd4c44a8a7bc4d0ed61f511abd";
   };
 
   outputs =
