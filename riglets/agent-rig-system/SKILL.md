@@ -129,17 +129,19 @@ self:
     };
 
     # EXPERIMENTAL: Prompt commands (slash commands for harnesses like Claude Code)
-    # promptCommands.my-cmd = {
-    #   template = "Do something specific with $ARGUMENTS";
-    #   description = "What this command does";
-    #   useSubAgent = false;
-    # };
+    promptCommands.my-cmd = {
+      template = "Do something specific with $ARGUMENTS";
+      description = "What this command does";
+      useSubAgent = false;
+    };
 
-    # EXPERIMENTAL: MCP (Model Context Protocol) servers
-    # mcpServers.my-server = {
-    #   command = pkgs.my-mcp-server;  # For stdio transport
-    #   transport = "stdio";
-    # };
+  };
+
+  # EXPERIMENTAL: MCP (Model Context Protocol) servers
+  mcpServers.some-local-mcp.command = pkgs.my-mcp-server;
+  mcpServers.some-remote-mcp = {
+    url = "https://...";
+    useSSE = true; # false by default
   };
 }
 ```
@@ -192,9 +194,10 @@ Riglets can provide MCP (Model Context Protocol) servers to extend agent capabil
 ```nix
 mcpServers.my-tools = {
   command = pkgs.my-mcp-server;  # Package that starts the server
-  transport = "stdio";            # stdio, sse, or http
 };
 ```
+
+WARNING: API still experimental.
 
 ## Cross-Riglet/Flake Interaction
 
