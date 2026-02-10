@@ -6,14 +6,17 @@ flake:
 let
   options = {
     # Make a boolean option, false by default
+    # DEPRECATED: use pkgs.lib.mkEnableOption instead
     flag =
       description:
-      with pkgs.lib;
-      mkOption {
-        inherit description;
-        type = types.bool;
-        default = false;
-      };
+      pkgs.lib.warn "riglib.options.flag is deprecated, use pkgs.lib.mkEnableOption instead" (
+        with pkgs.lib;
+        mkOption {
+          inherit description;
+          type = types.bool;
+          default = false;
+        }
+      );
   };
 
   # Override a derivation so its always built locally, and not queried from remote substituters

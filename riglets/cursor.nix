@@ -14,10 +14,10 @@ in
 
   options.cursor = {
     # To setup a project to use with Cursor IDE
-    justSetupProject = riglib.options.flag "Only set up .cursor/ in CWD, don't run cursor-agent";
+    justSetupProject = lib.mkEnableOption "only setting up .cursor/ in CWD, without running cursor-agent";
 
     # Exposed because it _needs_ to be present so cursor-agent considers the config to be valid
-    editor.vimMode = riglib.options.flag "Activate vim mode for cursor-agent";
+    editor.vimMode = lib.mkEnableOption "vim mode for cursor-agent";
   };
 
   config.entrypoint =
