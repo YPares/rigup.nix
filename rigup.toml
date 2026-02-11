@@ -17,7 +17,6 @@ self = [
   "mcp-notion",
   # The next riglets import agent-identity (which will be deduplicated)
   "git-setup",
-  "jj-basics",
   "typst-reporter",
 ]
 # Riglets from external flake inputs would go here:

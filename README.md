@@ -295,12 +295,12 @@ Define rigs in `rigup.toml` at the top of your project:
 ```toml
 # Riglets to include in this rig, grouped by source
 [rigs.default.riglets]
-rigup = ["jj-basics", "typst-reporter"]  # From the rigup flake input
+rigup = ["git-setup", "typst-reporter"]  # From the rigup flake input
 self = ["my-local-riglet"]               # From your riglets/ folder
 
 # Configuration for the riglets used in this rig
 [rigs.default.config.agent.identity]
-name = "Alice"  # This is used by both jj-basics & typst-reporter example riglets
+name = "Alice"  # This is used by both git-setup and typst-reporter example riglets
 email = "alice@example.com"
 ```
 

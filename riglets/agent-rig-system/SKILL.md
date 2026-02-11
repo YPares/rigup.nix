@@ -216,7 +216,7 @@ Add a `rigup.toml` file to your project root:
 ```toml
 [rigs.default.riglets]
 self = ["my-riglet"]
-rigup = ["jj-basics"]
+rigup = ["git-setup"]
 
 [rigs.default.config.agent.identity]
 name = "Alice"
@@ -268,7 +268,9 @@ For config not representable in TOML:
           name = "my-custom-rig";
           inherit pkgs;
           modules = [
-            rigup.riglets.jj-basics
+            # A module from rigup:
+            rigup.riglets.git-setup
+            # A module defined directly inline:
             {
               # Complex Nix expressions
               agent.complexOption = lib.mkIf condition value;
@@ -349,7 +351,7 @@ rigup build ".#<rig>" # Does `nix build ".#rigs.<system>.<rig>.home"`
 cat .rigup/<rig>/RIG.md
 
 # Source the activation script to use the tools
-source .rigup/<rig>/activate.sh && jj --version && other-tool ...
+source .rigup/<rig>/activate.sh && git --version && other-tool ...
 
 # Read documentation (paths shown in RIG.md)
 ls .rigup/<rig>/docs/
