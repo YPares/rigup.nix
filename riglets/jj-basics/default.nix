@@ -10,7 +10,10 @@ self:
   imports = [ self.riglets.agent-identity ];
 
   config.riglets.jj-basics = {
-    tools = [
+    # JJ 0.38.0 wants a mutable XDG_CONFIG_HOME, as it will store repo-level config in it too
+    # Until https://github.com/jj-vcs/jj/issues/8841 is fixed, `jj` needs to be _unwrapped_
+    # (ie. it will use the user's own config)
+    tools.unwrapped = [
       pkgs.jujutsu
     ]
     ++ riglib.useScriptFolder ./scripts;
@@ -44,14 +47,15 @@ self:
       version = "0.1.0";
     };
 
-    configFiles = riglib.writeFileTree {
-      jj."config.toml" = riglib.toTOML {
-        user = {
-          name = config.agent.identity.name;
-          email = config.agent.identity.email;
-        };
-      };
-    };
+    ## See comment above re. JJ 0.38.0
+    # configFiles = riglib.writeFileTree {
+    #   jj."config.toml" = riglib.toTOML {
+    #     user = {
+    #       name = config.agent.identity.name;
+    #       email = config.agent.identity.email;
+    #     };
+    #   };
+    # };
 
     docs = riglib.writeFileTree {
       "SKILL.md" = ''
