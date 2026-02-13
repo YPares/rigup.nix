@@ -134,14 +134,19 @@ in
           ) (lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands);
         }
         // lib.optionalAttrs (config.models.default.modelId != null) {
-          model = (
+          model =
             if config.models.default.providerId == null then
               throw ''
                 If models.default.modelId is set, then models.default.providerId must be too
               ''
             else
-              "${config.models.default.providerId}/${config.models.default.modelId}"
-          );
+              "${config.models.default.providerId}/${config.models.default.modelId}";
+        }
+        // lib.optionalAttrs (config.models.providers.disabled != null) {
+          disabled_providers = config.models.providers.disabled;
+        }
+        // lib.optionalAttrs (config.models.providers.enabled != null) {
+          enabled_providers = config.models.providers.enabled;
         }
       );
     in
