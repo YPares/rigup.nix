@@ -28,13 +28,13 @@ _:
         default = null;
       };
     };
+  };
 
-    config.riglets.models.meta = {
-      description = "Pre-select a specific model for a rig (To be used by entrypoints)";
-      status = "stable";
-      version = "0.1.0";
-      intent = "base";
-      disclosure = "none";
-    };
+  config.riglets.models.meta = {
+    description = "Pre-select a specific model for a rig (To be used by entrypoints)";
+    status = "stable";
+    version = "0.1.0";
+    intent = "base";
+    disclosure = "none";
   };
 }

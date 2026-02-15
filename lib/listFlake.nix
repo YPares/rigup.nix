@@ -29,7 +29,7 @@ let
               };
             in
             # Extract this riglet's metadata from the rig, and add entrypoint info
-            tempRig.meta.${rigletName}
+            (tempRig.meta.${rigletName} or { })
             // {
               entrypoint = if tempRig ? "entrypoint" then tempRig.entrypoint.name else null;
             }
