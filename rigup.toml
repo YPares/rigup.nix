@@ -60,8 +60,9 @@ extends.self = "example-rig-claude"
 [rigs.example-rig-opencode]
 extends.self = "example-rig"
 riglets.self = ["opencode"]
-config.models.default.providerId = "opencode"
-config.models.default.modelId = "glm-4.7-free"
+config.models.default = { providerId = "opencode", modelId = "glm-4.7" }
+config.models.specialized.plan = { providerId = "opencode", modelId = "claude-opus-4-6" }
+config.models.specialized.explore = { providerId = "opencode", modelId = "kimi-k2.5-free" }
 
 [rigs.example-rig-opencode.config.agent.personality]
 inspiration = "Fa Mulan"
@@ -88,8 +89,8 @@ extends.self = "example-rig"
 riglets.self = ["cursor"]
 config.models.default.modelId = "opus-4.5"
 # config.cursor.justSetupProject = true
-  # If true, the entrypoiny will not start cursor-agent:
-  # it will only setup the .cursor/ folder in the CWD, to be used by Cursor IDE.
+# If true, the entrypoiny will not start cursor-agent:
+# it will only setup the .cursor/ folder in the CWD, to be used by Cursor IDE.
 
 [rigs.example-rig-cursor.config.agent.personality]
 inspiration = "Sauron"

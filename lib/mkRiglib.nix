@@ -19,7 +19,7 @@ let
       );
   };
 
-  # Override a derivation so its always built locally, and not queried from remote substituters
+  # Override a derivation so it is always built locally, and not queried from remote substituters
   alwaysLocal =
     x:
     if pkgs.lib.isDerivation x then

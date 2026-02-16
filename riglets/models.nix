@@ -1,18 +1,27 @@
 _:
 { lib, ... }:
+let
+  providerAndModel = with lib.types; {
+    providerId = lib.mkOption {
+      type = nullOr str;
+      description = "Model provider ID. Can be ignored depending on the entrypoint";
+      default = null;
+    };
+    modelId = lib.mkOption {
+      type = nullOr str;
+      description = "Model ID";
+      default = null;
+    };
+  };
+in
 {
   options.models = with lib.types; {
-    default = {
-      providerId = lib.mkOption {
-        type = nullOr str;
-        description = "Model provider ID. Can be ignored depending on the entrypoint";
-        default = null;
-      };
-      modelId = lib.mkOption {
-        type = nullOr str;
-        description = "Model ID";
-        default = null;
-      };
+    default = providerAndModel;
+
+    specialized = lib.mkOption {
+      type = types.attrsOf (types.submodule { options = providerAndModel; });
+      description = "Model overrides for specialized agents (plan, build, explore, etc.). Support depends on entrypoint";
+      default = { };
     };
 
     providers = {
@@ -31,7 +40,7 @@ _:
   };
 
   config.riglets.models.meta = {
-    description = "Pre-select a specific model for a rig (to be imported by compatible entrypoints)";
+    description = "Pre-select model(s) for a rig (to be imported by compatible entrypoints)";
     status = "stable";
     version = "0.1.0";
     intent = "base";
