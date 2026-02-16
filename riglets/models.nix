@@ -31,7 +31,7 @@ _:
   };
 
   config.riglets.models.meta = {
-    description = "Pre-select a specific model for a rig (To be used by entrypoints)";
+    description = "Pre-select a specific model for a rig (to be imported by compatible entrypoints)";
     status = "stable";
     version = "0.1.0";
     intent = "base";

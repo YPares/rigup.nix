@@ -12,7 +12,10 @@ let
   inherit (lib) mkOption types;
 in
 {
-  imports = [ self.riglets.models ];
+  imports = [
+    self.riglets.models
+    self.riglets.lsp-servers
+  ];
 
   options.opencode = {
     # See https://opencode.ai/docs/lsp/#built-in
@@ -20,37 +23,6 @@ in
       type = types.bool;
       description = "Disable auto-downloads of LSP servers";
       default = false;
-    };
-
-    lspServers = mkOption {
-      description = "LSP servers to be used by the agent";
-      default = { };
-      type = types.attrsOf (
-        types.submodule {
-          options = {
-            disabled = mkOption {
-              type = types.bool;
-              description = "Disable this LSP";
-              default = false;
-            };
-            command = mkOption {
-              type = types.nullOr types.package;
-              description = "Which package to run. 'null' to use default opencode support for this LSP";
-              default = null;
-            };
-            extensions = mkOption {
-              type = types.nullOr (types.listOf types.str);
-              description = "Which file extensions to use this LSP server with (including '.' prefixes). 'null' to use default opencode support for this LSP";
-              default = null;
-            };
-            initialization = mkOption {
-              type = types.nullOr (types.attrsOf types.anything);
-              description = "Initialization options to send to the LSP server";
-              default = null;
-            };
-          };
-        }
-      );
     };
   };
 
@@ -105,7 +77,7 @@ in
             // lib.optionalAttrs (s.command != null) {
               command = [ (lib.getExe s.command) ];
             }
-          ) config.opencode.lspServers;
+          ) config.lspServers;
 
           mcp = lib.mapAttrs (
             name: def:
