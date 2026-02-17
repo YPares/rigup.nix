@@ -60,9 +60,11 @@ extends.self = "example-rig-claude"
 [rigs.example-rig-opencode]
 extends.self = "example-rig"
 riglets.self = ["opencode"]
-config.models.default = { providerId = "opencode", modelId = "glm-4.7" }
-config.models.specialized.plan = { providerId = "opencode", modelId = "claude-opus-4-6" }
-config.models.specialized.explore = { providerId = "opencode", modelId = "kimi-k2.5-free" }
+config.models.providers.default = "opencode"
+config.models.providers.enabled = ["opencode"]
+config.models.default.modelId = "glm-4.7"
+config.models.specialized.plan.modelId = "claude-opus-4-6"
+config.models.specialized.explore.modelId = "kimi-k2.5-free"
 
 [rigs.example-rig-opencode.config.agent.personality]
 inspiration = "Fa Mulan"

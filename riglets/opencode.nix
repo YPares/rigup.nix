@@ -113,18 +113,16 @@ in
             }
             // lib.optionalAttrs cmd.useSubAgent { subtask = true; }
           ) (lib.concatMapAttrs (k: v: { "rig:${k}" = v; }) rig.promptCommands);
-        }
-        // lib.optionalAttrs (config.models.default.modelId != null) {
-          model = toModelId config.models.default;
-        }
-        // lib.optionalAttrs (config.models.providers.disabled != null) {
+
+          agent = lib.mapAttrs (_agentName: mdl: { model = toModelId mdl; }) config.models.specialized;
+
           disabled_providers = config.models.providers.disabled;
         }
         // lib.optionalAttrs (config.models.providers.enabled != null) {
           enabled_providers = config.models.providers.enabled;
         }
-        // lib.optionalAttrs (config.models.specialized != { }) {
-          agent = lib.mapAttrs (_agentName: mdl: { model = toModelId mdl; }) config.models.specialized;
+        // lib.optionalAttrs (config.models.default.modelId != null) {
+          model = toModelId config.models.default;
         }
       );
     in
