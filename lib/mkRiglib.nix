@@ -75,6 +75,8 @@ let
   # Derives the executable name from the script's filename (without extension)
   wrapScriptPath =
     scriptPath:
+    assert pkgs.lib.assertMsg (pkgs.lib.pathIsRegularFile scriptPath)
+      "${scriptPath} is not a regular file";
     let
       scriptName = baseNameOf (toString scriptPath);
     in

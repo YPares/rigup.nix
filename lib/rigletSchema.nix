@@ -1,36 +1,43 @@
 # rigup flake's self
-_flake:
+flake:
 # Base module that defines common riglet structure
 { pkgs, ... }:
 with pkgs.lib;
 let
-  packageLike = types.oneOf [
-    types.package
-    types.path
-  ];
+  riglib = flake.lib.mkRiglib { inherit pkgs; };
 
-  packageList = types.listOf packageLike;
+  actualPath = types.addCheck (types.pathWith { }) builtins.isPath;
 
-  toolset = types.oneOf [
-    # If just a list of packages is given as a toolset, these tools are considered _wrapped_:
-    packageList
-    # Else, for more explicit control over which tools should be wrapped and which should not,
-    # the toolset can be given as a { wrapped = [...]; unwrapped [...]; } attrset:
-    (types.submodule {
-      options = {
-        wrapped = mkOption {
-          description = "Tools that should be wrapped to use the rig's isolated XDG_CONFIG_HOME";
-          type = packageList;
-          default = [ ];
-        };
-        unwrapped = mkOption {
-          description = "Tools that must directly use the user's XDG_CONFIG_HOME";
-          type = packageList;
-          default = [ ];
-        };
-      };
-    })
-  ];
+  # Anything that can become a folder in store
+  folder = types.addCheck (types.either actualPath types.pathInStore) pathIsDirectory;
+
+  executable =
+    types.coercedTo (types.addCheck actualPath pathIsRegularFile) riglib.wrapScriptPath
+      types.package;
+
+  toolset =
+    types.coercedTo
+      # If just a list of packages is given as a toolset, these tools are considered _wrapped_:
+      (types.listOf executable)
+      (x: { wrapped = x; })
+      # Else, for more explicit control over which tools should be wrapped and which should not,
+      # the toolset can be given as a { wrapped = [...]; unwrapped [...]; } attrset:
+      (
+        types.submodule {
+          options = {
+            wrapped = mkOption {
+              description = "Tools that should be wrapped to use the rig's isolated XDG_CONFIG_HOME";
+              type = types.listOf executable;
+              default = [ ];
+            };
+            unwrapped = mkOption {
+              description = "Tools that must directly use the user's XDG_CONFIG_HOME";
+              type = types.listOf executable;
+              default = [ ];
+            };
+          };
+        }
+      );
 
   localMcpServer = types.submodule {
     options.command = mkOption {
@@ -103,14 +110,14 @@ in
             };
 
             docs = mkOption {
-              description = "Documentation folder. It can be a derivation or a path";
-              type = types.nullOr packageLike;
+              description = "Documentation folder";
+              type = types.nullOr folder;
               default = null;
             };
 
             configFiles = mkOption {
               description = "Configuration files folder. All rig's configFiles will be joined together to form the rig's XDG_CONFIG_HOME which _wrapped_ tools will then use";
-              type = types.nullOr packageLike;
+              type = types.nullOr folder;
               default = null;
             };
 
@@ -238,7 +245,7 @@ in
         Optional entrypoint for the rig. Only ONE riglet in a rig should define this.
         Takes the rig attrset and should return a folder derivation with a SINGLE bin/xxx executable (e.g. via pkgs.writeShellScriptBin).
       '';
-      type = types.nullOr (types.functionTo packageLike);
+      type = types.nullOr (types.functionTo types.package);
       default = null;
     };
 

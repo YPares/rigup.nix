@@ -78,11 +78,7 @@ let
     riglet.meta
     // {
       # Add computed command names to each riglet's metadata
-      commandNames =
-        let
-          normalized = normalizeTools riglet.tools;
-        in
-        map getToolMainProgramName (normalized.wrapped ++ normalized.unwrapped);
+      commandNames = map getToolMainProgramName (riglet.tools.wrapped ++ riglet.tools.unwrapped);
     }
   ) evaluated.config.riglets;
 
@@ -92,32 +88,10 @@ let
     paths = map (riglet: riglet.configFiles) (attrValues evaluated.config.riglets);
   };
 
-  normalizeTools =
-    tools:
-    let
-      # Normalize a tool item: if it's a path, wrap it with wrapScriptPath; otherwise return as-is
-      normalizeOne = tool: if builtins.isPath tool then riglib.wrapScriptPath tool else tool;
-    in
-    if builtins.isList tools then
-      {
-        wrapped = map normalizeOne tools;
-        unwrapped = [ ];
-      }
-    else
-      {
-        wrapped = map normalizeOne tools.wrapped;
-        unwrapped = map normalizeOne tools.unwrapped;
-      };
-
-  accumRigletTools =
-    acc: riglet:
-    let
-      normalized = normalizeTools riglet.tools;
-    in
-    {
-      wrapped = acc.wrapped ++ normalized.wrapped;
-      unwrapped = acc.unwrapped ++ normalized.unwrapped;
-    };
+  accumRigletTools = acc: riglet: {
+    wrapped = acc.wrapped ++ riglet.tools.wrapped;
+    unwrapped = acc.unwrapped ++ riglet.tools.unwrapped;
+  };
 
   wrapWithConfigHome =
     tools:
