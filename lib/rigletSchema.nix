@@ -11,14 +11,35 @@ let
 
   packageList = types.listOf packageLike;
 
-  localMCP = types.submodule {
+  toolset = types.oneOf [
+    # If just a list of packages is given as a toolset, these tools are considered _wrapped_:
+    packageList
+    # Else, for more explicit control over which tools should be wrapped and which should not,
+    # the toolset can be given as a { wrapped = [...]; unwrapped [...]; } attrset:
+    (types.submodule {
+      options = {
+        wrapped = mkOption {
+          description = "Tools that should be wrapped to use the rig's isolated XDG_CONFIG_HOME";
+          type = packageList;
+          default = [ ];
+        };
+        unwrapped = mkOption {
+          description = "Tools that must directly use the user's XDG_CONFIG_HOME";
+          type = packageList;
+          default = [ ];
+        };
+      };
+    })
+  ];
+
+  localMcpServer = types.submodule {
     options.command = mkOption {
       description = "Single-exe package that starts a local MCP server (stdio transport)";
       type = types.package;
     };
   };
 
-  remoteMCP = types.submodule {
+  remoteMcpServer = types.submodule {
     options = {
       url = mkOption {
         description = "URL for remote MCP server (SSE/HTTP transport)";
@@ -36,6 +57,11 @@ let
       };
     };
   };
+
+  mcpServer = types.oneOf [
+    (types.addCheck localMcpServer (x: x ? command))
+    (types.addCheck remoteMcpServer (x: x ? url))
+  ];
 in
 {
   options = {
@@ -45,24 +71,8 @@ in
         types.submodule {
           options = {
             tools = mkOption {
-              description = "List of tools this riglet provides";
-              type = types.oneOf [
-                packageList # If a single list is given, these tools are considered _wrapped_
-                (types.submodule {
-                  options = {
-                    wrapped = mkOption {
-                      description = "Tools that should be wrapped to use the rig's isolated XDG_CONFIG_HOME";
-                      type = packageList;
-                      default = [ ];
-                    };
-                    unwrapped = mkOption {
-                      description = "Tools that must directly use the user's XDG_CONFIG_HOME";
-                      type = packageList;
-                      default = [ ];
-                    };
-                  };
-                })
-              ];
+              description = "Tools that this riglet provides";
+              type = toolset;
               default = [ ];
             };
 
@@ -231,12 +241,7 @@ in
     # WARNING: STILL EXPERIMENTAL. Schema for mcpServers is subject to change
     mcpServers = mkOption {
       description = "Configuration for MCP (Model Context Protocol) servers";
-      type = types.attrsOf (
-        types.oneOf [
-          (types.addCheck localMCP (x: x ? command))
-          (types.addCheck remoteMCP (x: x ? url))
-        ]
-      );
+      type = types.attrsOf mcpServer;
       default = { };
     };
   };
