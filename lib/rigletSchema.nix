@@ -62,6 +62,32 @@ let
     (types.addCheck localMcpServer (x: x ? command))
     (types.addCheck remoteMcpServer (x: x ? url))
   ];
+
+  promptCommand = types.submodule {
+    options = {
+      template = mkOption {
+        description = "The command template itself. Can use $ARGUMENTS, $1, $2...";
+        type = types.str;
+      };
+
+      description = mkOption {
+        description = "Short explanation of what this prompt command does. Usually shown in help or autocompletion menu in the harness";
+        type = types.str;
+      };
+
+      readDocsFirst = mkOption {
+        description = "Add an instruction to read the riglet's doc first (if it is not eagerly disclosed and contains docs)";
+        type = types.bool;
+        default = true;
+      };
+
+      useSubAgent = mkOption {
+        description = "Have a sub-agent read and run the command (`context: fork` in Claude Code, `subtask: true` in OpenCode). Support depends on harness";
+        type = types.bool;
+        default = false;
+      };
+    };
+  };
 in
 {
   options = {
@@ -105,34 +131,10 @@ in
             # This is why promptCommands are scoped per riglet.
             # WARNING: STILL EXPERIMENTAL. Schema for promptCommands is subject to change
             promptCommands = mkOption {
-              description = ''Reusable prompt templates ("slash commands" for Claude Code, or simply "commands" for OpenCode)'';
-              type = types.attrsOf (
-                types.submodule {
-                  options = {
-                    template = mkOption {
-                      description = "The command template itself. Can use $ARGUMENTS, $1, $2...";
-                      type = types.str;
-                    };
-
-                    description = mkOption {
-                      description = "Short explanation of what this prompt command does. Usually shown in help or autocompletion menu in the harness";
-                      type = types.str;
-                    };
-
-                    readDocsFirst = mkOption {
-                      description = "Add an instruction to read the riglet's doc first (if it is not eagerly disclosed and contains docs)";
-                      type = types.bool;
-                      default = true;
-                    };
-
-                    useSubAgent = mkOption {
-                      description = "Have a sub-agent read and run the command (`context: fork` in Claude Code, `subtask: true` in OpenCode). Support depends on harness";
-                      type = types.bool;
-                      default = false;
-                    };
-                  };
-                }
-              );
+              description = ''
+                Reusable prompt templates ("slash commands" for Claude Code, or simply "commands" for OpenCode)
+              '';
+              type = types.attrsOf promptCommand;
               default = { };
             };
 
@@ -141,7 +143,9 @@ in
               type = types.submodule {
                 options = {
                   mainDocFile = mkOption {
-                    description = "Path to the docs' main file (e.g. \"SKILL.md\", \"./files/index.md\"...), relative to 'docs' root";
+                    description = ''
+                      Path to the docs' main file (e.g. "SKILL.md", "./files/index.md"...), relative to 'docs' root
+                    '';
                     type = types.pathWith {
                       absolute = false;
                     };
@@ -182,7 +186,10 @@ in
                   };
 
                   whenToUse = mkOption {
-                    description = "Situations when this riglet should be (at least partially) consulted. Empty list means IMMEDIATELY at startup";
+                    description = ''
+                      Situations when this riglet should be (at least partially) consulted.
+                      Empty list means IMMEDIATELY at startup
+                    '';
                     type = types.listOf types.singleLineStr;
                     default = [ ];
                   };
