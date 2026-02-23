@@ -170,8 +170,8 @@ let
           ) input.riglets
         )
       ) enhancedInputs;
-      # `<rig-name1>._comb.<rig-name2>` extends the rig with another rig's contents
-      _comb = concatMapAttrs (
+      # `<rig-name1>._ext.<rig-name2>` extends the rig with another rig's contents
+      _ext = concatMapAttrs (
         inputName: input:
         optionalAttrs (input ? rigs && input.rigs ? "${system}") (
           mapAttrs (
