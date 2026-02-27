@@ -26,6 +26,11 @@ in
     };
   };
 
+  # OpenCode supports using LSP servers.
+  #
+  # Riglets can test config.lspServersEnabled to know whether they can add lsp server config to the rig
+  config.lspServersEnabled = lib.mkDefault true;
+
   # Define the entrypoint for this rig - launches OpenCode with rig context
   config.entrypoint =
     rig:
@@ -80,14 +85,6 @@ in
               );
           };
 
-          lsp = lib.mapAttrs (
-            _name: s:
-            lib.filterAttrs (_: x: x != null) s
-            // lib.optionalAttrs (s.command != null) {
-              command = [ (lib.getExe s.command) ];
-            }
-          ) config.lspServers;
-
           mcp = lib.mapAttrs (
             name: def:
             if def ? command then
@@ -123,6 +120,15 @@ in
         }
         // lib.optionalAttrs (config.models.default.modelId != null) {
           model = toModelId config.models.default;
+        }
+        // lib.optionalAttrs config.lspServersEnabled {
+          lsp = lib.mapAttrs (
+            _name: s:
+            lib.filterAttrs (_: x: x != null) s
+            // lib.optionalAttrs (s.command != null) {
+              command = [ (lib.getExe s.command) ];
+            }
+          ) config.lspServers;
         }
       );
     in
