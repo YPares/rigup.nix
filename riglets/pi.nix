@@ -3,12 +3,19 @@ self:
   pkgs,
   system,
   lib,
+  config,
   ...
 }:
 let
   inherit (self.inputs.llm-agents.packages.${system}) pi;
 in
 {
+  options.pi.extensions = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    description = "A list of URLs to Pi extensions to use";
+    default = [ ];
+  };
+
   # Define the entrypoint for this rig - launches Pi with rig context
   config.entrypoint =
     rig:
@@ -35,35 +42,40 @@ in
           null;
     in
     # Return a folder derivation with bin/ subfolder
-    pkgs.writeShellScriptBin "pi" ''
-      set -euo pipefail
+    pkgs.writeShellApplication {
+      name = "pi";
+      runtimeInputs = [ pkgs.nodejs ];
+      text = ''
+        set -euo pipefail
 
-      warn() {
-        printf "> \033[0;33m%s\033[0m\n" "$1" >&2
-      }
+        warn() {
+          printf "> \033[0;33m%s\033[0m\n" "$1" >&2
+        }
 
-      export PATH="${rig.toolRoot}/bin:$PATH"
-      export RIG_DOCS="${rig.docRoot}"
-      # For later reference, if needed
-      export RIG_MANIFEST="${manifestPath}"
+        export PATH="${rig.toolRoot}/bin:$PATH"
+        export RIG_DOCS="${rig.docRoot}"
+        # For later reference, if needed
+        export RIG_MANIFEST="${manifestPath}"
 
-      ${
-        pkgs.lib.optionalString (rig.mcpServers != { }) ''
-          warn "pi does not support MCP servers"
-          warn "  Rig's MCP config is ignored"
-        ''
-      }${
-        pkgs.lib.optionalString (rig.denyRules != { }) ''
-          warn "pi does not support deny rules"
-          warn "  Rig's deny rules are ignored"
-        ''
-      }
+        ${
+          pkgs.lib.optionalString (rig.mcpServers != { }) ''
+            warn "pi does not support MCP servers"
+            warn "  Rig's MCP config is ignored"
+          ''
+        }${
+          pkgs.lib.optionalString (rig.denyRules != { }) ''
+            warn "pi does not support deny rules"
+            warn "  Rig's deny rules are ignored"
+          ''
+        }
 
-      exec ${lib.getExe pi} \
-        --append-system-prompt "$(cat ${manifestPath})" \
-        ${lib.optionalString (promptTemplateDir != null) "--prompt-template ${promptTemplateDir}"} \
-        "$@"
-    '';
+        exec ${lib.getExe pi} \
+          --append-system-prompt "$(cat ${manifestPath})" \
+          ${lib.optionalString (promptTemplateDir != null) "--prompt-template ${promptTemplateDir}"} \
+          ${lib.concatStringsSep " " (map (ext: "--extension ${ext}") config.pi.extensions)}
+          "$@"
+      '';
+    };
 
   config.riglets.pi = {
     meta = {

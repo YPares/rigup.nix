@@ -53,7 +53,7 @@ self:
         - `rigup` and the agent rig system,
         - your current rig.
 
-        Assume that the user has just basic knowledge of Nix and only a very vague idea of what Nix flakes are."
+        Assume that the user has just basic knowledge of Nix and only a very vague idea of what Nix flakes are.
       '';
     };
   };
