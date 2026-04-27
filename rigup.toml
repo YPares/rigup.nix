@@ -110,7 +110,10 @@ riglets.self = ["vscode-copilot"]
 [rigs.example-rig-pi]
 extends.self = "example-rig"
 riglets.self = ["pi"]
-config.pi.extensions = ["git:github.com/mrbeandev/pi-snake"]
+config.pi.extensions = [
+  "git:github.com/mrbeandev/pi-snake",
+  "npm:pi-web-access"
+]
 
 # Local (non-committed) overrides:
 # Create `rigup.local.toml` and add it to .gitignore to override config without modifying this file.

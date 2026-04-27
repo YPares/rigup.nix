@@ -8,7 +8,7 @@ self:
 }:
 let
   inherit (self.inputs.llm-agents.packages.${system}) pi;
-  cfg = config.models;
+  mcfg = config.models;
 in
 {
   imports = [
@@ -49,7 +49,10 @@ in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellApplication {
       name = "pi";
-      runtimeInputs = [ pkgs.nodejs ];
+      runtimeInputs = lib.optionals (config.pi.extensions != [ ]) [
+        pkgs.nodejs
+        pkgs.git
+      ];
       text = ''
         set -euo pipefail
 
@@ -73,7 +76,7 @@ in
             warn "  Rig's deny rules are ignored"
           ''
         }${
-          pkgs.lib.optionalString (cfg.specialized != { }) ''
+          pkgs.lib.optionalString (mcfg.specialized != { }) ''
             warn "pi does not support specialized agents"
             warn "  Rig's specialized model config is ignored"
           ''
@@ -83,8 +86,8 @@ in
           --append-system-prompt "$(cat ${manifestPath})" \
           ${lib.optionalString (promptTemplateDir != null) "--prompt-template ${promptTemplateDir}"} \
           ${lib.concatStringsSep " " (map (ext: "--extension ${ext}") config.pi.extensions)} \
-          ${lib.optionalString (cfg.default.providerId != null) "--provider ${cfg.default.providerId}"} \
-          ${lib.optionalString (cfg.default.modelId != null) "--model ${cfg.default.modelId}"} \
+          ${lib.optionalString (mcfg.default.providerId != null) "--provider ${mcfg.default.providerId}"} \
+          ${lib.optionalString (mcfg.default.modelId != null) "--model ${mcfg.default.modelId}"} \
           "$@"
       '';
     };
