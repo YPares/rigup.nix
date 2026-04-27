@@ -72,7 +72,7 @@ in
         exec ${lib.getExe pi} \
           --append-system-prompt "$(cat ${manifestPath})" \
           ${lib.optionalString (promptTemplateDir != null) "--prompt-template ${promptTemplateDir}"} \
-          ${lib.concatStringsSep " " (map (ext: "--extension ${ext}") config.pi.extensions)}
+          ${lib.concatStringsSep " " (map (ext: "--extension ${ext}") config.pi.extensions)} \
           "$@"
       '';
     };
