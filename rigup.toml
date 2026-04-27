@@ -14,7 +14,6 @@ self = [
   "nix-module-system",
   "mcp-memory",
   "mcp-cased-kit",
-  "mcp-notion",
   # The next riglets import agent-identity (which will be deduplicated)
   "git-setup",
   "typst-reporter",
@@ -60,11 +59,12 @@ extends.self = "example-rig-claude"
 [rigs.example-rig-opencode]
 extends.self = "example-rig"
 riglets.self = ["opencode"]
-config.models.providers.default = "opencode"
-config.models.providers.enabled = ["opencode"]
-config.models.default.modelId = "glm-4.7"
-config.models.specialized.plan.modelId = "claude-opus-4-6"
-config.models.specialized.explore.modelId = "kimi-k2.5-free"
+config.opencode.plugins = ["opencode-agent-memory"]
+config.models.providers.default = "opencode-go"
+config.models.providers.enabled = ["opencode-go"]
+config.models.default.modelId = "mimo-v2.5-pro"
+config.models.specialized.plan.modelId = "glm-5.1"
+config.models.specialized.explore.modelId = "kimi-k2.6"
 
 [rigs.example-rig-opencode.config.agent.personality]
 inspiration = "Fa Mulan"

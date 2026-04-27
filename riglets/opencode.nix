@@ -24,6 +24,13 @@ in
       description = "Disable auto-downloads of LSP servers";
       default = false;
     };
+
+    # See https://opencode.ai/config.json ("plugin" field)
+    plugins = mkOption {
+      type = types.listOf (types.either types.str (types.listOf types.anything));
+      description = "A list of OpenCode plugins. Each entry is either a plugin name or a [name, config] tuple.";
+      default = [ ];
+    };
   };
 
   # OpenCode supports using LSP servers.
@@ -121,6 +128,9 @@ in
         // lib.optionalAttrs (config.models.default.modelId != null) {
           model = toModelId config.models.default;
         }
+        // lib.optionalAttrs (config.opencode.plugins != [ ]) {
+          plugin = config.opencode.plugins;
+        }
         // lib.optionalAttrs config.lspServersEnabled {
           lsp = lib.mapAttrs (
             _name: s:
@@ -154,7 +164,7 @@ in
       intent = "base";
       disclosure = "none";
       status = "stable";
-      version = "0.1.0";
+      version = "0.2.0";
     };
   };
 }
