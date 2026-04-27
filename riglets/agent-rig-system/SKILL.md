@@ -40,7 +40,7 @@ Defined in `{{repoRoot}}/lib/default.nix`.
 
 #### rigup CLI tool
 
-A Rust app. It provides convenient access to rig outputs, via commands like `rigup build` and `rigup shell`. This tool is meant for **the user** primarily. Agents should not have to call it directly.
+A Rust app. It provides convenient access to rig outputs, via commands like `rigup build` and `rigup shell`, and project scaffolding via `rigup new`. This tool is meant for **the user** primarily. Agents should not have to call it directly.
 
 Defined in `{{repoRoot}}/packages/rigup`
 

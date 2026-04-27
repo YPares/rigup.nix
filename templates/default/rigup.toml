@@ -5,7 +5,7 @@
 # Include riglets from this repository, including some derived from Anthropic's Skills
 self = ["my-first-riglet", "algorithmic-art", "frontend-design"]
 # Include riglets from external inputs
-rigup = ["agent-rig-system", "riglet-creator", "nix-module-system"]
+rigup = ["opencode", "agent-rig-system", "riglet-creator", "nix-module-system"]
 
 # Configuration for the riglets (if they define options)
 [rigs.default.config]
