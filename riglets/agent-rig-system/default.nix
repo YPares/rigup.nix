@@ -46,12 +46,12 @@ self:
     };
 
     promptCommands.explain = {
-      description = "Ask the agent to give a brief summary of the rig system and of which riglets it currently knows";
+      description = "Get a brief summary of the rig system in general and of the current rig in particular";
       template = ''
         Give the user a short summary of:
 
         - `rigup` and the agent rig system,
-        - which riglets you have at your disposal.
+        - your current rig.
 
         Assume that the user has just basic knowledge of Nix and only a very vague idea of what Nix flakes are."
       '';

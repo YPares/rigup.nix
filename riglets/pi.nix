@@ -33,13 +33,6 @@ in
           ''
         else
           null;
-
-      promptFlags = lib.concatMapStringsSep " " (path: "--prompt-template ${path}") (
-        if promptTemplateDir != null then
-          lib.mapAttrsToList (name: _: "${promptTemplateDir}/rig:${name}.md") rig.promptCommands
-        else
-          [ ]
-      );
     in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin "pi" ''
@@ -68,7 +61,7 @@ in
 
       exec ${lib.getExe pi} \
         --append-system-prompt "$(cat ${manifestPath})" \
-        ${promptFlags} \
+        ${lib.optionalString (promptTemplateDir != null) "--prompt-template ${promptTemplateDir}"} \
         "$@"
     '';
 
