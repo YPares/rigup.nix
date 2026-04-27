@@ -2,7 +2,8 @@
 
 ## Overview
 
-A **rig** is a project-scoped collection of _riglets_ that provide knowledge and tools for AI agents.
+A **rig** is a collection of _riglets_ that provide knowledge and tools for AI agents.
+Rigs and riglets are packaged as Nix flake outputs, so they can both be used inside the project defining them and by other projects depending on it.
 
 ## Core Concepts
 
