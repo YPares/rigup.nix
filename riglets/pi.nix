@@ -8,8 +8,13 @@ self:
 }:
 let
   inherit (self.inputs.llm-agents.packages.${system}) pi;
+  cfg = config.models;
 in
 {
+  imports = [
+    self.riglets.models
+  ];
+
   options.pi.extensions = lib.mkOption {
     type = lib.types.listOf lib.types.str;
     description = "A list of URLs to Pi extensions to use";
@@ -67,12 +72,19 @@ in
             warn "pi does not support deny rules"
             warn "  Rig's deny rules are ignored"
           ''
+        }${
+          pkgs.lib.optionalString (cfg.specialized != { }) ''
+            warn "pi does not support specialized agents"
+            warn "  Rig's specialized model config is ignored"
+          ''
         }
 
         exec ${lib.getExe pi} \
           --append-system-prompt "$(cat ${manifestPath})" \
           ${lib.optionalString (promptTemplateDir != null) "--prompt-template ${promptTemplateDir}"} \
           ${lib.concatStringsSep " " (map (ext: "--extension ${ext}") config.pi.extensions)} \
+          ${lib.optionalString (cfg.default.providerId != null) "--provider ${cfg.default.providerId}"} \
+          ${lib.optionalString (cfg.default.modelId != null) "--model ${cfg.default.modelId}"} \
           "$@"
       '';
     };
@@ -83,7 +95,7 @@ in
       intent = "base";
       disclosure = "none";
       status = "experimental";
-      version = "0.1.0";
+      version = "0.2.0";
     };
   };
 }
