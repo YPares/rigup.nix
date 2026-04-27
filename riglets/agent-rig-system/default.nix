@@ -44,5 +44,12 @@ self:
       };
       references = ./references;
     };
+
+    promptCommands.explain = {
+      description = "Ask the agent to give a brief summary of the rig system and of which riglets it currently knows";
+      template = ''
+        Give the user a short summary of the agent rig system and of which riglets you have at your disposal.
+      '';
+    };
   };
 }

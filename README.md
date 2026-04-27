@@ -432,6 +432,7 @@ But this enables riglets to perform things that Skills just cannot do:
 - **One Config To Rule Them All:** `rigup` will generate config for:
   - Claude Code
   - OpenCode
+  - Pi (no MCP and deny rules support)
   - VSCode with Copilot
   - Cursor & `cursor-agent`
   - `copilot-cli` (although `copilot-cli` does not allow custom prompt commands, and MCP servers can only be set in user's config for now)

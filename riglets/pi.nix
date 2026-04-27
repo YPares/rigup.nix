@@ -1,0 +1,84 @@
+self:
+{
+  pkgs,
+  system,
+  lib,
+  ...
+}:
+let
+  inherit (self.inputs.llm-agents.packages.${system}) pi;
+in
+{
+  # Define the entrypoint for this rig - launches Pi with rig context
+  config.entrypoint =
+    rig:
+    let
+      manifestPath = rig.manifest.override { shownDocRoot = "$RIG_DOCS"; };
+
+      # Generate prompt template files from riglet promptCommands
+      # Each becomes a .md file that Pi can load via --prompt-template
+      promptTemplateDir =
+        if rig.promptCommands != { } then
+          pkgs.runCommandLocal "rig-pi-prompt-templates" { } ''
+            mkdir -p $out
+            ${lib.concatMapAttrsStringSep "\n" (name: cmd: ''
+              cat > $out/rig:${name}.md <<'CMDEOF'
+              ---
+              description: ${cmd.description}
+              ---
+
+              ${cmd.template}
+              CMDEOF
+            '') rig.promptCommands}
+          ''
+        else
+          null;
+
+      promptFlags = lib.concatMapStringsSep " " (path: "--prompt-template ${path}") (
+        if promptTemplateDir != null then
+          lib.mapAttrsToList (name: _: "${promptTemplateDir}/rig:${name}.md") rig.promptCommands
+        else
+          [ ]
+      );
+    in
+    # Return a folder derivation with bin/ subfolder
+    pkgs.writeShellScriptBin "pi" ''
+      set -euo pipefail
+
+      warn() {
+        printf "> \033[0;33m%s\033[0m\n" "$1" >&2
+      }
+
+      export PATH="${rig.toolRoot}/bin:$PATH"
+      export RIG_DOCS="${rig.docRoot}"
+      # For later reference, if needed
+      export RIG_MANIFEST="${manifestPath}"
+
+      ${
+        pkgs.lib.optionalString (rig.mcpServers != { }) ''
+          warn "pi does not support MCP servers"
+          warn "  Rig's MCP config is ignored"
+        ''
+      }${
+        pkgs.lib.optionalString (rig.denyRules != { }) ''
+          warn "pi does not support deny rules"
+          warn "  Rig's deny rules are ignored"
+        ''
+      }
+
+      exec ${lib.getExe pi} \
+        --append-system-prompt "$(cat ${manifestPath})" \
+        ${promptFlags} \
+        "$@"
+    '';
+
+  config.riglets.pi = {
+    meta = {
+      description = "Launch Pi with rig context";
+      intent = "base";
+      disclosure = "none";
+      status = "experimental";
+      version = "0.1.0";
+    };
+  };
+}
