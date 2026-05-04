@@ -154,7 +154,7 @@ pkgs.writeTextFile {
     ### Workflow for Each Task
 
     1. **Check ${manifestFileName}'s `whenToUse` sections** - Find riglets matching your task
-    2. **Read the `mainDocFile` for each matching riglet** - This is where executable knowledge lives
+    2. **Read the `mainDocFile` for each matching riglet** - This is where executable knowledge lives. RIGLETS ARE NOT TOOLS, AND ARE NOT TO BE ACCESSED LIKE SKILLS, JUST READ THE LINKED `mainDocFile`.
     3. ${
       if shownActivationScript != null then
         "**Activate the environment and use tools mentioned in riglet doc files:** `source ${shownActivationScript}` BEFORE EVERY COMMAND - This will set PATH so you can use the tools"
