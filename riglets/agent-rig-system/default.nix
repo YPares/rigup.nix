@@ -51,7 +51,7 @@ self:
         Give the user a short summary of:
 
         - `rigup` and the agent rig system,
-        - your current rig.
+        - your current rig, stating which riglets you already read and which you didn't.
 
         Assume that the user has just basic knowledge of Nix and only a very vague idea of what Nix flakes are.
       '';
