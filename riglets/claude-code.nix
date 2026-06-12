@@ -19,6 +19,12 @@ in
       type = types.bool;
       default = false;
     };
+
+    userConfigDir = mkOption {
+      description = "Override user-level claude config folder";
+      type = types.nullOr (types.pathWith { inStore = false; });
+      default = null;
+    };
   };
 
   # Define the entrypoint for this rig - launches Claude Code with rig context
@@ -110,6 +116,10 @@ in
       export RIG_DOCS="${rig.docRoot}"
       # For later reference, if needed
       export RIG_MANIFEST="${manifestPath}"
+
+      ${pkgs.lib.optionalString (config.claude-code.userConfigDir != null) ''
+        export CLAUDE_CONFIG_DIR="${config.claude-code.userConfigDir}"
+      ''}
 
       exec ${pkgs.lib.getExe claude-code} \
         --append-system-prompt "$(cat ${manifestPath})" \
