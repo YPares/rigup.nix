@@ -18,9 +18,11 @@ It will then go on reading it when it needs to, or is prompted to.
 However, `rigup` gives you more control than Skills traditionally do in terms of when your agent should be exposed to a riglet's content.
 For instance, a fundamental riglet can be set to have an _eager_ disclosure (forcing the agent to see the whole SKILL.md at startup), while another one can have a _shallow-toc_ disclosure (the agent will see a table of contents of the riglet's main SKILL.md).
 
+Besides, while Skills are necessarily fixed files, riglets' documentation files can be produced by any Nix _derivation_, meaning the contents can also just be a raw file read from disk, or they can defined programmatically, for instance by a bash script. This makes a riglet's doc file contents configurable in the same way this riglet's tools are. `rigup`'s Nix library provides utilities to template your skills via [minijinja](https://github.com/mitsuhiko/minijinja) to facilitate this use case.
+
 `rigup` has a "knowledge-first" design: documentation is the payload, tools are dependencies. The "main entrance" to the rig will be the `RIG.md` manifest that rigup will generate for your AI agent to read, and through which it will discover all the available tools, knowledge and processes to follow.
 
-In short, `rigup` is **parametrable agent skills + lightweight home management** for your agent, with a high-level of interoperability with Claude Skills and Claude plugin marketplaces, so reusing published Skills as basis for riglets is made as easy as possible.
+In short, `rigup` is **parametrable agent skills + lightweight home management** for your agent, with a high-level of interoperability with Skills and Claude plugin marketplaces so reusing existing Skills as riglets or as basis for riglets is made as easy as possible.
 
 ## Quick start
 
