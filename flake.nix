@@ -7,7 +7,8 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    # See https://discourse.nixos.org/t/psa-use-nixos-org-tarballs-for-your-flake-inputs/79950 :
+    nixpkgs.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst";
     blueprint.url = "github:numtide/blueprint";
     llm-agents.url = "github:numtide/llm-agents.nix";
   };
