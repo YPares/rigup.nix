@@ -48,7 +48,7 @@ This CLI tool makes it easier to:
 - build a full rig as a folder of symlinks (`rigup build`)
 - use a rig as a subshell, with `$PATH` and `$RIG_MANIFEST` (path to the `RIG.md`) set up (`rigup shell`)
 
-(Note all these commands are just wrappers, provided for convenience, around the rigup Nix library. So you may still do everything with the usual `nix {build,develop,run}` commands if you prefer)
+Note all these commands are just wrappers, provided for convenience, around the rigup Nix library. So you may still do everything with usual `nix build` calls if you prefer.
 
 You can then create a new project from the templates provided by this repository, or even directly build the example rig defined here.
 

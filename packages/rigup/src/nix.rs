@@ -160,6 +160,50 @@ pub fn run_command_inherit(cmd: &str, args: Vec<&str>) -> Result<()> {
     Ok(())
 }
 
+/// Build an installable (or fetch it from a binary cache) and return the store
+/// path of its first output, without creating a `result` symlink.
+///
+/// Build progress is streamed on stderr, while the output path is captured from
+/// stdout. `nix build` is used on purpose: unlike `nix run`, it benefits from
+/// Nix's evaluation cache, so an already-evaluated entrypoint resolves in a few
+/// hundred milliseconds instead of re-evaluating the whole flake.
+pub fn nix_build_print_out_path(installable: &str) -> Result<String> {
+    let mut child = Command::new("nix")
+        .args(&["build", "--no-link", "--print-out-paths", installable])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .into_diagnostic()?;
+
+    let mut stdout = Vec::new();
+    child
+        .stdout
+        .take()
+        .expect("Failed to capture stdout")
+        .read_to_end(&mut stdout)
+        .into_diagnostic()?;
+
+    let status = child.wait().into_diagnostic()?;
+
+    if !status.success() {
+        let code = status.code().unwrap_or(1);
+        return Err(RigupError::NixCommandFailed {
+            code,
+            stderr: "See error output above".to_string(),
+        }
+        .into());
+    }
+
+    // `--print-out-paths` may print several paths for multi-output derivations;
+    // the entrypoint is a single-output derivation, so the first line is the one.
+    String::from_utf8_lossy(&stdout)
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| miette::miette!("`nix build` did not print any output path"))
+}
+
 /// Run a nix eval command that returns JSON, capturing stdout but showing stderr
 /// This is useful for commands that output JSON while showing build progress
 pub fn run_nix_eval_json(eval_expr: &str) -> Result<Value> {
