@@ -83,11 +83,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1789530731,
-        "narHash": "sha256-ibDJiHImJZv6a8jo9K3CO2p3j9M7oBFlogNKGUXtEUw=",
+        "lastModified": 1789616995,
+        "narHash": "sha256-Rs5atV7wJs+XC+C2kdZtEisfow994EkPEP0VQFxz2yY=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "44331a376f4039bf5bc6dcc80a86077603539ce1",
+        "rev": "0eef5302a0bec7e12d0d8bee1e86e1845b74ac49",
         "type": "github"
       },
       "original": {
@@ -130,11 +130,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1789286504,
-        "narHash": "sha256-3i80JnZ9pZ7tWReb/Sqpc32cfzffCu8TWLnbnH0hN9c=",
-        "rev": "ef34387ddd751e1ab8857adf4676492d32eb24ec",
+        "lastModified": 1789546076,
+        "narHash": "sha256-vWkSk5bbfTqdtMoSgD9FshACO8JCvXTFi+3cqEp0mH0=",
+        "rev": "b1b875982b17dabde9b4a37f3e229e74913e6db3",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1073009.ef34387ddd75/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixos/unstable/nixos-26.11pre1074753.b1b875982b17/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
