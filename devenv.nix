@@ -14,7 +14,9 @@ let
   project = rigupLib.resolveProject {
     inherit (cfg) projectUri;
     inputs = self.inputs // {
-      inherit self;
+      self = self // {
+        inherit (project) riglets;
+      };
     };
     systems = [ system ];
   };
@@ -26,7 +28,7 @@ in
     projectUri = lib.mkOption {
       type = lib.types.str;
       description = "A project name (will be used in error messages)";
-      default = "devenv:";
+      default = "[devenv]";
     };
   };
 
