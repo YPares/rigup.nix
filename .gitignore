@@ -1,5 +1,6 @@
 # direnv
 .direnv/
+.devenv/
 
 # VSCode & copilot-cli
 .vscode/

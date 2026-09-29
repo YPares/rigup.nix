@@ -1,3 +1,5 @@
 inputs:
   rigup:
     url: git+file:.
+  nixpkgs:
+    follows: "rigup/nixpkgs"
