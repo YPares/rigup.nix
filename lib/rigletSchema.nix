@@ -74,7 +74,7 @@ let
     (addCheck remoteMcpServer (x: x ? url))
   ];
 
-  promptCommand = submodule {
+  promptCommand = submodule ({config, ...}: {
     options = {
       template = mkOption {
         description = "The command template itself. Can use $ARGUMENTS, $1, $2...";
@@ -84,6 +84,7 @@ let
       description = mkOption {
         description = "Short explanation of what this prompt command does. Usually shown in help or autocompletion menu in the harness";
         type = str;
+        default = config.template;
       };
 
       readDocsFirst = mkOption {
@@ -98,7 +99,7 @@ let
         default = false;
       };
     };
-  };
+  });
 in
 {
   options = {
