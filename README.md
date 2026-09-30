@@ -106,6 +106,14 @@ Edit `riglets/*.nix` and `rigup.toml` to customize the project.
 
 The default template includes some example riglets and shows how `rigup` supports using a Claude Marketplace as a direct input, to import pre-existing Skills and use them as a basis for riglets.
 
+### Alternative: Use `devenv`
+
+If your project uses [`devenv`](https://devenv.sh) instead of Nix flakes, an experimental integration of `rigup` is available, using this repo directy as a devenv module you can import in your project. Follow the [example here](https://github.com/YPares/rigup-devenv-demo).
+
+IMPORTANT: The `rigup` CLI tool **only** deals with flake-based projects, and the rest of this documentation is written assuming a flake-base project, but everything regarding how to declare rigs and riglets remains applicable. Only the way to start up rigs changes.
+
+More information about using `rigup` with `devenv` will be added here as this integration matures.
+
 ## Deeper dive
 
 This section covers the general workflow of defining and editing riglets and rigs.

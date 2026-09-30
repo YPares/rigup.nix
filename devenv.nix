@@ -1,3 +1,25 @@
+# 
+# This is a devenv module, to be imported in your own project's devenv config this way:
+#
+# ```yaml
+# # devenv.yaml
+# 
+# inputs:
+#   rigup: github:YPares/rigup.nix
+#   ...
+# imports:
+#   - rigup
+# ```
+#
+# ```nix
+# # devenv.nix
+#
+# {
+#   rigup.enable = true;
+#   ...
+# }
+# 
+
 {
   pkgs,
   config,

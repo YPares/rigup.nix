@@ -1,6 +1,9 @@
-# direnv
 .direnv/
 .devenv/
+
+# devenv lockfile isn't versioned.
+# devenv module should only propagate what's already pinned in the flake.
+devenv.lock
 
 # VSCode & copilot-cli
 .vscode/
