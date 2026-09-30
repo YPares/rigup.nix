@@ -112,6 +112,8 @@ If your project uses [`devenv`](https://devenv.sh) instead of Nix flakes, an exp
 
 IMPORTANT: The `rigup` CLI tool **only** deals with flake-based projects, and the rest of this documentation is written assuming a flake-base project, but everything regarding how to declare rigs and riglets remains applicable. Only the way to start up rigs changes.
 
+Additionally, the `devenv` integration only covers declaring your own rigs and riglets and re-using riglets defined in other flake-based projects. To package riglets for others to use, Nix flakes remain a better fit.
+
 More information about using `rigup` with `devenv` will be added here as this integration matures.
 
 ## Deeper dive
