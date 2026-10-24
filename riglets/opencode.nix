@@ -8,8 +8,11 @@ self:
   ...
 }:
 let
-  inherit (self.inputs.llm-agents.packages.${system}) opencode;
+  cfg = config.opencode;
   inherit (lib) mkOption types;
+  opencodePkg =
+    with self.inputs.llm-agents.packages.${system};
+    if cfg.useOpencode1 then opencode else opencode2;
 in
 {
   imports = [
@@ -28,9 +31,11 @@ in
     # See https://opencode.ai/config.json ("plugin" field)
     plugins = mkOption {
       type = types.listOf (types.either types.str (types.listOf types.anything));
-      description = "A list of OpenCode plugins. Each entry is either a plugin name or a [name, config] tuple.";
+      description = "A list of OpenCode plugins. Each entry is either a plugin name or a [name, config] tuple";
       default = [ ];
     };
+
+    useOpencode1 = lib.mkEnableOption "Use Opencode1 instead of Opencode2";
   };
 
   # OpenCode supports using LSP servers.
@@ -128,9 +133,23 @@ in
         // lib.optionalAttrs (config.models.default.modelId != null) {
           model = toModelId config.models.default;
         }
-        // lib.optionalAttrs (config.opencode.plugins != [ ]) {
-          plugin = config.opencode.plugins;
-        }
+        // lib.optionalAttrs (cfg.plugins != [ ]) (
+          if cfg.useOpencode1 then
+            { plugin = cfg.plugins; }
+          else
+            {
+              plugins = with builtins; map (
+                p:
+                if isString p then
+                  p
+                else
+                  {
+                    package = elemAt p 0;
+                    options = elemAt p 1;
+                  }
+              ) cfg.plugins;
+            }
+        )
         // lib.optionalAttrs config.lspServersEnabled {
           lsp = lib.mapAttrs (
             _name: s:
@@ -143,7 +162,7 @@ in
       );
     in
     # Return a folder derivation with bin/ subfolder
-    pkgs.writeShellScriptBin "opencode" ''
+    pkgs.writeShellScriptBin (if cfg.useOpencode1 then "opencode" else "opencode2") ''
       set -euo pipefail
 
       export PATH="${rig.toolRoot}/bin:$PATH"
@@ -153,9 +172,9 @@ in
 
       export OPENCODE_CONFIG="${opencodeConfigJson}"
 
-      ${lib.optionalString config.opencode.disableLspDownload "export OPENCODE_DISABLE_LSP_DOWNLOAD=true"}
+      ${lib.optionalString cfg.disableLspDownload "export OPENCODE_DISABLE_LSP_DOWNLOAD=true"}
 
-      exec ${lib.getExe opencode} "$@"
+      exec ${lib.getExe opencodePkg} ${lib.optionalString (!cfg.useOpencode1) "--standalone"} "$@"
     '';
 
   config.riglets.opencode = {
