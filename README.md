@@ -34,6 +34,8 @@ nix profile add github:YPares/rigup.nix#rigup
 
 _**NOTE:** On older Nix versions, "`add`" is "`install`" instead._
 
+This should prompt you to accept the usage of the `https://rigup.cachix.org` binary cache.
+
 If already installed, update with:
 
 ```bash

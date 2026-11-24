@@ -2,8 +2,14 @@
   description = "rigup - Build your AI agent's rig";
 
   nixConfig = {
-    extra-substituters = [ "https://cache.numtide.com" ];
-    extra-trusted-public-keys = [ "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" ];
+    extra-substituters = [
+      "https://cache.numtide.com"
+      "https://rigup.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      "rigup.cachix.org-1:0+eycVc+C66sup2VdP2dmJWYYYzY7HakY9Kcjsuuals="
+    ];
   };
 
   inputs = {

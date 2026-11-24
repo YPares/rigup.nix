@@ -2,10 +2,17 @@
   description = "My AI Agent Rig";
 
   # Many riglets depend on tools provided by numtide/llm-agents.nix,
-  # this tells nix to reuse the cache provided by numtide for these tools:
+  # this tells nix to reuse the cache provided by numtide for these tools,
+  # as well as rigup's own cache:
   nixConfig = {
-    extra-substituters = [ "https://cache.numtide.com" ];
-    extra-trusted-public-keys = [ "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" ];
+    extra-substituters = [
+      "https://cache.numtide.com"
+      "https://rigup.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+      "rigup.cachix.org-1:0+eycVc+C66sup2VdP2dmJWYYYzY7HakY9Kcjsuuals="
+    ];
   };
 
   inputs = {
