@@ -13,7 +13,6 @@ self = [
   "riglet-creator",
   "nix-module-system",
   "mcp-memory",
-  "mcp-cased-kit",
   # The next riglets import agent-identity (which will be deduplicated)
   "git-setup",
   "typst-reporter",

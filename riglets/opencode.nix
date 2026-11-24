@@ -10,9 +10,9 @@ self:
 let
   cfg = config.opencode;
   inherit (lib) mkOption types;
+  llm-agents = self.inputs.llm-agents.packages.${system};
   opencodePkg =
-    with self.inputs.llm-agents.packages.${system};
-    if cfg.useOpencode1 then opencode else opencode2;
+    if cfg.useOpencode1 then llm-agents.opencode else llm-agents.opencode2;
 in
 {
   imports = [
@@ -36,7 +36,13 @@ in
     };
 
     useOpencode1 = lib.mkEnableOption "Use Opencode1 instead of Opencode2";
+
+    enableClaudeAuth = lib.mkEnableOption "Let Opencode use a claude-code subscription. Will check for claude auth status before running Opencode";
   };
+
+  config.opencode.plugins = lib.mkIf cfg.enableClaudeAuth [
+    "opencode-claude-auth@latest"
+  ];
 
   # OpenCode supports using LSP servers.
   #
@@ -138,16 +144,18 @@ in
             { plugin = cfg.plugins; }
           else
             {
-              plugins = with builtins; map (
-                p:
-                if isString p then
-                  p
-                else
-                  {
-                    package = elemAt p 0;
-                    options = elemAt p 1;
-                  }
-              ) cfg.plugins;
+              plugins =
+                with builtins;
+                map (
+                  p:
+                  if isString p then
+                    p
+                  else
+                    {
+                      package = elemAt p 0;
+                      options = elemAt p 1;
+                    }
+                ) cfg.plugins;
             }
         )
         // lib.optionalAttrs config.lspServersEnabled {
@@ -164,6 +172,11 @@ in
     # Return a folder derivation with bin/ subfolder
     pkgs.writeShellScriptBin (if cfg.useOpencode1 then "opencode" else "opencode2") ''
       set -euo pipefail
+
+      ${lib.optionalString cfg.enableClaudeAuth ''
+        export PATH="${llm-agents.claude-code}/bin:$PATH"
+        claude auth status || claude auth login || exit 1
+      ''}
 
       export PATH="${rig.toolRoot}/bin:$PATH"
       export RIG_DOCS="${rig.docRoot}"
